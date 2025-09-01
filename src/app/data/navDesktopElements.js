@@ -1,4 +1,4 @@
-export const navElements = [
+export const navDesktopElements = [
   { label: "Random Palettes", path: "/random-palettes" },
   { label: "Custom Palettes", path: "/custom-palettes" },
   { label: "Palette Tester", path: "/palette-tester" },

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import NavBar from "@/comps/NavBar";
+import NavbarDesktop from "@/comps/NavbarDesktop";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
 import { DM_Sans } from "next/font/google";
@@ -23,23 +23,24 @@ export default function RootLayount({ children }) {
       <body className="bg-[var(--background)] text-[var(--foreground)] transition-colors duration-500">
         <ThemeProvider
           attribute="class"
-          defaultTheme="light"
+          defaultTheme="system"
           enableSystem={true}
         >
           <header>
-            <nav className="flex justify-between py-3 px-10 ">
+            <nav className="flex border border-[var(--border)] px-7 items-center justify-between py-3 lg:px-10 lg:border-0">
               <NavLogoHome />
 
-              <div
-                className={`flex gap-10 ${dm_sans.className} text-[18px] pb-2 font-[300] border-b border-[var(--muted)]`}
-              >
-                <ThemeToggle />
+              <ThemeToggle />
 
-                <NavBar />
+              <div
+                className={`hidden lg:flex gap-10 ${dm_sans.className} text-[18px] pb-2 font-[300] border-b border-[var(--muted)]`}
+              >
+                <NavbarDesktop />
               </div>
             </nav>
           </header>
-          <main>{children}</main>
+
+          <main> {children}</main>
         </ThemeProvider>
       </body>
     </html>
