@@ -10,7 +10,7 @@ export default function NavbarDesktop() {
         <NavLinkIsActive
           key={element.path}
           href={element.path}
-          extraClasses="px-2"
+          extraClasses="px-2 py-1"
         >
           {element.label}
         </NavLinkIsActive>

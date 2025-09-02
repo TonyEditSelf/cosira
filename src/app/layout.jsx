@@ -20,7 +20,7 @@ export const metadata = {
 export default function RootLayount({ children }) {
   return (
     <html lang="en" suppressHydrationWarning={true}>
-      <body className="bg-[var(--background)] text-[var(--foreground)] transition-colors duration-500">
+      <body className="bg-[var(--background)] text-[var(--foreground)] transition-colors duration-500 h-screen flex flex-col">
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -40,7 +40,7 @@ export default function RootLayount({ children }) {
             </nav>
           </header>
 
-          <main> {children}</main>
+          <main className="h-[calc(100vh-68px)]"> {children}</main>
         </ThemeProvider>
       </body>
     </html>
