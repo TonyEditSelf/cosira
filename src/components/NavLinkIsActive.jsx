@@ -16,7 +16,9 @@ export default function NavLinkIsActive({
       href={href}
       onClick={onClick}
       className={`${
-        isActive ? "bg-[var(--brand)] text-white font-bold" : ""
+        isActive
+          ? "border border-[var(--brand)] rounded-tl-lg rounded-br-lg text-[var(--foreground)]"
+          : ""
       } ${extraClasses}`}
     >
       {children}

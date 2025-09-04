@@ -38,11 +38,11 @@ export default function NavLogoHome() {
         href={"/"}
         className={`${orbitron.className} text-md lg:text-xl font-[900] text-[var(--brand)]`}
       >
-        <span className="border-l-3 border-t-3 border-b-3 border-[var(--brand)] px-2 py-1">
+        <span className="border-l-3 border-t-3 border-b-3 rounded-tl-xl border-[var(--brand)] px-2 py-1">
           TO
         </span>
         <span className="border-3 border-[var(--brand)] px-2 py-1">FAB</span>
-        <span className="border-r-3 border-t-3 border-b-3 border-[var(--brand)] px-2 py-1">
+        <span className="border-r-3 border-t-3 border-b-3 border-[var(--brand)] rounded-br-xl  px-2 py-1">
           ZA
         </span>
       </Link>

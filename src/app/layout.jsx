@@ -1,10 +1,10 @@
 import Link from "next/link";
-import NavbarDesktop from "@/comps/NavbarDesktop";
+import NavbarDesktop from "@/components/NavbarDesktop";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
 import { DM_Sans } from "next/font/google";
-import ThemeToggle from "@/comps/ThemeToggle";
-import NavLogoHome from "@/comps/NavLogoHome";
+import ThemeToggle from "@/components/ThemeToggle";
+import NavLogoHome from "@/components/NavLogoHome";
 
 const dm_sans = DM_Sans({
   subsets: ["latin"],
@@ -33,7 +33,7 @@ export default function RootLayount({ children }) {
               <ThemeToggle />
 
               <div
-                className={`hidden lg:flex gap-10 ${dm_sans.className} text-[18px] pb-2 font-[300] border-b border-[var(--muted)]`}
+                className={`hidden lg:flex justify-center items-center gap-5 ${dm_sans.className} text-[16px] pb-2 font-[300] `}
               >
                 <NavbarDesktop />
               </div>
