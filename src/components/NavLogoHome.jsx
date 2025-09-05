@@ -36,7 +36,7 @@ export default function NavLogoHome() {
 
       <Link
         href={"/"}
-        className={`${orbitron.className} text-md lg:text-xl font-[900] text-[var(--brand)]`}
+        className={`${orbitron.className} text-md lg:text-[17px] font-[900] text-[var(--brand)]`}
       >
         <span className="border-l-3 border-t-3 border-b-3 rounded-tl-xl border-[var(--brand)] px-2 py-1">
           TO

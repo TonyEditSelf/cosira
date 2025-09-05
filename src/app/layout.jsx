@@ -40,7 +40,7 @@ export default function RootLayount({ children }) {
             </nav>
           </header>
 
-          <main className="h-[calc(100vh-68px)]"> {children}</main>
+          <main className="flex-1"> {children}</main>
         </ThemeProvider>
       </body>
     </html>

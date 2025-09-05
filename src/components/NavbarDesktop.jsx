@@ -15,7 +15,7 @@ export default function NavbarDesktop() {
           {element.label}
         </NavLinkIsActive>
       ))}
-      <CiMenuKebab className="text-2xl" />
+      <CiMenuKebab className="text-xl" />
     </>
   );
 }
