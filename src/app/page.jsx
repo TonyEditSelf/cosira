@@ -1,3 +1,9 @@
+import PageWrapper from "@/components/ui/PageWrapper";
+
 export default function Home() {
-  return <div></div>;
+  return (
+    <PageWrapper>
+      <div></div>
+    </PageWrapper>
+  );
 }

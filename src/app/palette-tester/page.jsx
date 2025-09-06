@@ -1,3 +1,9 @@
+import PageWrapper from "@/components/ui/PageWrapper";
+
 export default function PaletteTester() {
-  return <div>page</div>;
+  return (
+    <PageWrapper>
+      <div>page</div>
+    </PageWrapper>
+  );
 }
