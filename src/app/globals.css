@@ -5,10 +5,13 @@
 
 :root {
   --background: oklch(0.9791 0 0);
+
+  /* --background: white; */
   --foreground: oklch(0.1776 0 0);
 
   /* Brand colors */
   --brand: oklch(0.597 0.240854 2.4025);
+  --mutedBrand: oklch(72.231% 0.06569 347.312);
   /* --navBorder: oklch(88.505% 0.01608 106.827); */
   --navBorder: oklch(84.16% 0.01763 106.864);
 

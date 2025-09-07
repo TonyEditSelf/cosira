@@ -30,6 +30,12 @@ export const paletteTypes = [
     description: "Four colors in a rectangle (two complementary pairs)",
   },
   {
+    label: "Vintage",
+    value: "vintage",
+    description:
+      "Muted, warm, and desaturated tones inspired by retro aesthetics",
+  },
+  {
     label: "Square",
     value: "square",
     description: "Four colors evenly spaced, like tetradic but balanced",

@@ -13,16 +13,22 @@ import {
 import { FaSave, FaPlay } from "react-icons/fa";
 import { CgExport } from "react-icons/cg";
 import { LuFullscreen } from "react-icons/lu";
-import { useState } from "react";
 
-export default function Cp_toolbar1({ setLeftPaletteAdjusterOpen }) {
-  const [baseColor, setBaseColor] = useState("#e60073");
-
+export default function Cp_toolbar1({
+  setLeftPaletteAdjusterOpen,
+  setMyColorPickerOpen,
+  leftPaletteAdjusterOpen,
+  hexColor,
+}) {
   return (
     <section className="flex gap-3 items-center justify-center border border-[var(--navBorder)] py-2 ml-2 mr-2 mb-2 rounded-md">
       <HiMiniAdjustmentsHorizontal
         onClick={() => setLeftPaletteAdjusterOpen((prev) => !prev)}
-        className="size-9 font-black border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]"
+        className={`size-9 font-black border py-2 px-2 rounded-md ${
+          leftPaletteAdjusterOpen
+            ? "border-[var(--brand)] hover:border-2"
+            : "border-[var(--navBorder)] hover:border-[var(--muted-foreground)]"
+        } `}
       />
       <SelectComp items={paletteTypes} />
       <FaAnglesUp className="size-9 border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]" />
@@ -30,8 +36,11 @@ export default function Cp_toolbar1({ setLeftPaletteAdjusterOpen }) {
       <section className="flex gap-5 items-center border border-[var(--navBorder)] hover:border-[var(--muted-foreground)] pl-5 rounded-md">
         <p className="h-full">Pick Color: </p>
         <button
-          className="rounded-md h-[35px] py-1 px-10"
-          style={{ backgroundColor: `${baseColor}` }}
+          onClick={() => {
+            setMyColorPickerOpen((prev) => !prev);
+          }}
+          className="rounded-md h-[35px]  py-1 px-20"
+          style={{ backgroundColor: `${hexColor}` }}
         ></button>
       </section>
       <Link href={"/palette-tester"} className="size-9">
