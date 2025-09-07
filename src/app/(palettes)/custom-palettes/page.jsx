@@ -1,26 +1,21 @@
 "use client";
 
 import { MySlider } from "./_components/MySlider";
-import CustomPalToolbar1 from "./_components/CustomPalToolbar1";
+import CustomPalToolbar from "./_components/CustomPalToolbar";
 import { useState } from "react";
 import { AnimatePresence, easeIn, motion } from "framer-motion";
 import PageWrapper from "@/components/ui/PageWrapper";
 import MyColorPicker from "./_components/MyColorPicker";
 import { parseColor } from "react-aria-components";
+import { useColorPaletteContextProvider } from "../ColorContext";
 
 export default function CustomPalettes() {
+  const { hexColor, setHexColor, ariaColor, setAriaColor } =
+    useColorPaletteContextProvider();
+
   const [leftPaletteAdjusterOpen, setLeftPaletteAdjusterOpen] = useState(false);
   const [myColorPickerOpen, setMyColorPickerOpen] = useState(false);
 
-  const [hexColor, setHexColor] = useState("#e60073");
-  const [ariaColor, setAriaColor] = useState(
-    parseColor("hsla(330, 100%, 45.1%, 1)")
-  );
-
-  // console.log("hexColor: ", hexColor);
-  // console.log("ariaColor: ", ariaColor);
-
-  // Handle change from ColorArea or ColorWheel
   const handleAriaColorChange = (newAriaColor) => {
     // Force HSLA and preserve alpha
     const hslaColor = parseColor(newAriaColor.toString("hsla"));
@@ -103,7 +98,7 @@ export default function CustomPalettes() {
             </AnimatePresence>
           </section>
         </section>
-        <CustomPalToolbar1
+        <CustomPalToolbar
           setLeftPaletteAdjusterOpen={setLeftPaletteAdjusterOpen}
           leftPaletteAdjusterOpen={leftPaletteAdjusterOpen}
           setMyColorPickerOpen={setMyColorPickerOpen}

@@ -40,7 +40,7 @@ export default function MyColorPicker({
       transition={{ duration: 0.1, ease: easeIn }}
       ref={pickerRef}
       className={`absolute flex flex-col justify-center items-center gap-3 left-1/2 -translate-x-1/2 bottom-2 rounded-md p-4 bg-[var(--background)] ${
-        showHexColorPicker ? "w-[240px] h-[340px]" : "w-[540px] h-[440px]"
+        showHexColorPicker ? "w-[240px] h-[340px]" : "w-[580px] h-[435px]"
       }  border border-[var(--navBorder)]`}
     >
       {showHexColorPicker && (
@@ -140,7 +140,7 @@ export default function MyColorPicker({
               yChannel="lightness"
               width={200}
               height={200}
-              className="w-[145px] h-[145px] rounded-md overflow-hidden"
+              className="w-[160px] h-[160px] rounded-md overflow-hidden"
             >
               <ColorThumb className="border-2 border-black size-4 rounded-full" />
             </ColorArea>

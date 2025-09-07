@@ -14,7 +14,7 @@ import { FaSave, FaPlay } from "react-icons/fa";
 import { CgExport } from "react-icons/cg";
 import { LuFullscreen } from "react-icons/lu";
 
-export default function Cp_toolbar1({
+export default function CustomPalToolbar({
   setLeftPaletteAdjusterOpen,
   setMyColorPickerOpen,
   leftPaletteAdjusterOpen,
