@@ -14,23 +14,24 @@ import {
   ColorField,
   Input,
 } from "react-aria-components";
-import { useRef, useState } from "react";
 import useClickOutsideRef from "@/hooks/useHooks";
+import { useColorPaletteContext } from "../../ColorContext";
 
-export default function MyColorPicker({
-  hexColor,
-  hexOnChange,
-  onChangeEnd,
-  closeMyColorPicker,
-  ariaOnChange,
-  ariaColor,
-}) {
-  const [showHexColorPicker, setShowHexColorPicker] = useState(true);
-  const [showAdvancedPicker, setShowAdvancedPicker] = useState(false);
+export default function MyColorPicker() {
+  const {
+    hexColor,
+    handleAriaColorChange,
+    handleHexColorChange,
+    ariaColor,
+    pickerRef,
+    showHexColorPicker,
+    setShowHexColorPicker,
+    showAdvancedPicker,
+    setShowAdvancedPicker,
+    setMyColorPickerOpen,
+  } = useColorPaletteContext();
 
-  const pickerRef = useRef(null);
-
-  useClickOutsideRef(pickerRef, closeMyColorPicker);
+  useClickOutsideRef(pickerRef, setMyColorPickerOpen);
 
   return (
     <motion.div
@@ -45,11 +46,11 @@ export default function MyColorPicker({
     >
       {showHexColorPicker && (
         <>
-          <HexColorPicker color={hexColor} onChange={hexOnChange} />
+          <HexColorPicker color={hexColor} onChange={handleHexColorChange} />
           <HexColorInput
             className="border border-[var(--navBorder)] rounded-md p-1 px-3"
             color={hexColor}
-            onChange={hexOnChange}
+            onChange={handleHexColorChange}
           />
         </>
       )}
@@ -63,7 +64,7 @@ export default function MyColorPicker({
               <ColorField
                 label="HexColor"
                 value={ariaColor}
-                onChange={ariaOnChange}
+                onChange={handleAriaColorChange}
                 colorSpace="hex"
               >
                 <div className="flex gap-2 justify-between">
@@ -75,7 +76,7 @@ export default function MyColorPicker({
               <ColorField
                 label="Hue"
                 value={ariaColor}
-                onChange={ariaOnChange}
+                onChange={handleAriaColorChange}
                 colorSpace="hsla"
                 channel="hue"
               >
@@ -87,7 +88,7 @@ export default function MyColorPicker({
               <ColorField
                 label="Saturation"
                 value={ariaColor}
-                onChange={ariaOnChange}
+                onChange={handleAriaColorChange}
                 colorSpace="hsla"
                 channel="saturation"
               >
@@ -99,7 +100,7 @@ export default function MyColorPicker({
               <ColorField
                 label="Lightness"
                 value={ariaColor}
-                onChange={ariaOnChange}
+                onChange={handleAriaColorChange}
                 colorSpace="hsla"
                 channel="lightness"
               >
@@ -111,7 +112,7 @@ export default function MyColorPicker({
               <ColorField
                 label="Alpha"
                 value={ariaColor}
-                onChange={ariaOnChange}
+                onChange={handleAriaColorChange}
                 colorSpace="hsla"
                 channel="alpha"
               >
@@ -124,7 +125,7 @@ export default function MyColorPicker({
             {/* ------------------------- COLOR WHEEL ----------------------- */}
             <ColorWheel
               value={ariaColor}
-              onChange={ariaOnChange}
+              onChange={handleAriaColorChange}
               // onChangeEnd={onChangeEnd}
               outerRadius={80}
               innerRadius={0}
@@ -135,7 +136,7 @@ export default function MyColorPicker({
             {/* ----------------------- COLOR AREA ---------------------------- */}
             <ColorArea
               value={ariaColor}
-              onChange={ariaOnChange}
+              onChange={handleAriaColorChange}
               xChannel="saturation"
               yChannel="lightness"
               width={200}
@@ -150,7 +151,7 @@ export default function MyColorPicker({
             <ColorSlider
               channel="hue"
               value={ariaColor}
-              onChange={ariaOnChange}
+              onChange={handleAriaColorChange}
               className="react-aria-ColorSlider"
             >
               <div className="flex justify-between">
@@ -165,7 +166,7 @@ export default function MyColorPicker({
             <ColorSlider
               channel="saturation"
               value={ariaColor}
-              onChange={ariaOnChange}
+              onChange={handleAriaColorChange}
               className="react-aria-ColorSlider"
             >
               <div className="flex justify-between">
@@ -180,7 +181,7 @@ export default function MyColorPicker({
             <ColorSlider
               channel="lightness"
               value={ariaColor}
-              onChange={ariaOnChange}
+              onChange={handleAriaColorChange}
               className="react-aria-ColorSlider"
             >
               <div className="flex justify-between">
@@ -195,7 +196,7 @@ export default function MyColorPicker({
             <ColorSlider
               channel="alpha"
               value={ariaColor}
-              onChange={ariaOnChange}
+              onChange={handleAriaColorChange}
               className="react-aria-ColorSlider"
             >
               <div className="flex justify-between">

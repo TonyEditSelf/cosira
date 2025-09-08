@@ -13,13 +13,16 @@ import {
 import { FaSave, FaPlay } from "react-icons/fa";
 import { CgExport } from "react-icons/cg";
 import { LuFullscreen } from "react-icons/lu";
+import { useColorPaletteContext } from "../../ColorContext";
 
-export default function CustomPalToolbar({
-  setLeftPaletteAdjusterOpen,
-  setMyColorPickerOpen,
-  leftPaletteAdjusterOpen,
-  hexColor,
-}) {
+export default function CustomPalToolbar() {
+  const {
+    setLeftPaletteAdjusterOpen,
+    setMyColorPickerOpen,
+    leftPaletteAdjusterOpen,
+    hexColor,
+  } = useColorPaletteContext();
+
   return (
     <section className="flex gap-3 items-center justify-center border border-[var(--navBorder)] py-2 ml-2 mr-2 mb-2 rounded-md">
       <HiMiniAdjustmentsHorizontal

@@ -2,38 +2,14 @@
 
 import { MySlider } from "./_components/MySlider";
 import CustomPalToolbar from "./_components/CustomPalToolbar";
-import { useState } from "react";
 import { AnimatePresence, easeIn, motion } from "framer-motion";
 import PageWrapper from "@/components/ui/PageWrapper";
 import MyColorPicker from "./_components/MyColorPicker";
-import { parseColor } from "react-aria-components";
-import { useColorPaletteContextProvider } from "../ColorContext";
+import { useColorPaletteContext } from "../ColorContext";
 
 export default function CustomPalettes() {
-  const { hexColor, setHexColor, ariaColor, setAriaColor } =
-    useColorPaletteContextProvider();
-
-  const [leftPaletteAdjusterOpen, setLeftPaletteAdjusterOpen] = useState(false);
-  const [myColorPickerOpen, setMyColorPickerOpen] = useState(false);
-
-  const handleAriaColorChange = (newAriaColor) => {
-    // Force HSLA and preserve alpha
-    const hslaColor = parseColor(newAriaColor.toString("hsla"));
-    setAriaColor(hslaColor);
-
-    // Update hex state (hex ignores alpha)
-    const nexHex = newAriaColor.toString("hex");
-    setHexColor(nexHex);
-  };
-
-  // Handle change from hex input
-  const handleHexColorChange = (newHexColor) => {
-    setHexColor(newHexColor);
-
-    // Convert hex → HSLA with alpha = 1
-    const hslaColor = parseColor(parseColor(newHexColor).toString("hsla"));
-    setAriaColor(hslaColor);
-  };
+  const { leftPaletteAdjusterOpen, myColorPickerOpen } =
+    useColorPaletteContext();
 
   return (
     <PageWrapper>
@@ -86,25 +62,11 @@ export default function CustomPalettes() {
 
             {/* MY COLORPICKER COMP  */}
             <AnimatePresence>
-              {myColorPickerOpen && (
-                <MyColorPicker
-                  hexColor={hexColor}
-                  hexOnChange={handleHexColorChange}
-                  ariaColor={ariaColor}
-                  ariaOnChange={handleAriaColorChange}
-                  closeMyColorPicker={() => setMyColorPickerOpen(false)}
-                />
-              )}
+              {myColorPickerOpen && <MyColorPicker />}
             </AnimatePresence>
           </section>
         </section>
-        <CustomPalToolbar
-          setLeftPaletteAdjusterOpen={setLeftPaletteAdjusterOpen}
-          leftPaletteAdjusterOpen={leftPaletteAdjusterOpen}
-          setMyColorPickerOpen={setMyColorPickerOpen}
-          hexColor={hexColor}
-          myColorPickerOpen={myColorPickerOpen}
-        />
+        <CustomPalToolbar />
       </main>
     </PageWrapper>
   );
