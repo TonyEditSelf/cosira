@@ -1,5 +1,3 @@
-"use client";
-
 import {
   Select,
   SelectContent,
@@ -9,17 +7,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useState } from "react";
 
-export default function SelectComp({ items }) {
-  const [selectedPaletteType, setSelectedPaletteType] = useState(
-    items[2].value || ""
-  );
-
+export default function SelectComp({ items, value, onChange }) {
   return (
-    <Select value={selectedPaletteType} onValueChange={setSelectedPaletteType}>
+    <Select value={value} onValueChange={onChange}>
       <SelectTrigger className="w-48">
-        <SelectValue placeholder={selectedPaletteType} />
+        <SelectValue placeholder={value} />
       </SelectTrigger>
       <SelectContent className="lg:max-h-96">
         <SelectGroup>

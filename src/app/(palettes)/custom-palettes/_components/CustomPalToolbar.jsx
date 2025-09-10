@@ -21,6 +21,8 @@ export default function CustomPalToolbar() {
     setMyColorPickerOpen,
     leftPaletteAdjusterOpen,
     hexColor,
+    selectedPaletteType,
+    setSelectedPaletteType,
   } = useColorPaletteContext();
 
   return (
@@ -33,7 +35,11 @@ export default function CustomPalToolbar() {
             : "border-[var(--navBorder)] hover:border-[var(--muted-foreground)]"
         } `}
       />
-      <SelectComp items={paletteTypes} />
+      <SelectComp
+        items={paletteTypes}
+        value={selectedPaletteType}
+        onChange={setSelectedPaletteType}
+      />
       <FaAnglesUp className="size-9 border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]" />
       <FaAnglesDown className="size-9 border border-[var(--navBorder)] hover:border-[var(--muted-foreground)] p-2 rounded-md" />
       <section className="flex gap-5 items-center border border-[var(--navBorder)] hover:border-[var(--muted-foreground)] pl-5 rounded-md">

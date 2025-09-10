@@ -2,12 +2,13 @@
 
 import { createContext, useContext, useState, useRef } from "react";
 import { parseColor } from "react-aria-components";
+import { paletteTypes } from "@/app/data/paletteTypes";
 
 export const ColorPaletteContext = createContext(null);
 
 export function ColorPaletteContextProvider({ children }) {
   const [showHexColorPicker, setShowHexColorPicker] = useState(true);
-  const [showAdvancedPicker, setShowAdvancedPicker] = useState(false);
+  const [showAdvancedPickers, setShowAdvancedPickers] = useState(false);
   const pickerRef = useRef(null);
   const [hexColor, setHexColor] = useState("#e60073");
   const [ariaColor, setAriaColor] = useState(
@@ -32,6 +33,10 @@ export function ColorPaletteContextProvider({ children }) {
 
   const [myColorPickerOpen, setMyColorPickerOpen] = useState(false);
 
+  const [selectedPaletteType, setSelectedPaletteType] = useState(
+    paletteTypes[2].value || ""
+  );
+
   const values = {
     hexColor,
     setHexColor,
@@ -40,14 +45,16 @@ export function ColorPaletteContextProvider({ children }) {
     pickerRef,
     showHexColorPicker,
     setShowHexColorPicker,
-    showAdvancedPicker,
-    setShowAdvancedPicker,
+    showAdvancedPickers,
+    setShowAdvancedPickers,
     handleAriaColorChange,
     handleHexColorChange,
     leftPaletteAdjusterOpen,
     setLeftPaletteAdjusterOpen,
     myColorPickerOpen,
     setMyColorPickerOpen,
+    selectedPaletteType,
+    setSelectedPaletteType,
   };
 
   return (
