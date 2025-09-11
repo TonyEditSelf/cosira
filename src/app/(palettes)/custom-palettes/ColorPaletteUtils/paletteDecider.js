@@ -6,5 +6,7 @@ export default function paletteDecider(ariaColor, selectedPaletteType) {
     // console.log("ariaColor: ", ariaColor);
     return complementary(ariaColor);
   }
-  console.log("selectedPaletteType: ", selectedPaletteType);
+  if (process.env.NODE_ENV === "development") {
+    console.log("selectedPaletteType:", selectedPaletteType);
+  }
 }

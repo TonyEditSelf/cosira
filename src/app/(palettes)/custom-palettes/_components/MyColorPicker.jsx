@@ -2,7 +2,7 @@ import HexColors from "./Pickers/HexColors";
 import { easeIn, motion } from "framer-motion";
 import HslaColors from "./Pickers/HslaColors";
 
-import useClickOutsideRef from "@/hooks/useHooks";
+import { useClickOutsideRef } from "@/hooks/useHooks";
 import { useColorPaletteContext } from "../../ColorContext";
 
 export default function MyColorPicker() {

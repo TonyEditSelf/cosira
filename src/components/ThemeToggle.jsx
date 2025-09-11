@@ -1,14 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+// import { useState, useEffect } from "react";
 import { HiOutlineSun, HiOutlineMoon } from "react-icons/hi2";
 import { useTheme } from "next-themes";
+import { useMounted } from "@/hooks/useHooks";
 
 export default function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
+  const mounted = useMounted();
 
-  useEffect(() => setMounted(true), []);
+  const { theme, setTheme } = useTheme();
 
   if (!mounted) return null;
 

@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 
-export default function useClickOutsideRef(ref, handleEvent) {
+export function useClickOutsideRef(ref, handleEvent) {
   useEffect(() => {
     const handleClickOutsideRef = (event) => {
       if (ref.current && !ref.current.contains(event.target)) {
@@ -16,4 +16,10 @@ export default function useClickOutsideRef(ref, handleEvent) {
       document.removeEventListener("mousedown", handleClickOutsideRef);
     };
   });
+}
+
+export function useMounted() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  return mounted;
 }

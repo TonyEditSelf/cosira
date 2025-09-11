@@ -1,8 +1,15 @@
 "use client";
 
-import { createContext, useContext, useState, useRef, useMemo } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useRef,
+  useMemo,
+} from "react";
 import { parseColor } from "react-aria-components";
-import { paletteTypes } from "@/app/data/paletteTypes";
+// import { paletteTypes } from "@/app/data/paletteTypes";
 import paletteDecider from "./custom-palettes/ColorPaletteUtils/paletteDecider";
 
 export const ColorPaletteContext = createContext(null);
@@ -34,9 +41,15 @@ export function ColorPaletteContextProvider({ children }) {
 
   const [myColorPickerOpen, setMyColorPickerOpen] = useState(false);
 
-  const defaultPaletteType = paletteTypes?.[2]?.value ?? "complementary";
   const [selectedPaletteType, setSelectedPaletteType] =
-    useState(defaultPaletteType);
+    useState("complementary");
+
+  useEffect(() => {
+    // expose the state to window for debugging
+    window.selectedPaletteType = selectedPaletteType;
+    window.setSelectedPaletteType = setSelectedPaletteType;
+    console.log("Selected Palette Type:", selectedPaletteType);
+  }, [selectedPaletteType]);
 
   const palette = useMemo(() => {
     return paletteDecider(ariaColor, selectedPaletteType);
