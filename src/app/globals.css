@@ -13,7 +13,8 @@
   --brand: oklch(0.597 0.240854 2.4025);
   --mutedBrand: oklch(72.231% 0.06569 347.312);
   /* --navBorder: oklch(88.505% 0.01608 106.827); */
-  --navBorder: oklch(84.16% 0.01763 106.864);
+  /* --navBorder: oklch(84.16% 0.01763 106.864); */
+  --navBorder: oklch(71.228% 0.01555 106.876);
 
   /* UI neutrals */
   --muted: oklch(0.97 0.001 106.424); /* gray-200 */

@@ -6,13 +6,11 @@ import { AnimatePresence, easeIn, motion } from "framer-motion";
 import PageWrapper from "@/components/ui/PageWrapper";
 import MyColorPicker from "./_components/MyColorPicker";
 import { useColorPaletteContext } from "../ColorContext";
-import paletteDecider from "./ColorPaletteUtils/paletteDecider";
+// import paletteDecider from "./ColorPaletteUtils/paletteDecider";
 
 export default function CustomPalettes() {
-  const { leftPaletteAdjusterOpen, myColorPickerOpen, ariaColor, hexColor } =
+  const { leftPaletteAdjusterOpen, myColorPickerOpen, ariaColor, hexColor, palette } =
     useColorPaletteContext();
-
-  paletteDecider();
 
   return (
     <PageWrapper>
@@ -69,7 +67,13 @@ export default function CustomPalettes() {
             transition={{ duration: 0.3, ease: "easeIn" }}
             className="relative flex-1 ml-2 mr-2 mb-2 border rounded-md border-[var(--navBorder)] flex-col p-2"
           >
-            <div role="palette viewer" className="flex-1"></div>
+            <div role="palette viewer" className="flex-1">
+              {
+                palette.map((color, item)=> (
+                  <div key={item} style={{backgroundColor: color, width: '100px', height: '100px', border: '2px solid white'}}></div>
+                ))
+              }
+            </div>
 
             {/* MY COLORPICKER COMP  */}
             <AnimatePresence>

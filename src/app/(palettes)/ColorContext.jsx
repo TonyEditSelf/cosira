@@ -44,16 +44,11 @@ export function ColorPaletteContextProvider({ children }) {
   const [selectedPaletteType, setSelectedPaletteType] =
     useState("complementary");
 
-  useEffect(() => {
-    // expose the state to window for debugging
-    window.selectedPaletteType = selectedPaletteType;
-    window.setSelectedPaletteType = setSelectedPaletteType;
-    console.log("Selected Palette Type:", selectedPaletteType);
-  }, [selectedPaletteType]);
-
   const palette = useMemo(() => {
     return paletteDecider(ariaColor, selectedPaletteType);
   }, [ariaColor, selectedPaletteType]);
+
+  //  console.log("palette: ", palette);
 
   const values = {
     hexColor,
