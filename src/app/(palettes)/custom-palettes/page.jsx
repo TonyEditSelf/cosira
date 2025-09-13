@@ -9,8 +9,13 @@ import { useColorPaletteContext } from "../ColorContext";
 // import paletteDecider from "./ColorPaletteUtils/paletteDecider";
 
 export default function CustomPalettes() {
-  const { leftPaletteAdjusterOpen, myColorPickerOpen, ariaColor, hexColor, palette } =
-    useColorPaletteContext();
+  const {
+    leftPaletteAdjusterOpen,
+    myColorPickerOpen,
+    ariaColor,
+    hexColor,
+    palette,
+  } = useColorPaletteContext();
 
   return (
     <PageWrapper>
@@ -68,11 +73,17 @@ export default function CustomPalettes() {
             className="relative flex-1 ml-2 mr-2 mb-2 border rounded-md border-[var(--navBorder)] flex-col p-2"
           >
             <div role="palette viewer" className="flex-1">
-              {
-                palette.map((color, item)=> (
-                  <div key={item} style={{backgroundColor: color, width: '100px', height: '100px', border: '2px solid white'}}></div>
-                ))
-              }
+              {/* {palette.map((color, item) => (
+                <div
+                  key={item}
+                  style={{
+                    backgroundColor: color,
+                    width: "100px",
+                    height: "100px",
+                    border: "2px solid white",
+                  }}
+                ></div>
+              ))} */}
             </div>
 
             {/* MY COLORPICKER COMP  */}
