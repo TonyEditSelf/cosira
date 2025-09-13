@@ -22,34 +22,24 @@ export function ColorPaletteContextProvider({ children }) {
   const [ariaColor, setAriaColor] = useState(
     parseColor("hsla(330, 100%, 45.1%, 1)")
   );
-
-  // const handleAriaColorChange = (newAriaColor) => {
-  //   const hslaColor = parseColor(newAriaColor.toString("hsla"));
-  //   setAriaColor(hslaColor);
-  //   const nexHex = newAriaColor.toString("hex");
-  //   setHexColor(nexHex);
-  // };
-
   const handleAriaColorChange = (newAriaColor) => {
-    setAriaColor(newAriaColor); // save the Color object
+    const hslaColor = parseColor(newAriaColor.toString("hsla"));
+    setAriaColor(hslaColor);
+
     const nexHex = newAriaColor.toString("hex");
-    setHexColor(nexHex); // save the matching hex string
+    setHexColor(nexHex);
   };
+
+  console.log(ariaColor.getColorSpace());
+
+  console.log("ariaColor: ", ariaColor);
 
   const handleHexColorChange = (newHexColor) => {
-    setHexColor(newHexColor); // save the string
-    const hslaColor = parseColor(newHexColor);
-    setAriaColor(hslaColor); // parse back into a Color object
+    setHexColor(newHexColor);
+
+    const hslaColor = parseColor(parseColor(newHexColor).toString("hsla"));
+    setAriaColor(hslaColor);
   };
-
-  console.log("oklchColor: ", typeof hexColor);
-
-  // const handleHexColorChange = (newHexColor) => {
-  //   setHexColor(newHexColor);
-
-  //   const hslaColor = parseColor(parseColor(newHexColor).toString("hsla"));
-  //   setAriaColor(hslaColor);
-  // };
 
   const [leftPaletteAdjusterOpen, setLeftPaletteAdjusterOpen] = useState(false);
 
