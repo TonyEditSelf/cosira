@@ -52,20 +52,11 @@ export function ColorPaletteContextProvider({ children }) {
     return paletteDecider(oklchAriaString, selectedPaletteType);
   }, [ariaColor, selectedPaletteType]);
 
-  // const [lightChannel, setLightChannel] = useState(0);
-  // const [chromeChannel, setChromeChannel] = useState(0);
-  // const [hueChannel, setHueChannel] = useState(0);
-  // const [alphChannel, setAlphChannel] = useState(1);
+  const [paletteObject, setPaletteObject] = useState({});
 
   const values = {
-    // lightChannel,
-    // setLightChannel,
-    // chromeChannel,
-    // setChromeChannel,
-    // hueChannel,
-    // setHueChannel,
-    // alphChannel,
-    // setAlphChannel,
+    paletteObject,
+    setPaletteObject,
     hexColor,
     setHexColor,
     ariaColor,

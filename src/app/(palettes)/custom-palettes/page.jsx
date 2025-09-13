@@ -1,11 +1,12 @@
 "use client";
 
-import { MySlider } from "./_components/MySlider";
+import ColorSliderComp from "./_components/Pickers/PickerComps/ColorSliderComp";
 import CustomPalToolbar from "./_components/CustomPalToolbar";
 import { AnimatePresence, easeIn, motion } from "framer-motion";
 import PageWrapper from "@/components/ui/PageWrapper";
 import MyColorPicker from "./_components/MyColorPicker";
 import { useColorPaletteContext } from "../ColorContext";
+import { useEffect } from "react";
 
 // import paletteDecider from "./ColorPaletteUtils/paletteDecider";
 
@@ -14,15 +15,24 @@ export default function CustomPalettes() {
     leftPaletteAdjusterOpen,
     myColorPickerOpen,
     palette,
-    lightChannel,
-    setLightChannel,
-    chromeChannel,
-    setChromeChannel,
-    hueChannel,
-    setHueChannel,
-    alphChannel,
-    setAlphChannel,
+    paletteObject,
+    setPaletteObject,
   } = useColorPaletteContext();
+
+  useEffect(() => {
+    const newObj = {};
+
+    palette.colorObjectsArray.map(({ l, c, h, a }, i) => {
+      if (!a) {
+        a = 1;
+      }
+      return (newObj[i] = { L: l, C: c, H: h, A: a });
+    });
+
+    setPaletteObject(newObj);
+  }, [palette]);
+
+  console.log(paletteObject);
 
   return (
     <PageWrapper>
@@ -35,40 +45,35 @@ export default function CustomPalettes() {
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: -200, opacity: 0 }}
                 transition={{ duration: 0.3, ease: easeIn }}
-                className="flex flex-col items-center mb-2 ml-2 mr-0 pt-5 px-10 w-52 rounded-md border border-[var(--navBorder)]"
+                className="flex flex-col items-center mb-2 ml-2 mr-0 pt-5 px-6 w-52 rounded-md border border-[var(--navBorder)]"
               >
-                <div className="flex flex-col gap-4">
-                  <MySlider
-                    label="Hue"
-                    defaultValue={180}
-                    minValue={0}
-                    maxValue={360}
-                    step={1}
-                    className="flex flex-col items-center w-32"
+                <div className="flex flex-col gap-4 w-full">
+                  <ColorSliderComp
+                    channel="hue"
+                    label="H"
+                    checkerboard={false}
+                    className="w-full"
                   />
-                  <MySlider
-                    label="Lightness"
-                    defaultValue={0.5}
-                    minValue={0}
-                    maxValue={1}
-                    step={0.1}
-                    className="flex flex-col items-center w-32"
+
+                  <ColorSliderComp
+                    channel="saturation"
+                    label="S"
+                    checkerboard={false}
+                    className="w-full"
                   />
-                  <MySlider
-                    label="Chroma"
-                    defaultValue={0.5}
-                    minValue={0}
-                    maxValue={1}
-                    step={0.1}
-                    className="flex flex-col items-center w-32"
+
+                  <ColorSliderComp
+                    channel="lightness"
+                    label="L"
+                    checkerboard={false}
+                    className="w-full"
                   />
-                  <MySlider
-                    label="Alpha"
-                    defaultValue={0.5}
-                    minValue={0}
-                    maxValue={1}
-                    step={0.1}
-                    className="flex flex-col items-center w-32"
+
+                  <ColorSliderComp
+                    channel="alpha"
+                    label="A"
+                    checkerboard={true}
+                    className="w-full"
                   />
                 </div>
               </motion.aside>
@@ -90,7 +95,20 @@ export default function CustomPalettes() {
                     key={item}
                     className="h-full w-32 flex flex-col justify-center items-center flex-1"
                     style={{ backgroundColor: color }}
-                  ></div>
+                  >
+                    {color}
+
+                    {Object.entries(paletteObject).map(([key, palObj]) => (
+                      <div key={key}>
+                        <ColorSliderComp
+                          channel="hue"
+                          label="H"
+                          checkerboard={false}
+                          className="w-full border-2 border-y-amber-700"
+                        />
+                      </div>
+                    ))}
+                  </div>
                 );
               })}
             </div>
