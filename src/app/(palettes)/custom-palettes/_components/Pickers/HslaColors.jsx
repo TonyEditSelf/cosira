@@ -12,7 +12,7 @@ import ColorAreaComp from "./PickerComps/ColorAreaComp";
 import ColorSliderComp from "./PickerComps/ColorSliderComp";
 
 export default function HslaColors() {
-  const { handleAriaColorChange, ariaColor } = useColorPaletteContext();
+  // const { handleAriaColorChange, ariaColor } = useColorPaletteContext();
 
   return (
     <div className="w-full flex flex-col gap-5 p-2">

@@ -18,43 +18,54 @@ export function ColorPaletteContextProvider({ children }) {
   const [showHexColorPicker, setShowHexColorPicker] = useState(true);
   const [showAdvancedPickers, setShowAdvancedPickers] = useState(false);
   const pickerRef = useRef(null);
-  const [hexColor, setHexColor] = useState("#e60073");
+
+  const [leftPaletteAdjusterOpen, setLeftPaletteAdjusterOpen] = useState(false);
+  const [myColorPickerOpen, setMyColorPickerOpen] = useState(false);
+  const [selectedPaletteType, setSelectedPaletteType] =
+    useState("complementary");
+
+  const [oklchAriaString, setOklchAriaString] = useState(
+    "oklch(0.597 0.240854 2.4025)"
+  );
+
+  const [hexColor, setHexColor] = useState("#e60073FF");
   const [ariaColor, setAriaColor] = useState(
     parseColor("hsla(330, 100%, 45.1%, 1)")
   );
+
   const handleAriaColorChange = (newAriaColor) => {
     const hslaColor = parseColor(newAriaColor.toString("hsla"));
     setAriaColor(hslaColor);
-
+    setOklchAriaString(ariaColor.toString("hexa"));
     const nexHex = newAriaColor.toString("hex");
     setHexColor(nexHex);
   };
 
-  console.log(ariaColor.getColorSpace());
-
-  console.log("ariaColor: ", ariaColor);
-
   const handleHexColorChange = (newHexColor) => {
     setHexColor(newHexColor);
-
     const hslaColor = parseColor(parseColor(newHexColor).toString("hsla"));
     setAriaColor(hslaColor);
+    setOklchAriaString(ariaColor.toString("hexa"));
   };
 
-  const [leftPaletteAdjusterOpen, setLeftPaletteAdjusterOpen] = useState(false);
-
-  const [myColorPickerOpen, setMyColorPickerOpen] = useState(false);
-
-  const [selectedPaletteType, setSelectedPaletteType] =
-    useState("complementary");
-
   const palette = useMemo(() => {
-    return paletteDecider(ariaColor, selectedPaletteType);
+    return paletteDecider(oklchAriaString, selectedPaletteType);
   }, [ariaColor, selectedPaletteType]);
 
-  //  console.log("palette: ", palette);
+  // const [lightChannel, setLightChannel] = useState(0);
+  // const [chromeChannel, setChromeChannel] = useState(0);
+  // const [hueChannel, setHueChannel] = useState(0);
+  // const [alphChannel, setAlphChannel] = useState(1);
 
   const values = {
+    // lightChannel,
+    // setLightChannel,
+    // chromeChannel,
+    // setChromeChannel,
+    // hueChannel,
+    // setHueChannel,
+    // alphChannel,
+    // setAlphChannel,
     hexColor,
     setHexColor,
     ariaColor,
@@ -73,6 +84,7 @@ export function ColorPaletteContextProvider({ children }) {
     selectedPaletteType,
     setSelectedPaletteType,
     palette,
+    oklchAriaString,
   };
 
   return (

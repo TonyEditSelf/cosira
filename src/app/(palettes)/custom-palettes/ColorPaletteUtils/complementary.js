@@ -1,42 +1,34 @@
-import { converter, clampChroma, formatter, displayable } from "culori";
+import { converter, clampChroma, formatCss, displayable } from "culori";
 
-export default function complementary(ariaColor) {
-  // console.log("ariaColor: ", ariaColor);
-
-  // const ariaColorOklch = ariaColor.toString("oklch");
-
-  // console.log("ariaColorOklch: ", ariaColorOklch);
-
+export default function complementary(oklchAriaString) {
   const toOKLCH = converter("oklch");
 
-  const baseColor = toOKLCH(ariaColor);
+  const baseColor = toOKLCH(oklchAriaString);
 
-  // console.log("baseColor: ", baseColor);
+  const compColor = { ...baseColor, h: (baseColor.h + 180) % 360 };
+  const ableToShowCompColor = displayable(compColor);
+  const ableToShowBaseColor = displayable(baseColor);
 
-  // console.log("ariaColor: ", ariaColor);
-  // console.log("basecolor: ", baseColor);
+  let showableCompColor;
+  let showableBaseColor;
 
-  const compColor = { ...baseColor, hue: (baseColor.hue + 180) % 360 };
-  const ableToShowColor = displayable(compColor);
-
-  let showableColor;
-
-  if (!ableToShowColor) {
-    showableColor = clampChroma(compColor);
+  if (!ableToShowCompColor) {
+    showableCompColor = clampChroma(compColor);
   } else {
-    showableColor = compColor;
+    showableCompColor = compColor;
   }
 
-  // const baseColorString = format(baseColor, "oklch");
-  // const showableColorString = format(compColor, "oklch");
+  if (!ableToShowBaseColor) {
+    showableBaseColor = clampChroma(baseColor);
+  } else {
+    showableBaseColor = baseColor;
+  }
 
-  // console.log("baseColorString: ", baseColorString);
-  // console.log("showableColorString: ", showableColorString);
+  return {
+    colorStringsArray: [
+      formatCss(showableBaseColor),
+      formatCss(showableCompColor),
+    ],
+    colorObjectsArray: [showableBaseColor, showableCompColor],
+  };
 }
-
-// console.log('ariacolor: ',  ariaColor);
-
-// console.log('h: ', baseColor.hue);
-// console.log('l: ', baseColor.lightness);
-// console.log('c: ', baseColor.saturation);
-// console.log('a: ', baseColor.alpha);

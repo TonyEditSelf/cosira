@@ -1,14 +1,11 @@
 import complementary from "./complementary";
 
-export default function paletteDecider(ariaColor, selectedPaletteType) {
-  if (selectedPaletteType === "complementary") {    
-    
-    const palette =  complementary(ariaColor);
+export default function paletteDecider(oklchAriaString, selectedPaletteType) {
+  if (selectedPaletteType === "complementary") {
+    const palette = complementary(oklchAriaString);
 
-return palette;
-
+    return palette;
   } else {
     return null;
   }
-
 }

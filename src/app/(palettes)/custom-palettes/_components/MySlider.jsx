@@ -8,14 +8,21 @@ import {
   SliderTrack,
 } from "react-aria-components";
 
-export function MySlider({ label, defaultValue, minValue, maxValue, step }) {
+export function MySlider({
+  label,
+  defaultValue,
+  minValue,
+  maxValue,
+  step,
+  className,
+}) {
   return (
     <Slider
       minValue={minValue}
       maxValue={maxValue}
       step={step}
       defaultValue={defaultValue}
-      className="flex flex-col items-center w-64"
+      className={className}
     >
       <div className="flex justify-between w-full mb-2">
         <Label className="text-sm font-semibold text-[var(--foreground)]">
@@ -23,8 +30,7 @@ export function MySlider({ label, defaultValue, minValue, maxValue, step }) {
         </Label>
         <SliderOutput className="text-sm font-bold text-[var(--brand)]" />
       </div>
-      <SliderTrack className="w-full h-2 bg-[var(--navBorder)] rounded-full relative">
-        {/* bg-gray-200 */}
+      <SliderTrack className="w-full h-2 bg-black border border-white rounded-full relative">
         <SliderThumb
           className="
             h-4 w-4 rounded-full border-2 border-[var(--background)] bg-[var(--brand)] transition-all
