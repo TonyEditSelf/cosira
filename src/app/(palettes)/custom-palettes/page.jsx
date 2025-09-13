@@ -1,6 +1,6 @@
 "use client";
 
-import ColorSliderComp from "./_components/Pickers/PickerComps/ColorSliderComp";
+import ColorSliderComp from "./_components/Pickers/PickerComps/HSLColorSliderComp";
 import CustomPalToolbar from "./_components/CustomPalToolbar";
 import { AnimatePresence, easeIn, motion } from "framer-motion";
 import PageWrapper from "@/components/ui/PageWrapper";

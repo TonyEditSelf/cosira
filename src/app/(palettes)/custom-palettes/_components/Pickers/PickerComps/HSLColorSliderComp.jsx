@@ -7,7 +7,7 @@ import {
 } from "react-aria-components";
 import { useColorPaletteContext } from "@/app/(palettes)/ColorContext";
 
-export default function ColorSliderComp({ channel, label, checkerboard }) {
+export default function HSLColorSliderComp({ channel, label, checkerboard }) {
   const { ariaColor, handleAriaColorChange } = useColorPaletteContext();
 
   return (

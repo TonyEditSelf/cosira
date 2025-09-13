@@ -24,9 +24,7 @@ export function ColorPaletteContextProvider({ children }) {
   const [selectedPaletteType, setSelectedPaletteType] =
     useState("complementary");
 
-  const [oklchAriaString, setOklchAriaString] = useState(
-    "oklch(0.597 0.240854 2.4025)"
-  );
+  const [ariaString, setAriaString] = useState("oklch(0.597 0.240854 2.4025)");
 
   const [hexColor, setHexColor] = useState("#e60073FF");
   const [ariaColor, setAriaColor] = useState(
@@ -36,7 +34,7 @@ export function ColorPaletteContextProvider({ children }) {
   const handleAriaColorChange = (newAriaColor) => {
     const hslaColor = parseColor(newAriaColor.toString("hsla"));
     setAriaColor(hslaColor);
-    setOklchAriaString(ariaColor.toString("hexa"));
+    setAriaString(ariaColor.toString("hexa"));
     const nexHex = newAriaColor.toString("hex");
     setHexColor(nexHex);
   };
@@ -45,11 +43,11 @@ export function ColorPaletteContextProvider({ children }) {
     setHexColor(newHexColor);
     const hslaColor = parseColor(parseColor(newHexColor).toString("hsla"));
     setAriaColor(hslaColor);
-    setOklchAriaString(ariaColor.toString("hexa"));
+    setAriaString(ariaColor.toString("hexa"));
   };
 
   const palette = useMemo(() => {
-    return paletteDecider(oklchAriaString, selectedPaletteType);
+    return paletteDecider(ariaString, selectedPaletteType);
   }, [ariaColor, selectedPaletteType]);
 
   const [paletteObject, setPaletteObject] = useState({});
@@ -75,7 +73,8 @@ export function ColorPaletteContextProvider({ children }) {
     selectedPaletteType,
     setSelectedPaletteType,
     palette,
-    oklchAriaString,
+    ariaString,
+    setAriaString,
   };
 
   return (

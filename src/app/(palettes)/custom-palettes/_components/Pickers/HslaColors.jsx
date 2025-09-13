@@ -2,11 +2,9 @@ import { useColorPaletteContext } from "@/app/(palettes)/ColorContext";
 import ColorFieldComp from "./PickerComps/ColorFieldComp";
 import ColorWheelComp from "./PickerComps/ColorWheelComp";
 import ColorAreaComp from "./PickerComps/ColorAreaComp";
-import ColorSliderComp from "./PickerComps/ColorSliderComp";
+import HSLColorSliderComp from "./PickerComps/HSLColorSliderComp";
 
 export default function HslaColors() {
-  const { handleAriaColorChange, ariaColor } = useColorPaletteContext();
-
   return (
     <div className="w-full flex flex-col gap-5 p-2">
       <div className="flex justify-end items-center gap-10 w-full">
@@ -31,17 +29,17 @@ export default function HslaColors() {
       </div>
       {/* -------------- COLOR SLIDERS ------------- */}
       <div className="flex flex-col gap-2">
-        <ColorSliderComp channel="hue" label="Hue" checkerboard={false} />
+        <HSLColorSliderComp channel="hue" label="Hue" checkerboard={false} />
 
-        <ColorSliderComp channel="saturation" label="Saturation" />
+        <HSLColorSliderComp channel="saturation" label="Saturation" />
 
-        <ColorSliderComp
+        <HSLColorSliderComp
           channel="lightness"
           label="Lightness"
           checkerboard={false}
         />
 
-        <ColorSliderComp channel="alpha" label="Alpha" checkerboard={true} />
+        <HSLColorSliderComp channel="alpha" label="Alpha" checkerboard={true} />
       </div>
     </div>
   );
