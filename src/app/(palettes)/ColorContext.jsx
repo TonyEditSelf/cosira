@@ -9,6 +9,7 @@ import {
   useMemo,
 } from "react";
 import { parseColor } from "react-aria-components";
+import { formatHex8 } from "culori";
 // import { paletteTypes } from "@/app/data/paletteTypes";
 import paletteDecider from "./custom-palettes/ColorPaletteUtils/paletteDecider";
 
@@ -34,7 +35,7 @@ export function ColorPaletteContextProvider({ children }) {
   const handleAriaColorChange = (newAriaColor) => {
     const hslaColor = parseColor(newAriaColor.toString("hsla"));
     setAriaColor(hslaColor);
-    setAriaString(ariaColor.toString("hexa"));
+    setAriaString(newAriaColor.toString("hexa"));
     const nexHex = newAriaColor.toString("hex");
     setHexColor(nexHex);
   };
@@ -43,7 +44,7 @@ export function ColorPaletteContextProvider({ children }) {
     setHexColor(newHexColor);
     const hslaColor = parseColor(parseColor(newHexColor).toString("hsla"));
     setAriaColor(hslaColor);
-    setAriaString(ariaColor.toString("hexa"));
+    setAriaString(newHexColor.toString("hexa"));
   };
 
   const palette = useMemo(() => {
@@ -52,7 +53,20 @@ export function ColorPaletteContextProvider({ children }) {
 
   const [paletteObject, setPaletteObject] = useState({});
 
+  const [oklchLightness, setOklchLightness] = useState();
+  const [oklchChroma, setOklchChroma] = useState();
+  const [oklchHue, setOklchHue] = useState();
+  const [oklchAlpha, setOklchAlpha] = useState();
+
   const values = {
+    oklchAlpha,
+    setOklchAlpha,
+    oklchHue,
+    setOklchHue,
+    oklchChroma,
+    setOklchChroma,
+    oklchLightness,
+    setOklchLightness,
     paletteObject,
     setPaletteObject,
     hexColor,

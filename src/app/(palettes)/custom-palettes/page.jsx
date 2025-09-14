@@ -6,12 +6,23 @@ import { AnimatePresence, easeIn, motion } from "framer-motion";
 import PageWrapper from "@/components/ui/PageWrapper";
 import MyColorPicker from "./_components/MyColorPicker";
 import { useColorPaletteContext } from "../ColorContext";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import OKLCHColorSliderComp from "./_components/Pickers/PickerComps/OKLCHColorSliderComp";
+import { parseColor } from "react-aria-components";
+import { formatHex8 } from "culori";
 
 // import paletteDecider from "./ColorPaletteUtils/paletteDecider";
 
 export default function CustomPalettes() {
   const {
+    oklchAlpha,
+    oklchHue,
+    oklchChroma,
+    oklchLightness,
+    setOklchAlpha,
+    setOklchHue,
+    setOklchChroma,
+    setOklchLightness,
     leftPaletteAdjusterOpen,
     myColorPickerOpen,
     palette,
@@ -21,18 +32,28 @@ export default function CustomPalettes() {
 
   useEffect(() => {
     const newObj = {};
-
-    palette.colorObjectsArray.map(({ l, c, h, a }, i) => {
-      if (!a) {
-        a = 1;
+    palette.colorObjectsArray.map((colorObj, i) => {
+      if (!colorObj.alpha) {
+        colorObj.alpha = 1;
       }
-      return (newObj[i] = { L: l, C: c, H: h, A: a });
+
+      newObj[i] = {
+        mode: colorObj.mode,
+        l: colorObj.l,
+        c: colorObj.c,
+        h: colorObj.h,
+        alpha: colorObj.alpha,
+      };
+
+      return newObj[i];
     });
 
     setPaletteObject(newObj);
   }, [palette]);
 
-  console.log(paletteObject);
+  // if (paletteObject && paletteObject[0]) {
+  //   console.log(paletteObject[0].mode);
+  // }
 
   return (
     <PageWrapper>
@@ -90,6 +111,8 @@ export default function CustomPalettes() {
           >
             <div role="palette viewer" className="flex h-full">
               {palette.colorStringsArray.map((color, item) => {
+                // const {l, c, h, alpha} = paletteObject[item];
+
                 return (
                   <div
                     key={item}
@@ -98,16 +121,19 @@ export default function CustomPalettes() {
                   >
                     {color}
 
-                    {Object.entries(paletteObject).map(([key, palObj]) => (
-                      <div key={key}>
-                        <ColorSliderComp
-                          channel="hue"
-                          label="H"
-                          checkerboard={false}
-                          className="w-full border-2 border-y-amber-700"
-                        />
-                      </div>
-                    ))}
+                    {/* <OKLCHColorSliderComp
+                      value={ariaColor}
+                      onChange={(newAriaColor) => {
+                        const newColorObj = oklch(newAriaColor.toString());
+                        const newPalette = [...palette.colorObjectsArray];
+                        newPalette[item] = newColorObj;
+                        setPaletteObject(newPalette);
+                      }}
+                      channel="hue"
+                      label="H"
+                      checkerboard={false}
+                      className="w-full border-2 border-y-amber-700"
+                    /> */}
                   </div>
                 );
               })}
