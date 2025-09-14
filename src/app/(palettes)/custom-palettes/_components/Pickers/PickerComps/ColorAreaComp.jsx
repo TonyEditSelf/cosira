@@ -1,13 +1,14 @@
 import { ColorThumb, ColorArea } from "react-aria-components";
 import { useColorPaletteContext } from "@/app/(palettes)/ColorContext";
 export default function ColorAreaComp() {
-  const { ariaColor, handleAriaColorChange } = useColorPaletteContext();
+  const { hslaColorObjectState, handleHslaColorChange } =
+    useColorPaletteContext();
 
   return (
     <>
       <ColorArea
-        value={ariaColor}
-        onChange={handleAriaColorChange}
+        value={hslaColorObjectState}
+        onChange={handleHslaColorChange}
         xChannel="saturation"
         yChannel="lightness"
         width={200}

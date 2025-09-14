@@ -2,14 +2,15 @@ import { Label, ColorField, Input } from "react-aria-components";
 import { useColorPaletteContext } from "@/app/(palettes)/ColorContext";
 
 export default function ColorFieldComp({ label, colorSpace, channel = "" }) {
-  const { ariaColor, handleAriaColorChange } = useColorPaletteContext();
+  const { hslaColorObjectState, handleHslaColorChange } =
+    useColorPaletteContext();
 
   return (
     <>
       <ColorField
         label="label"
-        value={ariaColor}
-        onChange={handleAriaColorChange}
+        value={hslaColorObjectState}
+        onChange={handleHslaColorChange}
         colorSpace={colorSpace}
         channel={channel}
       >

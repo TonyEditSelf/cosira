@@ -1,16 +1,7 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  useRef,
-  useMemo,
-} from "react";
+import { createContext, useContext, useState, useRef, useEffect } from "react";
 import { parseColor } from "react-aria-components";
-import { formatHex8 } from "culori";
-// import { paletteTypes } from "@/app/data/paletteTypes";
 import paletteDecider from "./custom-palettes/ColorPaletteUtils/paletteDecider";
 
 export const ColorPaletteContext = createContext(null);
@@ -24,71 +15,65 @@ export function ColorPaletteContextProvider({ children }) {
   const [myColorPickerOpen, setMyColorPickerOpen] = useState(false);
   const [selectedPaletteType, setSelectedPaletteType] =
     useState("complementary");
+  let [palette, setPalette] = useState();
 
-  const [ariaString, setAriaString] = useState("oklch(0.597 0.240854 2.4025)");
+  let parsedColorObject = parseColor("#e60073FF");
+  let hslaColorObject = parsedColorObject.toFormat("hsla");
 
-  const [hexColor, setHexColor] = useState("#e60073FF");
-  const [ariaColor, setAriaColor] = useState(
-    parseColor("hsla(330, 100%, 45.1%, 1)")
-  );
+  const [hslaColorObjectState, setHslaColorObjectState] =
+    useState(hslaColorObject);
 
-  const handleAriaColorChange = (newAriaColor) => {
-    const hslaColor = parseColor(newAriaColor.toString("hsla"));
-    setAriaColor(hslaColor);
-    setAriaString(newAriaColor.toString("hexa"));
-    const nexHex = newAriaColor.toString("hex");
-    setHexColor(nexHex);
-  };
+  const [hexColorState, setHexColorState] = useState("#e60073FF");
 
-  const handleHexColorChange = (newHexColor) => {
-    setHexColor(newHexColor);
-    const hslaColor = parseColor(parseColor(newHexColor).toString("hsla"));
-    setAriaColor(hslaColor);
-    setAriaString(newHexColor.toString("hexa"));
-  };
+  function handleHexcColorChange(newHexColor) {
+    setHexColorState(newHexColor);
+    let parsedColorObject = parseColor(hexColorState);
+    let hslaColorObject = parsedColorObject.toFormat("hsla");
 
-  const palette = useMemo(() => {
-    return paletteDecider(ariaString, selectedPaletteType);
-  }, [ariaColor, selectedPaletteType]);
+    setHslaColorObjectState(hslaColorObject);
+  }
 
-  const [paletteObject, setPaletteObject] = useState({});
+  function handleHslaColorChange(newHslaColor) {
+    setHslaColorObjectState(newHslaColor);
+    const ariaHSLString = `hsla(${newHslaColor.hue}, ${newHslaColor.saturation}%, ${newHslaColor.lightness}%, ${newHslaColor.alpha})`;
 
-  const [oklchLightness, setOklchLightness] = useState();
-  const [oklchChroma, setOklchChroma] = useState();
-  const [oklchHue, setOklchHue] = useState();
-  const [oklchAlpha, setOklchAlpha] = useState();
+    const colorObj = parseColor(ariaHSLString);
+    const hexString = colorObj.toString("hexa");
+    setHexColorState(hexString);
+  }
+
+  useEffect(() => {
+    const pal = paletteDecider(hexColorState, selectedPaletteType);
+    setPalette(pal);
+  }, [hexColorState, selectedPaletteType]);
+
+  function updateOklchPalette(index, channel, newValue) {
+    setPalette((prev) =>
+      prev.map((color, i) =>
+        i === index ? { ...color, [channel]: parseFloat(newValue) } : color
+      )
+    );
+  }
 
   const values = {
-    oklchAlpha,
-    setOklchAlpha,
-    oklchHue,
-    setOklchHue,
-    oklchChroma,
-    setOklchChroma,
-    oklchLightness,
-    setOklchLightness,
-    paletteObject,
-    setPaletteObject,
-    hexColor,
-    setHexColor,
-    ariaColor,
-    setAriaColor,
+    updateOklchPalette,
+    palette,
+    setPalette,
+    hexColorState,
+    handleHexcColorChange,
+    handleHslaColorChange,
+    hslaColorObjectState,
     pickerRef,
     showHexColorPicker,
     setShowHexColorPicker,
     showAdvancedPickers,
     setShowAdvancedPickers,
-    handleAriaColorChange,
-    handleHexColorChange,
     leftPaletteAdjusterOpen,
     setLeftPaletteAdjusterOpen,
     myColorPickerOpen,
     setMyColorPickerOpen,
     selectedPaletteType,
     setSelectedPaletteType,
-    palette,
-    ariaString,
-    setAriaString,
   };
 
   return (

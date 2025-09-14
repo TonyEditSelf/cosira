@@ -1,10 +1,8 @@
-import complementary from "./complementary";
+import complementaryPalGen from "./complementaryPalGen";
 
-export default function paletteDecider(oklchAriaString, selectedPaletteType) {
+export default function paletteDecider(hexColorState, selectedPaletteType) {
   if (selectedPaletteType === "complementary") {
-    const palette = complementary(oklchAriaString);
-
-    return palette;
+    return complementaryPalGen(hexColorState);
   } else {
     return null;
   }

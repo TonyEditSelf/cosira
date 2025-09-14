@@ -1,17 +1,22 @@
-import { ColorWheel, ColorWheelTrack, ColorThumb } from "react-aria-components";
+import {
+  ColorWheel,
+  ColorWheelTrack,
+  ColorThumb,
+  parseColor,
+} from "react-aria-components";
 import { useColorPaletteContext } from "@/app/(palettes)/ColorContext";
 
 export default function ColorWheelComp() {
-  const { ariaColor, handleAriaColorChange } = useColorPaletteContext();
+  const { hslaColorObjectState, handleHslaColorChange } =
+    useColorPaletteContext();
 
   return (
     <>
       <ColorWheel
-        value={ariaColor}
-        onChange={handleAriaColorChange}
-        // onChangeEnd={onChangeEnd}
+        value={hslaColorObjectState}
+        onChange={handleHslaColorChange}
         outerRadius={80}
-        innerRadius={0}
+        innerRadius={20}
       >
         <ColorWheelTrack />
         <ColorThumb className="border-2 border-black size-4 rounded-full" />

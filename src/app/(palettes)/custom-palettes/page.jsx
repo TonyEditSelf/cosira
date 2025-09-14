@@ -1,59 +1,29 @@
 "use client";
 
-import ColorSliderComp from "./_components/Pickers/PickerComps/HSLColorSliderComp";
+import ColorSliderComp from "./_components/Pickers/PickerComps/HslaColorSliderComp";
 import CustomPalToolbar from "./_components/CustomPalToolbar";
 import { AnimatePresence, easeIn, motion } from "framer-motion";
 import PageWrapper from "@/components/ui/PageWrapper";
 import MyColorPicker from "./_components/MyColorPicker";
 import { useColorPaletteContext } from "../ColorContext";
-import { useEffect, useState } from "react";
-import OKLCHColorSliderComp from "./_components/Pickers/PickerComps/OKLCHColorSliderComp";
-import { parseColor } from "react-aria-components";
-import { formatHex8 } from "culori";
-
-// import paletteDecider from "./ColorPaletteUtils/paletteDecider";
+import { formatCss, formatHex8 } from "culori";
+import NumberFieldcComp from "./_components/NumberFieldcComp";
+import { useEffect } from "react";
 
 export default function CustomPalettes() {
   const {
-    oklchAlpha,
-    oklchHue,
-    oklchChroma,
-    oklchLightness,
-    setOklchAlpha,
-    setOklchHue,
-    setOklchChroma,
-    setOklchLightness,
     leftPaletteAdjusterOpen,
     myColorPickerOpen,
     palette,
-    paletteObject,
-    setPaletteObject,
+    setPalette,
+    updateOklchPalette,
   } = useColorPaletteContext();
 
   useEffect(() => {
-    const newObj = {};
-    palette.colorObjectsArray.map((colorObj, i) => {
-      if (!colorObj.alpha) {
-        colorObj.alpha = 1;
-      }
-
-      newObj[i] = {
-        mode: colorObj.mode,
-        l: colorObj.l,
-        c: colorObj.c,
-        h: colorObj.h,
-        alpha: colorObj.alpha,
-      };
-
-      return newObj[i];
+    palette?.map((color, i) => {
+      console.log(color);
     });
-
-    setPaletteObject(newObj);
-  }, [palette]);
-
-  // if (paletteObject && paletteObject[0]) {
-  //   console.log(paletteObject[0].mode);
-  // }
+  });
 
   return (
     <PageWrapper>
@@ -110,30 +80,51 @@ export default function CustomPalettes() {
             className="relative flex-1 ml-2 mr-2 mb-2 border rounded-md border-[var(--navBorder)] flex-col p-2"
           >
             <div role="palette viewer" className="flex h-full">
-              {palette.colorStringsArray.map((color, item) => {
-                // const {l, c, h, alpha} = paletteObject[item];
+              {palette?.map((color, i) => {
+                const CssColor = formatCss(color);
+                const hexColorString = formatHex8(color);
+                const { l, c, h, alpha = 1 } = color;
+                // console.log(l, c, h, a);
 
                 return (
                   <div
-                    key={item}
-                    className="h-full w-32 flex flex-col justify-center items-center flex-1"
-                    style={{ backgroundColor: color }}
+                    className="h-full flex flex-col justify-center items-center flex-1 w-32"
+                    key={i}
+                    style={{ backgroundColor: CssColor }}
                   >
-                    {color}
-
-                    {/* <OKLCHColorSliderComp
-                      value={ariaColor}
-                      onChange={(newAriaColor) => {
-                        const newColorObj = oklch(newAriaColor.toString());
-                        const newPalette = [...palette.colorObjectsArray];
-                        newPalette[item] = newColorObj;
-                        setPaletteObject(newPalette);
-                      }}
-                      channel="hue"
+                    <NumberFieldcComp
+                      label="L"
+                      value={l}
+                      min={0}
+                      max={1}
+                      onChange={(val) => updateOklchPalette(i, "l", val)}
+                      step={0.1}
+                    />
+                    <NumberFieldcComp
+                      label="C"
+                      value={c}
+                      min={0}
+                      max={1}
+                      onChange={(val) => updateOklchPalette(i, "c", val)}
+                      step={0.1}
+                    />
+                    <NumberFieldcComp
                       label="H"
-                      checkerboard={false}
-                      className="w-full border-2 border-y-amber-700"
-                    /> */}
+                      value={h}
+                      min={0}
+                      max={360}
+                      onChange={(val) => updateOklchPalette(i, "h", val)}
+                      step={1}
+                    />
+                    <NumberFieldcComp
+                      label="A"
+                      value={alpha}
+                      min={0}
+                      max={1}
+                      onChange={(val) => updateOklchPalette(i, "alpha", val)}
+                      step={0.1}
+                    />
+                    <span>{hexColorString}</span>
                   </div>
                 );
               })}

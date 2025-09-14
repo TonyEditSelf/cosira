@@ -7,16 +7,18 @@ import {
 } from "react-aria-components";
 import { useColorPaletteContext } from "@/app/(palettes)/ColorContext";
 
-export default function HSLColorSliderComp({ channel, label, checkerboard }) {
-  const { ariaColor, handleAriaColorChange } = useColorPaletteContext();
+export default function HslaColorSliderComp({ channel, label, checkerboard }) {
+  const { hslaColorObjectState, handleHslaColorChange } =
+    useColorPaletteContext();
 
   return (
     <>
       <ColorSlider
         channel={channel}
-        value={ariaColor}
-        onChange={handleAriaColorChange}
+        value={hslaColorObjectState}
+        onChange={handleHslaColorChange}
         className="react-aria-ColorSlider"
+        colorSpace="hsl"
       >
         <div className="flex justify-between">
           <Label>{label}</Label>

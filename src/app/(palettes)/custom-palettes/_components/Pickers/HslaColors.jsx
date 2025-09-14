@@ -2,7 +2,7 @@ import { useColorPaletteContext } from "@/app/(palettes)/ColorContext";
 import ColorFieldComp from "./PickerComps/ColorFieldComp";
 import ColorWheelComp from "./PickerComps/ColorWheelComp";
 import ColorAreaComp from "./PickerComps/ColorAreaComp";
-import HSLColorSliderComp from "./PickerComps/HSLColorSliderComp";
+import HslaColorSliderComp from "./PickerComps/HslaColorSliderComp";
 
 export default function HslaColors() {
   return (
@@ -12,14 +12,10 @@ export default function HslaColors() {
 
         <div className="w-32 flex flex-col gap-1">
           <ColorFieldComp label="Hex" colorSpace="hex" channel="" />
-
-          <ColorFieldComp label="Hue" colorSpace="hsla" channel="hue" />
-
-          <ColorFieldComp label="Sat" colorSpace="hsla" channel="saturation" />
-
-          <ColorFieldComp label="Lit" colorSpace="hsla" channel="lightness" />
-
-          <ColorFieldComp label="Alp" colorSpace="hsla" channel="alpha" />
+          <ColorFieldComp label="H" colorSpace="hsl" channel="hue" />
+          <ColorFieldComp label="S" colorSpace="hsl" channel="saturation" />
+          <ColorFieldComp label="L" colorSpace="hsl" channel="lightness" />
+          <ColorFieldComp label="A" colorSpace="hsl" channel="alpha" />
         </div>
         {/* ------------- COLOR WHEEL ---------- */}
         <ColorWheelComp />
@@ -29,17 +25,21 @@ export default function HslaColors() {
       </div>
       {/* -------------- COLOR SLIDERS ------------- */}
       <div className="flex flex-col gap-2">
-        <HSLColorSliderComp channel="hue" label="Hue" checkerboard={false} />
+        <HslaColorSliderComp channel="hue" label="Hue" checkerboard={false} />
 
-        <HSLColorSliderComp channel="saturation" label="Saturation" />
+        <HslaColorSliderComp channel="saturation" label="Saturation" />
 
-        <HSLColorSliderComp
+        <HslaColorSliderComp
           channel="lightness"
           label="Lightness"
           checkerboard={false}
         />
 
-        <HSLColorSliderComp channel="alpha" label="Alpha" checkerboard={true} />
+        <HslaColorSliderComp
+          channel="alpha"
+          label="Alpha"
+          checkerboard={true}
+        />
       </div>
     </div>
   );

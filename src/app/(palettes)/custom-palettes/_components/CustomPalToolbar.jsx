@@ -20,7 +20,7 @@ export default function CustomPalToolbar() {
     setLeftPaletteAdjusterOpen,
     setMyColorPickerOpen,
     leftPaletteAdjusterOpen,
-    hexColor,
+    hexColorState,
     selectedPaletteType,
     setSelectedPaletteType,
   } = useColorPaletteContext();
@@ -49,7 +49,7 @@ export default function CustomPalToolbar() {
             setMyColorPickerOpen((prev) => !prev);
           }}
           className="rounded-md h-[35px]  py-1 px-20"
-          style={{ backgroundColor: `${hexColor}` }}
+          style={{ backgroundColor: `${hexColorState}` }}
         ></button>
       </section>
       <Link href={"/palette-tester"} className="size-9">

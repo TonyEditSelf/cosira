@@ -3,15 +3,15 @@ import { HexColorInput } from "react-colorful";
 import { HexColorPicker } from "react-colorful";
 
 export default function HexColors() {
-  const { hexColor, handleHexColorChange } = useColorPaletteContext();
+  const { hexColorState, handleHexcColorChange } = useColorPaletteContext();
 
   return (
     <>
-      <HexColorPicker color={hexColor} onChange={handleHexColorChange} />
+      <HexColorPicker color={hexColorState} onChange={handleHexcColorChange} />
       <HexColorInput
         className="border border-[var(--navBorder)] rounded-md p-1 px-3"
-        color={hexColor}
-        onChange={handleHexColorChange}
+        color={hexColorState}
+        onChange={handleHexcColorChange}
       />
     </>
   );
