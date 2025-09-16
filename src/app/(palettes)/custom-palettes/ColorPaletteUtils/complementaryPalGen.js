@@ -6,29 +6,52 @@ import {
   displayable,
 } from "culori";
 
-export default function complementaryPalGen(hexColorState) {
+export default function complementaryPalGen(hexColorState, source) {
   const toOKLCH = converter("oklch");
 
-  const baseColor = toOKLCH(hexColorState);
+  let baseColor, compColor;
 
-  const compColor = { ...baseColor, h: (baseColor.h + 180) % 360 };
-  const ableToShowCompColor = displayable(compColor);
-  const ableToShowBaseColor = displayable(baseColor);
+  if (source === 0) {
+    baseColor = toOKLCH(hexColorState);
 
-  let showableCompColor;
-  let showableBaseColor;
-
-  if (!ableToShowCompColor) {
-    showableCompColor = clampChroma(compColor, "oklch");
-  } else {
-    showableCompColor = compColor;
+    compColor = {
+      ...baseColor,
+      l: baseColor.l,
+      c: baseColor.c,
+      h: (baseColor.h + 180) % 360,
+    };
   }
 
-  if (!ableToShowBaseColor) {
-    showableBaseColor = clampChroma(baseColor, "oklch");
-  } else {
-    showableBaseColor = baseColor;
+  if (source === 1) {
+    compColor = toOKLCH(hexColorState);
+    baseColor = {
+      ...compColor,
+      l: compColor.l,
+      c: compColor.c,
+      h: (compColor.h + 180) % 360,
+    };
   }
 
-  return [showableBaseColor, showableCompColor];
+  // const ableToShowCompColor = displayable(compColor);
+  // const ableToShowBaseColor = displayable(baseColor);
+
+  // let showableCompColor;
+  // let showableBaseColor;
+
+  // if (!ableToShowCompColor) {
+  //   showableCompColor = clampChroma(compColor, "oklch");
+  // } else {
+  //   showableCompColor = compColor;
+  // }
+
+  // if (!ableToShowBaseColor) {
+  //   showableBaseColor = clampChroma(baseColor, "oklch");
+  // } else {
+  //   showableBaseColor = baseColor;
+  // }
+
+  // console.log(showableBaseColor);
+  // console.log(showableCompColor);
+  return [baseColor, compColor];
+  // return [showableBaseColor, showableCompColor];
 }

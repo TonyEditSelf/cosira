@@ -19,11 +19,11 @@ export default function CustomPalettes() {
     updateOklchPalette,
   } = useColorPaletteContext();
 
-  useEffect(() => {
-    palette?.map((color, i) => {
-      console.log(color);
-    });
-  });
+  // useEffect(() => {
+  //   palette?.map((color, i) => {
+  //     console.log(color);
+  //   });
+  // });
 
   return (
     <PageWrapper>
@@ -84,7 +84,6 @@ export default function CustomPalettes() {
                 const CssColor = formatCss(color);
                 const hexColorString = formatHex8(color);
                 const { l, c, h, alpha = 1 } = color;
-                // console.log(l, c, h, a);
 
                 return (
                   <div
@@ -97,7 +96,7 @@ export default function CustomPalettes() {
                       value={l}
                       min={0}
                       max={1}
-                      onChange={(val) => updateOklchPalette(i, "l", val)}
+                      onChange={(val) => updateOklchPalette(i, "l", val, i)}
                       step={0.1}
                     />
                     <NumberFieldcComp
@@ -105,7 +104,7 @@ export default function CustomPalettes() {
                       value={c}
                       min={0}
                       max={1}
-                      onChange={(val) => updateOklchPalette(i, "c", val)}
+                      onChange={(val) => updateOklchPalette(i, "c", val, i)}
                       step={0.1}
                     />
                     <NumberFieldcComp
@@ -113,7 +112,7 @@ export default function CustomPalettes() {
                       value={h}
                       min={0}
                       max={360}
-                      onChange={(val) => updateOklchPalette(i, "h", val)}
+                      onChange={(val) => updateOklchPalette(i, "h", val, i)}
                       step={1}
                     />
                     <NumberFieldcComp
@@ -121,7 +120,7 @@ export default function CustomPalettes() {
                       value={alpha}
                       min={0}
                       max={1}
-                      onChange={(val) => updateOklchPalette(i, "alpha", val)}
+                      onChange={(val) => updateOklchPalette(i, "alpha", val, i)}
                       step={0.1}
                     />
                     <span>{hexColorString}</span>

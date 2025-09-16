@@ -11,9 +11,9 @@ export default function NumberFieldcComp({
   label,
   value,
   onChange,
-  min = 0,
+  min,
   max,
-  step = 1,
+  step,
 }) {
   return (
     <NumberField

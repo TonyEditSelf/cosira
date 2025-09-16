@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useRef, useEffect } from "react";
 import { parseColor } from "react-aria-components";
 import paletteDecider from "./custom-palettes/ColorPaletteUtils/paletteDecider";
+import { formatHex8, converter } from "culori";
 
 export const ColorPaletteContext = createContext(null);
 
@@ -16,6 +17,7 @@ export function ColorPaletteContextProvider({ children }) {
   const [selectedPaletteType, setSelectedPaletteType] =
     useState("complementary");
   let [palette, setPalette] = useState();
+  const [source, setSource] = useState(0);
 
   let parsedColorObject = parseColor("#e60073FF");
   let hslaColorObject = parsedColorObject.toFormat("hsla");
@@ -27,15 +29,15 @@ export function ColorPaletteContextProvider({ children }) {
 
   function handleHexcColorChange(newHexColor) {
     setHexColorState(newHexColor);
-    let parsedColorObject = parseColor(hexColorState);
+    let parsedColorObject = parseColor(newHexColor);
     let hslaColorObject = parsedColorObject.toFormat("hsla");
 
     setHslaColorObjectState(hslaColorObject);
   }
 
-  function handleHslaColorChange(newHslaColor) {
-    setHslaColorObjectState(newHslaColor);
-    const ariaHSLString = `hsla(${newHslaColor.hue}, ${newHslaColor.saturation}%, ${newHslaColor.lightness}%, ${newHslaColor.alpha})`;
+  function handleHslaColorChange(newAriaColor) {
+    setHslaColorObjectState(newAriaColor);
+    const ariaHSLString = `hsla(${newAriaColor.hue}, ${newAriaColor.saturation}%, ${newAriaColor.lightness}%, ${newAriaColor.alpha})`;
 
     const colorObj = parseColor(ariaHSLString);
     const hexString = colorObj.toString("hexa");
@@ -43,19 +45,37 @@ export function ColorPaletteContextProvider({ children }) {
   }
 
   useEffect(() => {
-    const pal = paletteDecider(hexColorState, selectedPaletteType);
+    const pal = paletteDecider(hexColorState, selectedPaletteType, source);
     setPalette(pal);
   }, [hexColorState, selectedPaletteType]);
 
-  function updateOklchPalette(index, channel, newValue) {
-    setPalette((prev) =>
-      prev.map((color, i) =>
-        i === index ? { ...color, [channel]: parseFloat(newValue) } : color
-      )
-    );
+  const toHsl = converter("hsl");
+
+  function updateOklchPalette(index, channel, newValue, source) {
+    setPalette((prev) => {
+      return prev.map((color, i) => {
+        if (i === index) {
+          const newCol = { ...color, [channel]: parseFloat(newValue) };
+
+          const newhexval = formatHex8(newCol);
+
+          setSource(source);
+          setHexColorState(newhexval);
+
+          let parsedColorObject = parseColor(newhexval);
+          let hslaColorObject = parsedColorObject.toFormat("hsla");
+          setHslaColorObjectState(hslaColorObject);
+
+          return newCol;
+        }
+        return color;
+      });
+    });
   }
 
   const values = {
+    source,
+    setSource,
     updateOklchPalette,
     palette,
     setPalette,
