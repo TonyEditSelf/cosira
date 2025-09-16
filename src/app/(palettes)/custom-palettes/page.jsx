@@ -1,14 +1,11 @@
 "use client";
 
-import ColorSliderComp from "./_components/Pickers/PickerComps/HslaColorSliderComp";
 import CustomPalToolbar from "./_components/CustomPalToolbar";
 import { AnimatePresence, easeIn, motion } from "framer-motion";
 import PageWrapper from "@/components/ui/PageWrapper";
 import MyColorPicker from "./_components/MyColorPicker";
 import { useColorPaletteContext } from "../ColorContext";
 import { formatCss, formatHex8 } from "culori";
-import NumberFieldcComp from "./_components/NumberFieldcComp";
-import { useEffect } from "react";
 
 export default function CustomPalettes() {
   const {
@@ -38,35 +35,7 @@ export default function CustomPalettes() {
                 transition={{ duration: 0.3, ease: easeIn }}
                 className="flex flex-col items-center mb-2 ml-2 mr-0 pt-5 px-6 w-52 rounded-md border border-[var(--navBorder)]"
               >
-                <div className="flex flex-col gap-4 w-full">
-                  <ColorSliderComp
-                    channel="hue"
-                    label="H"
-                    checkerboard={false}
-                    className="w-full"
-                  />
-
-                  <ColorSliderComp
-                    channel="saturation"
-                    label="S"
-                    checkerboard={false}
-                    className="w-full"
-                  />
-
-                  <ColorSliderComp
-                    channel="lightness"
-                    label="L"
-                    checkerboard={false}
-                    className="w-full"
-                  />
-
-                  <ColorSliderComp
-                    channel="alpha"
-                    label="A"
-                    checkerboard={true}
-                    className="w-full"
-                  />
-                </div>
+                <div className="flex flex-col gap-4 w-full"></div>
               </motion.aside>
             )}
           </AnimatePresence>

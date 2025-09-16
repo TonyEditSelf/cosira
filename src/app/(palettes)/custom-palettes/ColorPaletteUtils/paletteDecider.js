@@ -1,13 +1,12 @@
 import complementaryPalGen from "./complementaryPalGen";
 
 export default function paletteDecider(
-  hexColorState,
+  oklchColor,
   selectedPaletteType,
   source
 ) {
   if (selectedPaletteType === "complementary") {
-    return complementaryPalGen(hexColorState, source);
-  } else {
-    return null;
+    return complementaryPalGen(oklchColor, source);
   }
+  return null;
 }
