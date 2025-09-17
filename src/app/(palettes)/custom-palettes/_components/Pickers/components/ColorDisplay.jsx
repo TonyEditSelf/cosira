@@ -7,22 +7,20 @@ export default function ColorDisplay() {
     useColorPaletteContext();
 
   return (
-    <div className="w-full flex flex-col justify-center items-center gap-2">
-      <Button
+    <div className="w-fit flex justify-center items-center gap-2">
+      <div
         onClick={() => handleCopy("css")}
-        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg transition-all duration-300 hover:shadow-xl"
-        size="lg"
+        className="w-fit bg-[var(--background)] text-xs px-3 py-[7px]"
       >
         {csscopied ? <>Copied!</> : <>Copy {cssColor}</>}
-      </Button>
+      </div>
 
-      <Button
+      <div
         onClick={() => handleCopy("rgb")}
-        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg transition-all duration-300 hover:shadow-xl"
-        size="lg"
+        className="w-fit bg-[var(--background)] text-[var(--foreground)] border-[var(--navBorder)] px-3 py-[7px]"
       >
         {rgbcopied ? <>Copied!</> : <>Copy {rgbColor}</>}
-      </Button>
+      </div>
 
       {/* <code className="text-sm font-mono">CSS: {cssColor}</code> */}
       {/* <code className="text-sm font-mono"> RGB:{rgbColor}</code> */}

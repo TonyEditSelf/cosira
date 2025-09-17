@@ -87,8 +87,8 @@ export default function OklchArea({ lightness, chroma, hue, onChange }) {
     const canvas = canvasRef.current;
     if (canvas) {
       // Set canvas size
-      canvas.width = 300;
-      canvas.height = 200;
+      canvas.width = 210;
+      canvas.height = 190;
       drawColorArea();
     }
   }, [drawColorArea]);
@@ -97,11 +97,11 @@ export default function OklchArea({ lightness, chroma, hue, onChange }) {
   const markerY = (1 - lightness) * 200;
 
   return (
-    <div className="relative h-50">
+    <div className="relative h-40">
       <canvas
         ref={canvasRef}
         onMouseDown={handleMouseDown}
-        className="w-full h-50 cursor-crosshair rounded-xl shadow-inner border border-[var(--navBorder)]"
+        className="w-full h-40 cursor-crosshair rounded-xl shadow-inner border border-[var(--navBorder)]"
         style={{ imageRendering: "pixelated" }}
       />
 
