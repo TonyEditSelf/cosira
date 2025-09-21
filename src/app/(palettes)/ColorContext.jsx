@@ -12,11 +12,11 @@ import {
 import {
   oklchToRgb,
   oklchToCss,
+  oklchToHex,
 } from "./custom-palettes/_components/Pickers/components/colorutil";
 
-import { parseColor } from "react-aria-components";
 import paletteDecider from "./custom-palettes/ColorPaletteUtils/paletteDecider";
-import { formatHex8, converter } from "culori";
+import { userAgent } from "next/server";
 
 export const ColorPaletteContext = createContext(null);
 
@@ -25,12 +25,25 @@ export function ColorPaletteContextProvider({ children }) {
     l: 0.597, // lightness (0-1) 0.7
     c: 0.240854, // chroma (0-0.4) 0.15
     h: 2.4025, // hue (0-360) 180
+    a: 1, // alpha (0–1), default full opacity
+  });
+
+  const [options, setOptions] = useState({
+    darkOffset: 0.15,
+    lightOffset: 0.15,
+    neutralLightOffSet: 0.1,
+    neutralChromaOffset: 0.08,
+    analogousStep: 20,
   });
   const [rgbcopied, setRgbCopied] = useState(false);
   const [csscopied, setCssCopied] = useState(false);
 
   const handleColorChange = useCallback((newValues) => {
     setOklch((prev) => ({ ...prev, ...newValues }));
+  }, []);
+
+  const handleOptionsChange = useCallback((value, id) => {
+    setOptions((prev) => ({ ...prev, [id]: value }));
   }, []);
 
   const handleCopy = async (color) => {
@@ -51,30 +64,44 @@ export function ColorPaletteContextProvider({ children }) {
   };
 
   const [r, g, b] = oklchToRgb(oklch.l, oklch.c, oklch.h);
-  const cssColor = oklchToCss(oklch.l, oklch.c, oklch.h);
-  const rgbColor = `rgb(${Math.round(r * 255)}, ${Math.round(
+  const cssColor = oklchToCss(oklch.l, oklch.c, oklch.h, oklch.a);
+  const alpha = oklch?.a ?? 1;
+
+  const rgbColor = `rgba(${Math.round(r * 255)}, ${Math.round(
     g * 255
-  )}, ${Math.round(b * 255)})`;
-  const hexColor = `#${Math.round(r * 255)
-    .toString(16)
-    .padStart(2, "0")}${Math.round(g * 255)
-    .toString(16)
-    .padStart(2, "0")}${Math.round(b * 255)
-    .toString(16)
-    .padStart(2, "0")}`;
+  )}, ${Math.round(b * 255)}, ${alpha.toFixed(2)})`;
+  const hexColor = oklchToHex(oklch.l, oklch.c, oklch.h, oklch.a);
 
   const [myColorPickerOpen, setMyColorPickerOpen] = useState(false);
   const pickerRef = useRef(null);
 
   const [leftPaletteAdjusterOpen, setLeftPaletteAdjusterOpen] = useState(false);
+  const [cellObjecttoEdit, setCellObjecttoEdit] = useState({});
+  const [cellObjectIndex, SetCellObjectIndex] = useState();
+  const [editCell, setEditCell] = useState(false);
+  const [editPalette, setEditPalette] = useState(false);
 
-  const [selectedPaletteType, setSelectedPaletteType] =
-    useState("complementary");
-  const [source, setSource] = useState(0);
+  const [selectedPaletteType, setSelectedPaletteType] = useState("analogous");
+  const [palette, setPalette] = useState([]);
+
+  useEffect(() => {
+    const pal = paletteDecider(oklch, options, selectedPaletteType);
+
+    setPalette(pal);
+  }, [oklch, options, selectedPaletteType]);
 
   const values = {
-    source,
-    setSource,
+    options,
+    setOptions,
+    cellObjectIndex,
+    SetCellObjectIndex,
+    editPalette,
+    setEditPalette,
+    editCell,
+    setEditCell,
+    cellObjecttoEdit,
+    setCellObjecttoEdit,
+    palette,
     oklch,
     setOklch,
     cssColor,
@@ -83,6 +110,7 @@ export function ColorPaletteContextProvider({ children }) {
     rgbcopied,
     csscopied,
     handleColorChange,
+    handleOptionsChange,
     handleCopy,
     pickerRef,
     leftPaletteAdjusterOpen,

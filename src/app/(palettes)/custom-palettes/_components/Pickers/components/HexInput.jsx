@@ -15,7 +15,7 @@ export default function HexInput({ oklch, onChange }) {
   // Update hex input when OKLCH changes (but not during user typing)
   useEffect(() => {
     if (!isUpdating) {
-      const hex = oklchToHex(oklch.l, oklch.c, oklch.h);
+      const hex = oklchToHex(oklch.l, oklch.c, oklch.h, oklch.a);
       setHexValue(hex);
     }
   }, [oklch, isUpdating]);
@@ -33,35 +33,40 @@ export default function HexInput({ oklch, onChange }) {
     }
 
     // Validate and convert hex to OKLCH
-    if (
-      normalizedValue.length === 7 &&
-      /^#[0-9A-Fa-f]{6}$/.test(normalizedValue)
-    ) {
+    const is6Digit =
+      normalizedValue.length === 7 && /^#[0-9A-Fa-f]{6}$/.test(normalizedValue);
+    const is8Digit =
+      normalizedValue.length === 9 && /^#[0-9A-Fa-f]{8}$/.test(normalizedValue);
+
+    if (is6Digit || is8Digit) {
       try {
         setIsUpdating(true);
         const oklchValues = hexToOklch(normalizedValue);
 
-        // **FIX:** Validate the conversion output before updating the main state.
         if (
           oklchValues &&
           !isNaN(oklchValues.l) &&
           !isNaN(oklchValues.c) &&
           !isNaN(oklchValues.h)
         ) {
-          // Explicitly preserve the existing alpha value.
-          onChange({ ...oklchValues, a: oklch.a });
+          let alpha = oklch.a; // default: keep current alpha
+          if (is8Digit) {
+            const alphaHex = normalizedValue.slice(-2); // last 2 chars
+            alpha = parseInt(alphaHex, 16) / 255;
+          }
+          onChange({ ...oklchValues, a: alpha });
         } else {
           setError("Hex conversion failed.");
         }
 
-        setTimeout(() => setIsUpdating(false), 100); // Prevent immediate update back
+        setTimeout(() => setIsUpdating(false), 100);
       } catch (err) {
         setError("Invalid hex color format");
       }
     } else if (normalizedValue.length > 1) {
       // Show error for invalid format (but not for empty or just #)
       if (normalizedValue.length < 7 && normalizedValue.length > 1) {
-        setError("Hex format must be 6 characters");
+        setError("Hex format must be 6 or 8 characters");
       }
     }
   };
@@ -99,66 +104,27 @@ export default function HexInput({ oklch, onChange }) {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        {/* <Label
-          htmlFor="hex-input"
-          className="text-sm font-semibold text-gray-700"
-        >
-          Hex Color Code
-        </Label> */}
-        <div className="flex gap-2">
-          <div className="relative flex-1">
-            <Hash className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <Input
-              id="hex-input"
-              type="text"
-              value={hexValue}
-              onChange={handleHexChange}
-              placeholder="000000"
-              className="pl-5 font-mono text-sm"
-              maxLength={8}
-            />
-          </div>
-          <Button
-            onClick={handleRandomColor}
-            variant="outline"
-            size="sm"
-            className="p-[17px]"
-          >
-            Random
-          </Button>
-        </div>
-
-        {/* {error && (
-          <Alert variant="destructive" className="py-2">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription className="text-sm">{error}</AlertDescription>
-          </Alert>
-        )} */}
-      </div>
-
-      {/* Current Hex Preview */}
-      {/* <div className="flex items-center gap-3 p-3 bg-[var(--background)] rounded-lg">
-        <div
-          className="w-8 h-8 rounded border border-[var(--navBorder)] shadow-sm"
-          style={{
-            backgroundColor: hexValue.length === 7 ? hexValue : "transparent",
-            backgroundImage:
-              hexValue.length !== 7
-                ? "linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%)"
-                : "none",
-            backgroundSize: "8px 8px",
-            backgroundPosition: "0 0, 0 4px, 4px -4px, -4px 0px",
-          }}
+    <div className="flex gap-2">
+      <div className="relative">
+        <Hash className="absolute left-2 top-1/2 transform -translate-y-1/2 w-7 h-7 text-gray-400 pr-4" />
+        <Input
+          id="hex-input"
+          type="text"
+          value={hexValue}
+          onChange={handleHexChange}
+          placeholder="00000000"
+          className="pl-5 font-mono w-28 border border-[var(--navBorder)] hover:border-[var(--muted-foreground)] py-[6px] px-5 rounded-md"
+          maxLength={9}
         />
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-gray-900 truncate">
-            {hexValue || "#000000"}
-          </p>
-          <p className="text-xs text-gray-500">Current hex color</p>
-        </div>
-      </div> */}
+      </div>
+      <Button
+        onClick={handleRandomColor}
+        // variant="outline"
+        size="sm"
+        className="border border-[var(--navBorder)] hover:border-[var(--muted-foreground)] py-[4px] px-5 rounded-md font-mono"
+      >
+        Random
+      </Button>
     </div>
   );
 }

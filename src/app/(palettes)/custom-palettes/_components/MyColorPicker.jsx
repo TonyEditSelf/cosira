@@ -28,7 +28,7 @@ export default function MyColorPicker() {
       exit={{ y: 10, opacity: 0 }}
       transition={{ duration: 0.1, ease: easeIn }}
       ref={pickerRef}
-      className={`absolute flex justify-center items-center gap-3 left-1/2 -translate-x-1/2 bottom-2 rounded-md bg-[var(--background)] w-[750px] h-[460px] border border-[var(--navBorder)]`}
+      className={`absolute flex justify-center items-center gap-3 left-1/2 -translate-x-1/2 bottom-2 rounded-md bg-[var(--background)] w-[590px] h-[460px] border border-[var(--navBorder)]`}
     >
       {myColorPickerOpen && (
         <div className="flex flex-col justify-center items-center gap-7 w-full px-10">
@@ -38,12 +38,14 @@ export default function MyColorPicker() {
                 hue={oklch.h}
                 lightness={oklch.l}
                 chroma={oklch.c}
+                alpha={oklch.a}
                 onChange={handleColorChange}
               />
               <OklchArea
                 lightness={oklch.l}
                 chroma={oklch.c}
                 hue={oklch.h}
+                alpha={oklch.a}
                 onChange={handleColorChange}
               />
             </div>
@@ -55,6 +57,7 @@ export default function MyColorPicker() {
                   hue={oklch.h}
                   lightness={oklch.l}
                   chroma={oklch.c}
+                  alpha={oklch.a}
                   onChange={handleColorChange}
                 />
               </div>
@@ -64,6 +67,7 @@ export default function MyColorPicker() {
                   lightness={oklch.l}
                   chroma={oklch.c}
                   hue={oklch.h}
+                  alpha={oklch.a}
                   onChange={handleColorChange}
                 />
               </div>
@@ -73,6 +77,7 @@ export default function MyColorPicker() {
                   lightness={oklch.l}
                   chroma={oklch.c}
                   hue={oklch.h}
+                  alpha={oklch.a}
                   onChange={handleColorChange}
                 />
               </div>

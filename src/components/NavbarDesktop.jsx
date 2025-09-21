@@ -15,7 +15,7 @@ export default function NavbarDesktop() {
           {element.label}
         </NavLinkIsActive>
       ))}
-      <CiMenuKebab className="text-2xl lg:text-3xl border border-[var(--navBorder)] rounded-tl-md rounded-br-md p-1" />
+      <CiMenuKebab className="text-2xl cursor-pointer lg:text-3xl border border-[var(--navBorder)] rounded-tl-md rounded-br-md p-1" />
     </>
   );
 }

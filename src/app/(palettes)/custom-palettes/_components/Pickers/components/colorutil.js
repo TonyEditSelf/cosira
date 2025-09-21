@@ -92,16 +92,23 @@ export function hexToOklch(hex) {
   // Remove # if present
   hex = hex.replace("#", "");
 
-  // Parse hex values
+  // Parse RGB
   const r = parseInt(hex.substr(0, 2), 16) / 255;
   const g = parseInt(hex.substr(2, 2), 16) / 255;
   const b = parseInt(hex.substr(4, 2), 16) / 255;
 
-  return rgbToOklch(r, g, b);
+  // Default alpha = 1 (fully opaque)
+  let a = 1;
+  if (hex.length === 8) {
+    a = parseInt(hex.substr(6, 2), 16) / 255;
+  }
+
+  const oklch = rgbToOklch(r, g, b);
+  return { ...oklch, a };
 }
 
 // OKLCH to Hex conversion
-export function oklchToHex(l, c, h) {
+export function oklchToHex(l, c, h, a = 1) {
   const [r, g, b] = oklchToRgb(l, c, h);
 
   const r_hex = Math.round(r * 255)
@@ -114,7 +121,17 @@ export function oklchToHex(l, c, h) {
     .toString(16)
     .padStart(2, "0");
 
-  return `#${r_hex}${g_hex}${b_hex}`;
+  const baseHex = `#${r_hex}${g_hex}${b_hex}`;
+
+  // include alpha only if not fully opaque
+  if (a < 1) {
+    const a_hex = Math.round(a * 255)
+      .toString(16)
+      .padStart(2, "0");
+    return `${baseHex}${a_hex}`;
+  }
+
+  return baseHex;
 }
 
 export function oklchToCss(l, c, h, a = 1) {

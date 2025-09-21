@@ -15,7 +15,7 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-      className="text-2xl lg:text-2xl border border-[var(--navBorder)] rounded-tl-md rounded-br-md p-1"
+      className="text-2xl cursor-pointer lg:text-2xl border border-[var(--navBorder)] rounded-tl-md rounded-br-md p-1"
     >
       {theme === "light" ? <HiOutlineMoon /> : <HiOutlineSun />}
     </button>
