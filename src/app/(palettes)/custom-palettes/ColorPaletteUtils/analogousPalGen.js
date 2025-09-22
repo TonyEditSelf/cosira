@@ -25,8 +25,11 @@ export default function analogousPalGen(oklch, options) {
   };
   analogousOne = {
     ...baseColor,
-    h: (baseColor.h + options.analogousStep) % 360,
+    h: (baseColor.h + options.analogousStep1 + 360) % 360,
   };
+
+  console.log("analogousOne: ", analogousOne);
+
   analogousOneDark = {
     ...analogousOne,
     l: Math.max(0, analogousOne.l - options.darkOffset),
@@ -36,9 +39,10 @@ export default function analogousPalGen(oklch, options) {
     ...analogousOne,
     l: Math.max(0, analogousOne.l + options.lightOffset),
   };
+
   analogousTwo = {
     ...analogousOne,
-    h: (analogousOne.h + options.analogousStep) % 360,
+    h: (baseColor.h + options.analogousStep2) % 360,
   };
 
   analogousTwoDark = {
@@ -53,17 +57,17 @@ export default function analogousPalGen(oklch, options) {
 
   analogousThree = {
     ...analogousTwo,
-    h: (analogousTwo.h + options.analogousStep) % 360,
+    h: (baseColor.h + options.analogousStep3) % 360,
   };
 
   return [
+    analogousOne,
+    analogousOneDark,
+    analogousOneLight,
     baseColor,
     darkBase,
     darkerNeutralBase,
     lightBase,
-    analogousOne,
-    analogousOneDark,
-    analogousOneLight,
     analogousTwo,
     analogousTwoDark,
     analogousTwoLight,

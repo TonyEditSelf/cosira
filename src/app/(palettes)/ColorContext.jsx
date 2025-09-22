@@ -16,16 +16,15 @@ import {
 } from "./custom-palettes/_components/Pickers/components/colorutil";
 
 import paletteDecider from "./custom-palettes/ColorPaletteUtils/paletteDecider";
-import { userAgent } from "next/server";
 
 export const ColorPaletteContext = createContext(null);
 
 export function ColorPaletteContextProvider({ children }) {
   const [oklch, setOklch] = useState({
-    l: 0.597, // lightness (0-1) 0.7
-    c: 0.240854, // chroma (0-0.4) 0.15
-    h: 2.4025, // hue (0-360) 180
-    a: 1, // alpha (0–1), default full opacity
+    l: 0.597,
+    c: 0.240854,
+    h: 2.4025,
+    a: 1,
   });
 
   const [options, setOptions] = useState({
@@ -33,10 +32,36 @@ export function ColorPaletteContextProvider({ children }) {
     lightOffset: 0.15,
     neutralLightOffSet: 0.1,
     neutralChromaOffset: 0.08,
-    analogousStep: 20,
+    analogousStep1: -20,
+    analogousStep2: 20,
+    analogousStep3: 40,
   });
   const [rgbcopied, setRgbCopied] = useState(false);
   const [csscopied, setCssCopied] = useState(false);
+
+  const [toggles, setToggles] = useState({
+    hexOn: true,
+    hueOn: false,
+    lightOn: false,
+    chromaOn: false,
+    alphaOn: false,
+    whiteContrastOn: false,
+    blackContrastOn: false,
+  });
+
+  const handleToggle = (key) => {
+    setToggles((prev) => {
+      return { ...prev, [key]: !prev[key] };
+    });
+  };
+
+  // const [hexOn, setHexOn] = useState(false);
+  // const [hueOn, setHueOn] = useState(false);
+  // const [lightOn, setLightOn] = useState(false);
+  // const [chromaOn, setChromaOn] = useState(false);
+  // const [alphaOn, setAlphaOn] = useState(false);
+  // const [whiteContrastOn, whiteContrastWcOn] = useState(false);
+  // const [blackContrastOn, setBlackContrastOn] = useState(false);
 
   const handleColorChange = useCallback((newValues) => {
     setOklch((prev) => ({ ...prev, ...newValues }));
@@ -91,6 +116,8 @@ export function ColorPaletteContextProvider({ children }) {
   }, [oklch, options, selectedPaletteType]);
 
   const values = {
+    toggles,
+    handleToggle,
     options,
     setOptions,
     cellObjectIndex,
