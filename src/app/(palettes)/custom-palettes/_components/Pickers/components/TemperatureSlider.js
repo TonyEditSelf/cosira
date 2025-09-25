@@ -127,12 +127,16 @@ export default function TemperatureSlider({
       </div>
 
       {/* Temperature Value Label */}
-      <div className="flex gap-6 mt-2 text-xs font-medium">
-        <span>Cool (6500K)</span>
-        <span className="px-2 py-1 rounded backdrop-blur-sm">
-          {Math.round(tempK)}K
-        </span>
-        <span>Warm (2700K)</span>
+      <div className="flex flex-col justify-center items-center mt-2 text-xs font-medium">
+        <div className="flex gap-13 justify-between">
+          <span>Cool</span>
+          <span className="px-2 py-1">{Math.round(tempK)}K</span>
+          <span>Warm</span>
+        </div>
+        <div className="flex gap-32 justify-between">
+          <span>(6500K)</span>
+          <span>(2700K)</span>
+        </div>
       </div>
     </div>
   );

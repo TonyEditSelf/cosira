@@ -4,10 +4,10 @@ export default function AnalogousOptionsComp() {
   const { options, handleOptionsChange } = useColorPaletteContext();
 
   return (
-    <>
-      <h1>Analogue Options</h1>
+    <div>
+      <h1 className="text-[15px] font-bold mb-3">ANALOGUE OPTIONS</h1>
       <div className="flex flex-col gap-4 text-sm font-semibold ">
-        <div>
+        <div className="flex flex-col w-fit">
           <label htmlFor="darkOffset">Darkness L Offset:</label>
           <input
             className="border border-[var(--navBorder)] rounded-md px-2 py-1 mt-1"
@@ -23,7 +23,7 @@ export default function AnalogousOptionsComp() {
           />
         </div>
 
-        <div>
+        <div className="flex flex-col w-fit">
           <label htmlFor="lightOffset">Lightness L Offset:</label>
           <input
             className="border border-[var(--navBorder)] rounded-md px-2 py-1 mt-1"
@@ -39,7 +39,7 @@ export default function AnalogousOptionsComp() {
           />
         </div>
 
-        <div>
+        <div className="flex flex-col w-fit">
           <label htmlFor="neutralChromaOffset">Neutral C Offset:</label>
           <input
             className="border border-[var(--navBorder)] rounded-md px-2 py-1 mt-1"
@@ -55,7 +55,7 @@ export default function AnalogousOptionsComp() {
           />
         </div>
 
-        <div>
+        <div className="flex flex-col w-fit">
           <label htmlFor="neutralLightOffSet">Neutral L Offset:</label>
           <input
             className="border border-[var(--navBorder)] rounded-md px-2 py-1 mt-1"
@@ -71,7 +71,7 @@ export default function AnalogousOptionsComp() {
           />
         </div>
 
-        <div>
+        <div className="flex flex-col w-fit">
           <label htmlFor="analogousStep2">Analogous 1 Hue Step:</label>
           <input
             className="border border-[var(--navBorder)] rounded-md px-2 py-1 mt-1"
@@ -87,7 +87,7 @@ export default function AnalogousOptionsComp() {
           />
         </div>
 
-        <div>
+        <div className="flex flex-col w-fit">
           <label htmlFor="analogousStep2">Analogous 2 Hue Step:</label>
           <input
             className="border border-[var(--navBorder)] rounded-md px-2 py-1 mt-1"
@@ -103,7 +103,7 @@ export default function AnalogousOptionsComp() {
           />
         </div>
 
-        <div>
+        <div className="flex flex-col w-fit">
           <label htmlFor="analogousStep3">Analogous 3 Hue Step:</label>
           <input
             className="border border-[var(--navBorder)] rounded-md px-2 py-1 mt-1"
@@ -119,6 +119,6 @@ export default function AnalogousOptionsComp() {
           />
         </div>
       </div>
-    </>
+    </div>
   );
 }

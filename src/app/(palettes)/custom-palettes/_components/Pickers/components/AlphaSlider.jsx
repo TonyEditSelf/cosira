@@ -118,8 +118,7 @@ export default function AlphaSlider({
       {/* Alpha Value Label */}
       <div className="flex justify-between mt-2 text-xs font-medium">
         <span>0%</span>
-        <span className="bg-[var(--background)] px-2 py-1 rounded backdrop-blur-sm">
-          {/* **FIX:** Add a fallback to prevent NaN display. */}
+        <span className="bg-[var(--background)] px-2 py-1">
           {((alpha || 0) * 100).toFixed(0)}%
         </span>
         <span>100%</span>

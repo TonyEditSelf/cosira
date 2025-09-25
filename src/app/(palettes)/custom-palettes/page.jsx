@@ -1,9 +1,10 @@
 "use client";
 
+import namedColors from "color-name-list";
+import nearestColor from "nearest-color";
 import chroma from "chroma-js";
 import { FaCrosshairs } from "react-icons/fa";
 import PalettteProperties from "./_components/PalettteProperties";
-import { HiMiniAdjustmentsHorizontal } from "react-icons/hi2";
 import CustomPalToolbar from "./_components/CustomPalToolbar";
 import { AnimatePresence, color, easeIn, motion } from "framer-motion";
 import PageWrapper from "@/components/ui/PageWrapper";
@@ -13,6 +14,14 @@ import {
   oklchToCss,
   oklchToHex,
 } from "./_components/Pickers/components/colorutil";
+import * as allColors from "color-name-list";
+
+let colors = {};
+allColors.colornames.forEach((color) => {
+  colors[color.name] = color.hex;
+});
+
+const nearestColorName = nearestColor.from(colors);
 
 export default function CustomPalettes() {
   const {
@@ -36,7 +45,7 @@ export default function CustomPalettes() {
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: -200, opacity: 0 }}
                 transition={{ duration: 0.3, ease: easeIn }}
-                className="flex gap-6 h-[calc(100vh-122px)] overflow-y-scroll flex-col items-center ml-3 mr-0 pt-5 py-4 px-6 w-60 rounded-md border border-[var(--navBorder)]"
+                className="flex gap-6 h-[calc(100vh-122px)] overflow-y-scroll flex-col items-center ml-3 mr-0 pt-5 py-4 px-6 w-[260px] rounded-md border border-[var(--navBorder)]"
               >
                 <PalettteProperties />
               </motion.aside>
@@ -53,9 +62,11 @@ export default function CustomPalettes() {
           >
             <div role="palette viewer" className="flex h-full">
               {palette.map((colorObj, index) => {
-                const { l, c, h, a } = colorObj;
+                const { l, c, h, a } = colorObj.value;
                 let textColor;
                 const hex = oklchToHex(l, c, h, a);
+                const color = nearestColorName(hex);
+
                 const contrast1 = chroma.contrast(hex, "white");
                 const contrast2 = chroma.contrast(hex, "black");
                 let i;
@@ -70,29 +81,40 @@ export default function CustomPalettes() {
 
                 return (
                   <div
-                    className={`h-full flex flex-col gap-2 flex-1 justify-center items-center font-semibold ${
+                    className={`h-full py-7 flex flex-col gap-2 flex-1 justify-between items-center font-semibold ${
                       textColor === "white" ? "text-white " : "text-black "
                     } `}
                     key={index}
                     style={{ backgroundColor: cssColor }}
                   >
-                    <span>
-                      <FaCrosshairs
-                        className="w-[24px] h-[24px] cursor-pointer"
-                        strokeWidth={0}
-                        onClick={() => setOklch(colorObj)}
-                      />
-                    </span>
-                    {toggles.hexOn && <span>{hex.toUpperCase()}</span>}
-                    {toggles.lightOn && <span>L: {l.toFixed(2)}</span>}
-                    {toggles.chromaOn && <span>C: {c.toFixed(2)}</span>}
-                    {toggles.hueOn && <span>H: {h.toFixed(2)}</span>}
-                    {toggles.alphaOn && <span>A: {a.toFixed(2)}</span>}
-                    {toggles.whiteContrastOn && (
-                      <span>WC: {contrast1.toFixed(2)}</span>
-                    )}
-                    {toggles.blackContrastOn && (
-                      <span>BC: {contrast2.toFixed(2)}</span>
+                    <div className="flex flex-col gap-4 justify-center items-center">
+                      {toggles.colorTypes && <span>{colorObj.name}</span>}
+                      {toggles.hexOn && <span>{hex.toUpperCase()}</span>}
+                      {toggles.lightOn && <span>L: {l.toFixed(2)}</span>}
+                      {toggles.chromaOn && <span>C: {c.toFixed(2)}</span>}
+                      {toggles.hueOn && <span>H: {h.toFixed(2)}</span>}
+                      {toggles.alphaOn && <span>A: {a.toFixed(2)}</span>}
+                      {toggles.whiteContrastOn && (
+                        <span>WC: {contrast1.toFixed(2)}</span>
+                      )}
+                      {toggles.blackContrastOn && (
+                        <span>BC: {contrast2.toFixed(2)}</span>
+                      )}
+                      {toggles.makeBaseOn && (
+                        <span>
+                          <FaCrosshairs
+                            className={`w-[18px] h-[18px] cursor-pointer ${
+                              colorObj.name === "Base" ? "invisible" : "visible"
+                            } `}
+                            onClick={() => setOklch(colorObj.value)}
+                          />
+                        </span>
+                      )}
+                    </div>
+                    {toggles.colorNames && (
+                      <span className="px-3 w-full text-[13px] text-center">
+                        {color.name}
+                      </span>
                     )}
                   </div>
                 );

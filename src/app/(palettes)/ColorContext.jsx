@@ -40,10 +40,13 @@ export function ColorPaletteContextProvider({ children }) {
   const [csscopied, setCssCopied] = useState(false);
 
   const [toggles, setToggles] = useState({
-    hexOn: true,
-    hueOn: false,
-    lightOn: false,
-    chromaOn: false,
+    colorNames: true,
+    colorTypes: false,
+    makeBaseOn: false,
+    hexOn: false,
+    hueOn: true,
+    lightOn: true,
+    chromaOn: true,
     alphaOn: false,
     whiteContrastOn: false,
     blackContrastOn: false,
@@ -54,14 +57,6 @@ export function ColorPaletteContextProvider({ children }) {
       return { ...prev, [key]: !prev[key] };
     });
   };
-
-  // const [hexOn, setHexOn] = useState(false);
-  // const [hueOn, setHueOn] = useState(false);
-  // const [lightOn, setLightOn] = useState(false);
-  // const [chromaOn, setChromaOn] = useState(false);
-  // const [alphaOn, setAlphaOn] = useState(false);
-  // const [whiteContrastOn, whiteContrastWcOn] = useState(false);
-  // const [blackContrastOn, setBlackContrastOn] = useState(false);
 
   const handleColorChange = useCallback((newValues) => {
     setOklch((prev) => ({ ...prev, ...newValues }));
@@ -106,7 +101,8 @@ export function ColorPaletteContextProvider({ children }) {
   const [editCell, setEditCell] = useState(false);
   const [editPalette, setEditPalette] = useState(false);
 
-  const [selectedPaletteType, setSelectedPaletteType] = useState("analogous");
+  const [selectedPaletteType, setSelectedPaletteType] =
+    useState("splitComplementary");
   const [palette, setPalette] = useState([]);
 
   useEffect(() => {

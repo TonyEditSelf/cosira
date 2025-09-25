@@ -28,8 +28,6 @@ export default function analogousPalGen(oklch, options) {
     h: (baseColor.h + options.analogousStep1 + 360) % 360,
   };
 
-  console.log("analogousOne: ", analogousOne);
-
   analogousOneDark = {
     ...analogousOne,
     l: Math.max(0, analogousOne.l - options.darkOffset),
@@ -61,16 +59,16 @@ export default function analogousPalGen(oklch, options) {
   };
 
   return [
-    analogousOne,
-    analogousOneDark,
-    analogousOneLight,
-    baseColor,
-    darkBase,
-    darkerNeutralBase,
-    lightBase,
-    analogousTwo,
-    analogousTwoDark,
-    analogousTwoLight,
-    analogousThree,
+    { name: "A1", value: analogousOne },
+    { name: "A1-D", value: analogousOneDark },
+    { name: "A1-L", value: analogousOneLight },
+    { name: "Base", value: baseColor },
+    { name: "Base-D", value: darkBase },
+    { name: "Base-N", value: darkerNeutralBase },
+    { name: "Base-L", value: lightBase },
+    { name: "A2", value: analogousTwo },
+    { name: "A2-D", value: analogousTwoDark },
+    { name: "A2-L", value: analogousTwoLight },
+    { name: "A3", value: analogousThree },
   ];
 }
