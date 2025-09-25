@@ -46,12 +46,12 @@ export default function monochromaticPalGen(oklch, options) {
   };
 
   return [
-    { name: "Base", value: baseColor },
     { name: "Base-D", value: darkBase },
     { name: "Base-DD", value: darkerBase },
     { name: "Base-DDD", value: darkestBase },
     { name: "Base-DN", value: darkerNeutralBase },
     { name: "Base-MD", value: mutedDarkerBase },
+    { name: "Base", value: baseColor },
     { name: "Base-L", value: lightBase },
     { name: "Base-LL", value: lighterBase },
     { name: "Base-LLL", value: lightestBase },

@@ -14,6 +14,12 @@ export default function splitCompPalGen(oklch, options) {
 
   const splitComp1 = { ...compColor, h: (compColor.h + 30) % 360 };
   const darkSplitComp1 = { ...splitComp1, l: Math.max(0, splitComp1.l - 0.15) };
+
+  // const darkNeuSplitComp1 = {
+  //   ...splitComp1,
+  //   l: Math.max(0, splitComp1.c - 0.15),
+  // };
+
   const lightSplitComp1 = {
     ...splitComp1,
     l: Math.min(1, splitComp1.l + 0.15),
@@ -27,14 +33,14 @@ export default function splitCompPalGen(oklch, options) {
   };
 
   return [
-    { name: "Base", value: baseColor },
     { name: "Base-D", value: darkBase },
+    { name: "Base", value: baseColor },
     { name: "Base-L", value: lightBase },
-    { name: "SC1", value: splitComp1 },
     { name: "SC1-D", value: darkSplitComp1 },
+    { name: "SC1", value: splitComp1 },
     { name: "SC1-L", value: lightSplitComp1 },
-    { name: "SC2", value: splitComp2 },
     { name: "SC2-D", value: darkSplitComp2 },
+    { name: "SC2", value: splitComp2 },
     { name: "SC2-L", value: lightSplitComp2 },
   ];
 }

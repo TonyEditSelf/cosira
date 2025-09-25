@@ -59,15 +59,15 @@ export default function analogousPalGen(oklch, options) {
   };
 
   return [
-    { name: "A1", value: analogousOne },
     { name: "A1-D", value: analogousOneDark },
+    { name: "A1", value: analogousOne },
     { name: "A1-L", value: analogousOneLight },
-    { name: "Base", value: baseColor },
     { name: "Base-D", value: darkBase },
     { name: "Base-N", value: darkerNeutralBase },
+    { name: "Base", value: baseColor },
     { name: "Base-L", value: lightBase },
-    { name: "A2", value: analogousTwo },
     { name: "A2-D", value: analogousTwoDark },
+    { name: "A2", value: analogousTwo },
     { name: "A2-L", value: analogousTwoLight },
     { name: "A3", value: analogousThree },
   ];

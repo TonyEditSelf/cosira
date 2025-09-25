@@ -31,15 +31,15 @@ export default function complementaryPalGen(oklch, options) {
   };
 
   return [
-    { name: "Base", value: baseColor },
     { name: "Base-D", value: darkBase },
+    { name: "Base", value: baseColor },
     { name: "Base-L", value: lightBase },
     { name: "Base-LL", value: lightestBase },
     { name: "Base-A", value: baseAccent },
     { name: "Comp-A", value: compAccent },
     { name: "Comp-LL", value: lightestComp },
     { name: "Comp-L", value: lightComp },
-    { name: "Comp-D", value: darkComp },
     { name: "Comp", value: compColor },
+    { name: "Comp-D", value: darkComp },
   ];
 }

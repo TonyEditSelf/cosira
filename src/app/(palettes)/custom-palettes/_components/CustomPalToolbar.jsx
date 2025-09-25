@@ -27,6 +27,7 @@ export default function CustomPalToolbar() {
     cssColor,
     selectedPaletteType,
     setSelectedPaletteType,
+    setFullScreenOn,
   } = useColorPaletteContext();
 
   return (
@@ -76,7 +77,6 @@ export default function CustomPalToolbar() {
       <FaAnglesRight className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]" />
       <FaSave className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]" />
       <CgExport className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]" />
-      <LuFullscreen className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]" />
     </section>
   );
 }
