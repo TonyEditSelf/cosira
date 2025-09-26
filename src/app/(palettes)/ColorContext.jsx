@@ -83,6 +83,23 @@ export function ColorPaletteContextProvider({ children }) {
     setTimeout(() => setRgbCopied(false), 2000);
   };
 
+  const [shadesTintsTonesOn, setShadesTintsTonesOn] = useState(false);
+  const [shadesTintsOfColor, setShadesTintsOfColor] = useState();
+  const [tonesofColor, setTonesofColor] = useState();
+
+  const showShadesTints = (obj) => {
+    const newShadeObj = { ...obj, l: 0 };
+
+    let shadesAndTints = [];
+
+    for (let i = 0.03; i <= 1; i += 0.03) {
+      let newObj = { ...newShadeObj, l: newShadeObj.l + i };
+
+      shadesAndTints.push(newObj);
+    }
+    setShadesTintsOfColor(shadesAndTints);
+  };
+
   const [r, g, b] = oklchToRgb(oklch.l, oklch.c, oklch.h);
   const cssColor = oklchToCss(oklch.l, oklch.c, oklch.h, oklch.a);
   const alpha = oklch?.a ?? 1;
@@ -142,6 +159,11 @@ export function ColorPaletteContextProvider({ children }) {
     setMyColorPickerOpen,
     selectedPaletteType,
     setSelectedPaletteType,
+    shadesTintsTonesOn,
+    setShadesTintsTonesOn,
+    showShadesTints,
+    shadesTintsOfColor,
+    tonesofColor,
   };
 
   return (

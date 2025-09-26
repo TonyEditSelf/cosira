@@ -15,7 +15,7 @@ import {
 } from "./_components/Pickers/components/colorutil";
 import * as allColors from "color-name-list";
 import { FiDroplet, FiMoon } from "react-icons/fi";
-import { MdWbSunny, MdBrightness2 } from "react-icons/md";
+
 import { BsCircleHalf } from "react-icons/bs";
 
 let colors = {};
@@ -33,6 +33,11 @@ export default function CustomPalettes() {
     myColorPickerOpen,
     palette,
     setOklch,
+    shadesTintsTonesOn,
+    setShadesTintsTonesOn,
+    showShadesTints,
+    shadesTintsOfColor,
+    tonesofColor,
   } = useColorPaletteContext();
 
   return (
@@ -60,9 +65,9 @@ export default function CustomPalettes() {
             }}
             exit={{ width: "100%" }}
             transition={{ duration: 0.9, ease: "easeIn" }}
-            className="relative flex-1 ml-3 mr-2 mb-0 border rounded-md border-[var(--navBorder)] flex-col p-2"
+            className=" flex-1 ml-3 mr-2 mb-0 border rounded-md border-[var(--navBorder)] flex-col p-2"
           >
-            <div role="palette viewer" className="flex h-full">
+            <div role="palette viewer" className="relative flex h-full">
               {palette.map((colorObj, index) => {
                 const { l, c, h, a } = colorObj.value;
                 let textColor;
@@ -83,83 +88,80 @@ export default function CustomPalettes() {
 
                 return (
                   <div
-                    className={`h-full py-5 flex flex-col gap-2 flex-1 justify-between items-center font-semibold ${
+                    className={`h-full border border-white py-5 relative flex flex-col gap-2 flex-1 justify-between items-center font-semibold ${
                       textColor === "white" ? "text-white " : "text-black "
                     } `}
                     key={index}
                     style={{ backgroundColor: cssColor }}
                   >
-                    <div className="flex flex-col gap-3 justify-center text-xs items-center">
-                      {toggles.colorTypes && <span>{colorObj.name}</span>}
-                      {toggles.hexOn && <span>{hex.toUpperCase()}</span>}
-                      {toggles.lightOn && <span>L: {l.toFixed(2)}</span>}
-                      {toggles.chromaOn && <span>C: {c.toFixed(2)}</span>}
-                      {toggles.hueOn && <span>H: {h.toFixed(2)}</span>}
-                      {toggles.alphaOn && <span>A: {a.toFixed(2)}</span>}
-                      {toggles.whiteContrastOn && (
-                        <span>WC: {contrast1.toFixed(2)}</span>
-                      )}
-                      {toggles.blackContrastOn && (
-                        <span>BC: {contrast2.toFixed(2)}</span>
-                      )}
-                      {toggles.makeBaseOn && (
+                    <>
+                      <div className="flex flex-col gap-3 justify-center text-xs items-center">
+                        {toggles.colorTypes && <span>{colorObj.name}</span>}
+                        {toggles.hexOn && <span>{hex.toUpperCase()}</span>}
+                        {toggles.lightOn && <span>L: {l.toFixed(2)}</span>}
+                        {toggles.chromaOn && <span>C: {c.toFixed(2)}</span>}
+                        {toggles.hueOn && <span>H: {h.toFixed(2)}</span>}
+                        {toggles.alphaOn && <span>A: {a.toFixed(2)}</span>}
+                        {toggles.whiteContrastOn && (
+                          <span>WC: {contrast1.toFixed(2)}</span>
+                        )}
+                        {toggles.blackContrastOn && (
+                          <span>BC: {contrast2.toFixed(2)}</span>
+                        )}
+                        {toggles.makeBaseOn && (
+                          <span
+                            className={`p-1 rounded-md border ${
+                              colorObj.name === "Base" ? "border-0" : "border"
+                            } ${
+                              textColor === "white"
+                                ? "border-white "
+                                : "border-black "
+                            }`}
+                          >
+                            <FaCrosshairs
+                              className={`w-[14px] h-[14px] cursor-pointer ${
+                                colorObj.name === "Base"
+                                  ? "invisible"
+                                  : "visible"
+                              }  `}
+                              onClick={() => setOklch(colorObj.value)}
+                            />
+                          </span>
+                        )}
                         <span
-                          className={`p-1 rounded-md border ${
-                            colorObj.name === "Base" ? "border-0" : "border"
-                          } ${
+                          onClick={() => {
+                            showShadesTints(colorObj.value);
+                            setShadesTintsTonesOn((prev) => !prev);
+                          }}
+                          className={`p-1 rounded-md cursor-pointer border ${
                             textColor === "white"
                               ? "border-white "
                               : "border-black "
-                          }`}
+                          } `}
                         >
-                          <FaCrosshairs
-                            className={`w-[14px] h-[14px] cursor-pointer ${
-                              colorObj.name === "Base" ? "invisible" : "visible"
-                            }  `}
-                            onClick={() => setOklch(colorObj.value)}
+                          <BsCircleHalf
+                            className={`w-[14px] h-[14px] cursor-pointer } `}
                           />
                         </span>
-                      )}
-                      <span
-                        className={`p-1 rounded-md border ${
-                          textColor === "white"
-                            ? "border-white "
-                            : "border-black "
-                        } `}
-                      >
-                        <FiDroplet
-                          className={`w-[14px] h-[14px] cursor-pointer } `}
-                        />
-                      </span>
-                      <span
-                        className={`p-1 rounded-md border ${
-                          textColor === "white"
-                            ? "border-white "
-                            : "border-black "
-                        } `}
-                      >
-                        <FiMoon
-                          className={`w-[14px] h-[14px] cursor-pointer } `}
-                        />
-                      </span>
-                      <span
-                        className={`p-1 rounded-md border ${
-                          textColor === "white"
-                            ? "border-white "
-                            : "border-black "
-                        } `}
-                      >
-                        <BsCircleHalf
-                          className={`w-[14px] h-[14px] cursor-pointer } `}
-                        />
-                      </span>
-                    </div>
+                        <span
+                          className={`p-1 rounded-md border ${
+                            textColor === "white"
+                              ? "border-white "
+                              : "border-black "
+                          } `}
+                        >
+                          <FiMoon
+                            className={`w-[14px] h-[14px] cursor-pointer } `}
+                          />
+                        </span>
+                      </div>
 
-                    {toggles.colorNames && (
-                      <span className="px-3 w-full text-[13px] text-center">
-                        {color.name}
-                      </span>
-                    )}
+                      {toggles.colorNames && (
+                        <span className="px-3 w-full text-[13px] text-center">
+                          {color.name}
+                        </span>
+                      )}
+                    </>
                   </div>
                 );
               })}
