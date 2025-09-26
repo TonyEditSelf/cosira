@@ -1,6 +1,5 @@
 "use client";
 
-import namedColors from "color-name-list";
 import nearestColor from "nearest-color";
 import chroma from "chroma-js";
 import { FaCrosshairs } from "react-icons/fa";
@@ -15,6 +14,9 @@ import {
   oklchToHex,
 } from "./_components/Pickers/components/colorutil";
 import * as allColors from "color-name-list";
+import { FiDroplet, FiMoon } from "react-icons/fi";
+import { MdWbSunny, MdBrightness2 } from "react-icons/md";
+import { BsCircleHalf } from "react-icons/bs";
 
 let colors = {};
 allColors.colornames.forEach((color) => {
@@ -81,13 +83,13 @@ export default function CustomPalettes() {
 
                 return (
                   <div
-                    className={`h-full py-7 flex flex-col gap-2 flex-1 justify-between items-center font-semibold ${
+                    className={`h-full py-5 flex flex-col gap-2 flex-1 justify-between items-center font-semibold ${
                       textColor === "white" ? "text-white " : "text-black "
                     } `}
                     key={index}
                     style={{ backgroundColor: cssColor }}
                   >
-                    <div className="flex flex-col gap-4 justify-center items-center">
+                    <div className="flex flex-col gap-3 justify-center text-xs items-center">
                       {toggles.colorTypes && <span>{colorObj.name}</span>}
                       {toggles.hexOn && <span>{hex.toUpperCase()}</span>}
                       {toggles.lightOn && <span>L: {l.toFixed(2)}</span>}
@@ -101,16 +103,58 @@ export default function CustomPalettes() {
                         <span>BC: {contrast2.toFixed(2)}</span>
                       )}
                       {toggles.makeBaseOn && (
-                        <span>
+                        <span
+                          className={`p-1 rounded-md border ${
+                            colorObj.name === "Base" ? "border-0" : "border"
+                          } ${
+                            textColor === "white"
+                              ? "border-white "
+                              : "border-black "
+                          }`}
+                        >
                           <FaCrosshairs
-                            className={`w-[18px] h-[18px] cursor-pointer ${
+                            className={`w-[14px] h-[14px] cursor-pointer ${
                               colorObj.name === "Base" ? "invisible" : "visible"
-                            } `}
+                            }  `}
                             onClick={() => setOklch(colorObj.value)}
                           />
                         </span>
                       )}
+                      <span
+                        className={`p-1 rounded-md border ${
+                          textColor === "white"
+                            ? "border-white "
+                            : "border-black "
+                        } `}
+                      >
+                        <FiDroplet
+                          className={`w-[14px] h-[14px] cursor-pointer } `}
+                        />
+                      </span>
+                      <span
+                        className={`p-1 rounded-md border ${
+                          textColor === "white"
+                            ? "border-white "
+                            : "border-black "
+                        } `}
+                      >
+                        <FiMoon
+                          className={`w-[14px] h-[14px] cursor-pointer } `}
+                        />
+                      </span>
+                      <span
+                        className={`p-1 rounded-md border ${
+                          textColor === "white"
+                            ? "border-white "
+                            : "border-black "
+                        } `}
+                      >
+                        <BsCircleHalf
+                          className={`w-[14px] h-[14px] cursor-pointer } `}
+                        />
+                      </span>
                     </div>
+
                     {toggles.colorNames && (
                       <span className="px-3 w-full text-[13px] text-center">
                         {color.name}

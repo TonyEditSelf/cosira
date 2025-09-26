@@ -17,6 +17,7 @@ export default function splitCompPalGen(oklch, options) {
 
   // const darkNeuSplitComp1 = {
   //   ...splitComp1,
+
   //   l: Math.max(0, splitComp1.c - 0.15),
   // };
 
