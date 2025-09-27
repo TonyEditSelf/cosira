@@ -27,15 +27,17 @@ export function ColorPaletteContextProvider({ children }) {
     a: 1,
   });
 
-  const [options, setOptions] = useState({
-    darkOffset: 0.15,
-    lightOffset: 0.15,
-    neutralLightOffSet: 0.1,
-    neutralChromaOffset: 0.08,
-    analogousStep1: -20,
-    analogousStep2: 20,
-    analogousStep3: 40,
+  const [analogOptions, setAnalogOptions] = useState({
+    analogousAngle1: -20,
+    analogousAngle2: 20,
+    analogousAngle3: 40,
   });
+
+  const [splitCompOptions, setSplitCompOptions] = useState({
+    splitCompAngle1: -30,
+    splitCompAngle2: 30,
+  });
+
   const [rgbcopied, setRgbCopied] = useState(false);
   const [csscopied, setCssCopied] = useState(false);
 
@@ -44,9 +46,9 @@ export function ColorPaletteContextProvider({ children }) {
     colorTypes: true,
     makeBaseOn: false,
     hexOn: true,
-    hueOn: false,
+    hueOn: true,
     lightOn: false,
-    chromaOn: true,
+    chromaOn: false,
     alphaOn: false,
     whiteContrastOn: false,
     blackContrastOn: false,
@@ -62,8 +64,12 @@ export function ColorPaletteContextProvider({ children }) {
     setOklch((prev) => ({ ...prev, ...newValues }));
   }, []);
 
-  const handleOptionsChange = useCallback((value, id) => {
-    setOptions((prev) => ({ ...prev, [id]: value }));
+  const handleAnalogOptionsChange = useCallback((value, id) => {
+    setAnalogOptions((prev) => ({ ...prev, [id]: value }));
+  }, []);
+
+  const handleSplitCompOptionsChange = useCallback((value, id) => {
+    setSplitCompOptions((prev) => ({ ...prev, [id]: value }));
   }, []);
 
   const handleCopy = async (color) => {
@@ -143,21 +149,25 @@ export function ColorPaletteContextProvider({ children }) {
 
   const [leftPaletteAdjusterOpen, setLeftPaletteAdjusterOpen] = useState(false);
 
-  const [selectedPaletteType, setSelectedPaletteType] =
-    useState("splitComplementary");
+  const [selectedPaletteType, setSelectedPaletteType] = useState("triadic");
   const [palette, setPalette] = useState([]);
 
   useEffect(() => {
     setShadesTintsTonesIndex(null);
-    const pal = paletteDecider(oklch, options, selectedPaletteType);
+    const pal = paletteDecider(
+      oklch,
+      analogOptions,
+      splitCompOptions,
+      selectedPaletteType
+    );
     setPalette(pal);
-  }, [oklch, options, selectedPaletteType]);
+  }, [oklch, analogOptions, splitCompOptions, selectedPaletteType]);
 
   const values = {
     toggles,
     handleToggle,
-    options,
-    setOptions,
+    analogOptions,
+    setAnalogOptions,
     palette,
     setPalette,
     oklch,
@@ -168,7 +178,7 @@ export function ColorPaletteContextProvider({ children }) {
     rgbcopied,
     csscopied,
     handleColorChange,
-    handleOptionsChange,
+    handleAnalogOptionsChange,
     handleCopy,
     pickerRef,
     leftPaletteAdjusterOpen,
@@ -188,6 +198,8 @@ export function ColorPaletteContextProvider({ children }) {
     shadesTintsTonesFunction,
     pickedShadesOrTones,
     setPickedShadesOrTones,
+    handleSplitCompOptionsChange,
+    splitCompOptions,
   };
 
   return (

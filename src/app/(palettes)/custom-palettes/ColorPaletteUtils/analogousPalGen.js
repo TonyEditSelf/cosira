@@ -13,7 +13,7 @@ export default function analogousPalGen(oklch, options) {
 
   baseColor = oklch;
 
-  darkBase = { ...baseColor, l: Math.max(0, baseColor.l - options.darkOffset) };
+  darkBase = { ...baseColor, l: Math.max(0, baseColor.l - 0.15) };
   lightBase = {
     ...baseColor,
     l: Math.min(1, baseColor.l + 0.15),
@@ -25,7 +25,7 @@ export default function analogousPalGen(oklch, options) {
   };
   analogousOne = {
     ...baseColor,
-    h: (baseColor.h + options.analogousStep1 + 360) % 360,
+    h: (baseColor.h + options.analogousAngle1 + 360) % 360,
   };
 
   analogousOneDark = {
@@ -40,7 +40,7 @@ export default function analogousPalGen(oklch, options) {
 
   analogousTwo = {
     ...analogousOne,
-    h: (baseColor.h + options.analogousStep2) % 360,
+    h: (baseColor.h + options.analogousAngle2 + 360) % 360,
   };
 
   analogousTwoDark = {
@@ -55,7 +55,7 @@ export default function analogousPalGen(oklch, options) {
 
   analogousThree = {
     ...analogousTwo,
-    h: (baseColor.h + options.analogousStep3) % 360,
+    h: (baseColor.h + options.analogousAngle3 + 360) % 360,
   };
 
   return [

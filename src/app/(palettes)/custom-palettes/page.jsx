@@ -128,12 +128,21 @@ export default function CustomPalettes() {
 
                             return (
                               <div
-                                className={`flex-1 cursor-pointer hover:border hover:border-[var(--navBorder)] hover:scale-x-125 hover:rounded-md ${
-                                  allShadesTintsTones.l ===
-                                  colorForShadesTintsTones.l
+                                className={`flex-1 cursor-pointer ${
+                                  pickedShadesOrTones === "tones"
+                                    ? "hover:border-t border-gray-400"
+                                    : null
+                                } hover:border hover:border-[var(--navBorder)] ${
+                                  pickedShadesOrTones === "shades"
+                                    ? allShadesTintsTones.l ===
+                                      colorForShadesTintsTones.l
+                                      ? "border border-white"
+                                      : "border-0"
+                                    : allShadesTintsTones.c ===
+                                      colorForShadesTintsTones.c
                                     ? "border border-white"
-                                    : "border-0"
-                                }`}
+                                    : null
+                                } `}
                                 key={STTIndex}
                                 style={{
                                   backgroundColor: STTColor,

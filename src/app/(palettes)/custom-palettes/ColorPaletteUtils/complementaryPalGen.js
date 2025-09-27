@@ -1,4 +1,4 @@
-export default function complementaryPalGen(oklch, options) {
+export default function complementaryPalGen(oklch) {
   let baseColor,
     darkBase,
     lightBase,

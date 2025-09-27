@@ -1,4 +1,4 @@
-export default function monochromaticPalGen(oklch, options) {
+export default function monochromaticPalGen(oklch) {
   let baseColor,
     darkBase,
     darkerBase,

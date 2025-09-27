@@ -3,8 +3,8 @@ import ChromaSlider from "./Pickers/components/ChromaSlider";
 import LightnessSlider from "./Pickers/components/LightnessSlider";
 import AlphaSlider from "./Pickers/components/AlphaSlider";
 import TemperatureSlider from "./Pickers/components/TemperatureSlider";
-import AnalogousOptionsComp from "../ColorPaletteUtils/AnalogousOptionsComp";
-import AdjustAllColors from "./AdjustAllColors";
+import AnalogousOptions from "../ColorPaletteUtils/AnalogousOptions";
+import SplitCompOptions from "../ColorPaletteUtils/SplitCompOptions";
 import { useColorPaletteContext } from "../../ColorContext";
 import OffAndOn from "./OffAndOn";
 
@@ -77,9 +77,9 @@ export default function PalettteProperties() {
         </div>
       </div>
 
-      {selectedPaletteType === "analogous" && <AnalogousOptionsComp />}
+      {selectedPaletteType === "analogous" && <AnalogousOptions />}
 
-      {/* <AdjustAllColors /> */}
+      {selectedPaletteType === "splitComplementary" && <SplitCompOptions />}
 
       <div className="w-full">
         <h1 className="text-[15px] font-bold space-y-3 mb-3">SHOW/HIDE</h1>
