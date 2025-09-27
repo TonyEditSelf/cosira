@@ -42,11 +42,11 @@ export function ColorPaletteContextProvider({ children }) {
   const [toggles, setToggles] = useState({
     colorNames: true,
     colorTypes: true,
-    makeBaseOn: true,
+    makeBaseOn: false,
     hexOn: true,
     hueOn: false,
     lightOn: false,
-    chromaOn: false,
+    chromaOn: true,
     alphaOn: false,
     whiteContrastOn: false,
     blackContrastOn: false,
@@ -84,20 +84,49 @@ export function ColorPaletteContextProvider({ children }) {
   };
 
   const [shadesTintsTonesOn, setShadesTintsTonesOn] = useState(false);
-  const [shadesTintsOfColor, setShadesTintsOfColor] = useState();
-  const [tonesofColor, setTonesofColor] = useState();
+  const [shadesTintsTonesIndex, setShadesTintsTonesIndex] = useState(null);
+  const [colorForShadesTintsTones, setColorForShadesTintsTones] = useState();
+  const [allShadesTintsTones, setAllShadesTintsTones] = useState();
+  const [pickedShadesOrTones, setPickedShadesOrTones] = useState(null);
 
-  const showShadesTints = (obj) => {
-    const newShadeObj = { ...obj, l: 0 };
+  const shadesTintsTonesFunction = (obj, typeShadeOrTint) => {
+    if (typeShadeOrTint === "tones") {
+      const newToneObj = { ...obj, c: 0 };
+      const middleTone = obj.c;
+      let tones = [];
 
-    let shadesAndTints = [];
+      for (let i = 0.01; i < middleTone; i += 0.01) {
+        let newObj = { ...newToneObj, c: newToneObj.c + i };
+        tones.push(newObj);
+      }
 
-    for (let i = 0.03; i <= 1; i += 0.03) {
-      let newObj = { ...newShadeObj, l: newShadeObj.l + i };
+      tones.push(obj);
 
-      shadesAndTints.push(newObj);
+      for (let i = middleTone + 0.01; i < 0.4; i += 0.01) {
+        let newObj = { ...newToneObj, c: newToneObj.c + i };
+        tones.push(newObj);
+      }
+
+      setAllShadesTintsTones(tones);
+    } else if (typeShadeOrTint === "shadesTints") {
+      const newShadeObj = { ...obj, l: 0 };
+      const middleShade = obj.l;
+      let shadesAndTints = [];
+
+      for (let i = 0.03; i < middleShade; i += 0.03) {
+        let newObj = { ...newShadeObj, l: newShadeObj.l + i };
+        shadesAndTints.push(newObj);
+      }
+
+      shadesAndTints.push(obj);
+
+      for (let i = middleShade + 0.03; i < 1; i += 0.03) {
+        let newObj = { ...newShadeObj, l: newShadeObj.l + i };
+        shadesAndTints.push(newObj);
+      }
+
+      setAllShadesTintsTones(shadesAndTints);
     }
-    setShadesTintsOfColor(shadesAndTints);
   };
 
   const [r, g, b] = oklchToRgb(oklch.l, oklch.c, oklch.h);
@@ -113,18 +142,14 @@ export function ColorPaletteContextProvider({ children }) {
   const pickerRef = useRef(null);
 
   const [leftPaletteAdjusterOpen, setLeftPaletteAdjusterOpen] = useState(false);
-  const [cellObjecttoEdit, setCellObjecttoEdit] = useState({});
-  const [cellObjectIndex, SetCellObjectIndex] = useState();
-  const [editCell, setEditCell] = useState(false);
-  const [editPalette, setEditPalette] = useState(false);
 
   const [selectedPaletteType, setSelectedPaletteType] =
     useState("splitComplementary");
   const [palette, setPalette] = useState([]);
 
   useEffect(() => {
+    setShadesTintsTonesIndex(null);
     const pal = paletteDecider(oklch, options, selectedPaletteType);
-
     setPalette(pal);
   }, [oklch, options, selectedPaletteType]);
 
@@ -133,15 +158,8 @@ export function ColorPaletteContextProvider({ children }) {
     handleToggle,
     options,
     setOptions,
-    cellObjectIndex,
-    SetCellObjectIndex,
-    editPalette,
-    setEditPalette,
-    editCell,
-    setEditCell,
-    cellObjecttoEdit,
-    setCellObjecttoEdit,
     palette,
+    setPalette,
     oklch,
     setOklch,
     cssColor,
@@ -161,9 +179,15 @@ export function ColorPaletteContextProvider({ children }) {
     setSelectedPaletteType,
     shadesTintsTonesOn,
     setShadesTintsTonesOn,
-    showShadesTints,
-    shadesTintsOfColor,
-    tonesofColor,
+    shadesTintsTonesIndex,
+    setShadesTintsTonesIndex,
+    setColorForShadesTintsTones,
+    colorForShadesTintsTones,
+    allShadesTintsTones,
+    setAllShadesTintsTones,
+    shadesTintsTonesFunction,
+    pickedShadesOrTones,
+    setPickedShadesOrTones,
   };
 
   return (

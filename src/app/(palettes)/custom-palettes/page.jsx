@@ -28,24 +28,32 @@ const nearestColorName = nearestColor.from(colors);
 export default function CustomPalettes() {
   const {
     toggles,
-    editPalette,
+    // editPalette,
     leftPaletteAdjusterOpen,
     myColorPickerOpen,
     palette,
+    setPalette,
     setOklch,
     shadesTintsTonesOn,
     setShadesTintsTonesOn,
-    showShadesTints,
-    shadesTintsOfColor,
-    tonesofColor,
+    shadesTintsTonesIndex,
+    setShadesTintsTonesIndex,
+    setColorForShadesTintsTones,
+    colorForShadesTintsTones,
+    allShadesTintsTones,
+    setAllShadesTintsTones,
+    shadesTintsTonesFunction,
+    pickedShadesOrTones,
+    setPickedShadesOrTones,
   } = useColorPaletteContext();
 
   return (
     <PageWrapper>
       <main className="hidden lg:flex flex-col h-full">
         <section className="flex flex-1">
+          {/* {leftPaletteAdjusterOpen && editPalette && */}
           <AnimatePresence>
-            {leftPaletteAdjusterOpen && editPalette && (
+            {leftPaletteAdjusterOpen && (
               <motion.aside
                 // key="leftPaletteAdjuster1"
                 initial={{ x: -200, opacity: 0 }}
@@ -65,14 +73,25 @@ export default function CustomPalettes() {
             }}
             exit={{ width: "100%" }}
             transition={{ duration: 0.9, ease: "easeIn" }}
-            className=" flex-1 ml-3 mr-2 mb-0 border rounded-md border-[var(--navBorder)] flex-col p-2"
+            className="relative flex-1 ml-3 mr-2 mb-0 border rounded-md border-[var(--navBorder)] flex-col p-2"
           >
-            <div role="palette viewer" className="relative flex h-full">
+            <div role="palette viewer" className="flex h-full">
               {palette.map((colorObj, index) => {
                 const { l, c, h, a } = colorObj.value;
                 let textColor;
                 const hex = oklchToHex(l, c, h, a);
-                const color = nearestColorName(hex);
+
+                let color;
+
+                if (hex.length === 9) {
+                  const newHex = hex.slice(0, -2);
+                  color = nearestColorName(newHex);
+                } else if (hex.length === 8) {
+                  const newHex = hex.slice(0, -1);
+                  color = nearestColorName(newHex);
+                } else if (hex.length === 7) {
+                  color = nearestColorName(hex);
+                }
 
                 const contrast1 = chroma.contrast(hex, "white");
                 const contrast2 = chroma.contrast(hex, "black");
@@ -88,80 +107,137 @@ export default function CustomPalettes() {
 
                 return (
                   <div
-                    className={`h-full border border-white py-5 relative flex flex-col gap-2 flex-1 justify-between items-center font-semibold ${
+                    className={`h-full ${
+                      shadesTintsTonesIndex === index ? "py-0" : "py-5"
+                    } flex flex-col gap-2 flex-1 justify-between items-center font-semibold ${
                       textColor === "white" ? "text-white " : "text-black "
                     } `}
                     key={index}
                     style={{ backgroundColor: cssColor }}
                   >
-                    <>
-                      <div className="flex flex-col gap-3 justify-center text-xs items-center">
-                        {toggles.colorTypes && <span>{colorObj.name}</span>}
-                        {toggles.hexOn && <span>{hex.toUpperCase()}</span>}
-                        {toggles.lightOn && <span>L: {l.toFixed(2)}</span>}
-                        {toggles.chromaOn && <span>C: {c.toFixed(2)}</span>}
-                        {toggles.hueOn && <span>H: {h.toFixed(2)}</span>}
-                        {toggles.alphaOn && <span>A: {a.toFixed(2)}</span>}
-                        {toggles.whiteContrastOn && (
-                          <span>WC: {contrast1.toFixed(2)}</span>
+                    {shadesTintsTonesIndex === index ? (
+                      <div className="flex flex-col w-full h-full">
+                        {allShadesTintsTones.map(
+                          (allShadesTintsTones, STTIndex) => {
+                            const STTColor = oklchToCss(
+                              allShadesTintsTones.l,
+                              allShadesTintsTones.c,
+                              allShadesTintsTones.h,
+                              allShadesTintsTones.a
+                            );
+
+                            return (
+                              <div
+                                className={`flex-1 cursor-pointer hover:border hover:border-[var(--navBorder)] hover:scale-x-125 hover:rounded-md ${
+                                  allShadesTintsTones.l ===
+                                  colorForShadesTintsTones.l
+                                    ? "border border-white"
+                                    : "border-0"
+                                }`}
+                                key={STTIndex}
+                                style={{
+                                  backgroundColor: STTColor,
+                                }}
+                                onClick={() => {
+                                  setColorForShadesTintsTones(null);
+                                  setShadesTintsTonesIndex(null);
+                                  setPalette((prev) =>
+                                    prev.map((item, index) =>
+                                      index === shadesTintsTonesIndex
+                                        ? {
+                                            ...item,
+                                            value: allShadesTintsTones,
+                                          }
+                                        : item
+                                    )
+                                  );
+                                }}
+                              ></div>
+                            );
+                          }
                         )}
-                        {toggles.blackContrastOn && (
-                          <span>BC: {contrast2.toFixed(2)}</span>
-                        )}
-                        {toggles.makeBaseOn && (
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex flex-col gap-3 justify-center text-xs items-center">
+                          {toggles.colorTypes && <span>{colorObj.name}</span>}
+                          {toggles.hexOn && <span>{hex.toUpperCase()}</span>}
+                          {toggles.lightOn && <span>L: {l.toFixed(2)}</span>}
+                          {toggles.chromaOn && <span>C: {c.toFixed(2)}</span>}
+                          {toggles.hueOn && <span>H: {h.toFixed(2)}</span>}
+                          {toggles.alphaOn && <span>A: {a.toFixed(2)}</span>}
+                          {toggles.whiteContrastOn && (
+                            <span>WC: {contrast1.toFixed(2)}</span>
+                          )}
+                          {toggles.blackContrastOn && (
+                            <span>BC: {contrast2.toFixed(2)}</span>
+                          )}
+                          {toggles.makeBaseOn && (
+                            <span
+                              className={`p-1 rounded-md border ${
+                                colorObj.name === "Base" ? "border-0" : "border"
+                              } ${
+                                textColor === "white"
+                                  ? "border-white "
+                                  : "border-black "
+                              }`}
+                            >
+                              <FaCrosshairs
+                                className={`w-[14px] h-[14px] cursor-pointer ${
+                                  colorObj.name === "Base"
+                                    ? "invisible"
+                                    : "visible"
+                                }  `}
+                                onClick={() => setOklch(colorObj.value)}
+                              />
+                            </span>
+                          )}
                           <span
-                            className={`p-1 rounded-md border ${
-                              colorObj.name === "Base" ? "border-0" : "border"
-                            } ${
+                            onClick={() => {
+                              shadesTintsTonesFunction(
+                                colorObj.value,
+                                "shadesTints"
+                              );
+                              setColorForShadesTintsTones(colorObj.value);
+                              setShadesTintsTonesIndex(index);
+                              setPickedShadesOrTones("shades");
+                            }}
+                            className={`p-1 rounded-md cursor-pointer border ${
                               textColor === "white"
                                 ? "border-white "
                                 : "border-black "
-                            }`}
+                            } `}
                           >
-                            <FaCrosshairs
-                              className={`w-[14px] h-[14px] cursor-pointer ${
-                                colorObj.name === "Base"
-                                  ? "invisible"
-                                  : "visible"
-                              }  `}
-                              onClick={() => setOklch(colorObj.value)}
+                            <BsCircleHalf
+                              className={`w-[14px] h-[14px] cursor-pointer } `}
                             />
                           </span>
-                        )}
-                        <span
-                          onClick={() => {
-                            showShadesTints(colorObj.value);
-                            setShadesTintsTonesOn((prev) => !prev);
-                          }}
-                          className={`p-1 rounded-md cursor-pointer border ${
-                            textColor === "white"
-                              ? "border-white "
-                              : "border-black "
-                          } `}
-                        >
-                          <BsCircleHalf
-                            className={`w-[14px] h-[14px] cursor-pointer } `}
-                          />
-                        </span>
-                        <span
-                          className={`p-1 rounded-md border ${
-                            textColor === "white"
-                              ? "border-white "
-                              : "border-black "
-                          } `}
-                        >
-                          <FiMoon
-                            className={`w-[14px] h-[14px] cursor-pointer } `}
-                          />
-                        </span>
-                      </div>
+                          <span
+                            onClick={() => {
+                              shadesTintsTonesFunction(colorObj.value, "tones");
+                              setColorForShadesTintsTones(colorObj.value);
+                              setShadesTintsTonesIndex(index);
+                              setPickedShadesOrTones("tones");
+                            }}
+                            className={`p-1 rounded-md border ${
+                              textColor === "white"
+                                ? "border-white "
+                                : "border-black "
+                            } `}
+                          >
+                            <FiMoon
+                              className={`w-[14px] h-[14px] cursor-pointer } `}
+                            />
+                          </span>
+                        </div>
 
-                      {toggles.colorNames && (
-                        <span className="px-3 w-full text-[13px] text-center">
-                          {color.name}
-                        </span>
-                      )}
-                    </>
+                        {toggles.colorNames && (
+                          <span className="px-3 w-full text-[13px] text-center">
+                            {color.name}
+                          </span>
+                        )}
+                      </>
+                    )}
                   </div>
                 );
               })}
