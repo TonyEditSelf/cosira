@@ -38,17 +38,19 @@ export function ColorPaletteContextProvider({ children }) {
     splitCompAngle2: 30,
   });
 
+  const [tetradicOption, setTetradicOption] = useState();
+
   const [rgbcopied, setRgbCopied] = useState(false);
   const [csscopied, setCssCopied] = useState(false);
 
   const [toggles, setToggles] = useState({
-    colorNames: true,
+    colorNames: false,
     colorTypes: true,
     makeBaseOn: false,
-    hexOn: true,
+    hexOn: false,
     hueOn: true,
-    lightOn: false,
-    chromaOn: false,
+    lightOn: true,
+    chromaOn: true,
     alphaOn: false,
     whiteContrastOn: false,
     blackContrastOn: false,
@@ -68,7 +70,7 @@ export function ColorPaletteContextProvider({ children }) {
     setAnalogOptions((prev) => ({ ...prev, [id]: value }));
   }, []);
 
-  const handleSplitCompOptionsChange = useCallback((value, id) => {
+  const handleSplitCompAngleChange = useCallback((value, id) => {
     setSplitCompOptions((prev) => ({ ...prev, [id]: value }));
   }, []);
 
@@ -108,7 +110,7 @@ export function ColorPaletteContextProvider({ children }) {
 
       tones.push(obj);
 
-      for (let i = middleTone + 0.01; i < 0.4; i += 0.01) {
+      for (let i = middleTone + 0.01; i <= 0.4; i += 0.01) {
         let newObj = { ...newToneObj, c: newToneObj.c + i };
         tones.push(newObj);
       }
@@ -126,7 +128,7 @@ export function ColorPaletteContextProvider({ children }) {
 
       shadesAndTints.push(obj);
 
-      for (let i = middleShade + 0.03; i < 1; i += 0.03) {
+      for (let i = middleShade + 0.03; i <= 1; i += 0.03) {
         let newObj = { ...newShadeObj, l: newShadeObj.l + i };
         shadesAndTints.push(newObj);
       }
@@ -149,7 +151,8 @@ export function ColorPaletteContextProvider({ children }) {
 
   const [leftPaletteAdjusterOpen, setLeftPaletteAdjusterOpen] = useState(false);
 
-  const [selectedPaletteType, setSelectedPaletteType] = useState("triadic");
+  const [selectedPaletteType, setSelectedPaletteType] =
+    useState("monochromatic");
   const [palette, setPalette] = useState([]);
 
   useEffect(() => {
@@ -198,7 +201,7 @@ export function ColorPaletteContextProvider({ children }) {
     shadesTintsTonesFunction,
     pickedShadesOrTones,
     setPickedShadesOrTones,
-    handleSplitCompOptionsChange,
+    handleSplitCompAngleChange,
     splitCompOptions,
   };
 

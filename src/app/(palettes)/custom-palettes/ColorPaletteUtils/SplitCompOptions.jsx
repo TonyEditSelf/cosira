@@ -1,7 +1,7 @@
 import { useColorPaletteContext } from "../../ColorContext";
 
 export default function SplitCompOptions() {
-  const { splitCompOptions, handleSplitCompOptionsChange } =
+  const { splitCompOptions, handleSplitCompAngleChange } =
     useColorPaletteContext();
   return (
     <div>
@@ -18,7 +18,7 @@ export default function SplitCompOptions() {
             step={1}
             value={splitCompOptions.splitCompAngle1}
             onChange={(e) =>
-              handleSplitCompOptionsChange(
+              handleSplitCompAngleChange(
                 parseFloat(e.target.value),
                 e.target.id
               )
@@ -37,7 +37,7 @@ export default function SplitCompOptions() {
             step={1}
             value={splitCompOptions.splitCompAngle2}
             onChange={(e) =>
-              handleSplitCompOptionsChange(
+              handleSplitCompAngleChange(
                 parseFloat(e.target.value),
                 e.target.id
               )

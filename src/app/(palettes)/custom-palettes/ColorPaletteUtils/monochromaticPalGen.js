@@ -18,9 +18,8 @@ export default function monochromaticPalGen(oklch) {
   darkestBase = { ...baseColor, l: Math.max(0, baseColor.l - 0.25) };
 
   darkerNeutralBase = {
-    ...baseColor,
-    l: Math.max(0, baseColor.l - 0.1),
-    c: Math.max(0, baseColor.c - 0.08),
+    ...darkestBase,
+    c: Math.max(0, darkestBase.c - 0.15),
   };
 
   mutedDarkerBase = {

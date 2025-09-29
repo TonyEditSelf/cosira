@@ -95,4 +95,19 @@ export const paletteTypes = [
     value: "polychromatic",
     description: "Multiple distinct hues",
   },
+  {
+    label: "Pure Neutrals",
+    value: "pureNeutrals",
+    description: "Multiple distinct hues",
+  },
+  {
+    label: "Hue-Dominant Neutrals",
+    value: "hueDominantNeutrals",
+    description: "Multiple distinct hues",
+  },
+  {
+    label: "Muted",
+    value: "muted",
+    description: "Multiple distinct hues",
+  },
 ];

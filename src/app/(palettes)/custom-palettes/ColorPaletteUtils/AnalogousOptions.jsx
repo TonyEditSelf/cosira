@@ -14,7 +14,7 @@ export default function AnalogousOptions() {
             type="number"
             id="analogousAngle1"
             min={-60}
-            max={0}
+            max={-5}
             step={1}
             value={analogOptions.analogousAngle1}
             onChange={(e) =>
@@ -29,7 +29,7 @@ export default function AnalogousOptions() {
             className="border border-[var(--navBorder)] rounded-md px-2 py-1 mt-1"
             type="number"
             id="analogousAngle2"
-            min={0}
+            min={5}
             max={30}
             step={1}
             value={analogOptions.analogousAngle2}
@@ -45,7 +45,7 @@ export default function AnalogousOptions() {
             className="border border-[var(--navBorder)] rounded-md px-2 py-1 mt-1"
             type="number"
             id="analogousAngle3"
-            min={30}
+            min={35}
             max={60}
             step={1}
             value={analogOptions.analogousAngle3}

@@ -2,7 +2,8 @@
 
 import nearestColor from "nearest-color";
 import chroma from "chroma-js";
-import { FaCrosshairs } from "react-icons/fa";
+import { FaCrosshairs, FaLayerGroup } from "react-icons/fa";
+import { MdGradient } from "react-icons/md";
 import PalettteProperties from "./_components/PalettteProperties";
 import CustomPalToolbar from "./_components/CustomPalToolbar";
 import { AnimatePresence, color, easeIn, motion } from "framer-motion";
@@ -28,7 +29,6 @@ const nearestColorName = nearestColor.from(colors);
 export default function CustomPalettes() {
   const {
     toggles,
-    // editPalette,
     leftPaletteAdjusterOpen,
     myColorPickerOpen,
     palette,
@@ -234,7 +234,7 @@ export default function CustomPalettes() {
                                 : "border-black "
                             } `}
                           >
-                            <FiMoon
+                            <FaLayerGroup
                               className={`w-[14px] h-[14px] cursor-pointer } `}
                             />
                           </span>
