@@ -1,33 +1,29 @@
 export default function complementaryPalGen(oklch) {
-  let baseColor,
-    darkBase,
-    lightBase,
-    lightestBase,
-    baseAccent,
-    compColor,
-    darkComp,
-    lightComp,
-    lightestComp,
-    compAccent;
+  let baseAccent, compColor, compAccent;
 
-  baseColor = oklch;
-  darkBase = { ...baseColor, l: Math.max(0, baseColor.l - 0.15) };
-  lightBase = { ...baseColor, l: Math.min(1, baseColor.l + 0.15) };
-  lightestBase = { ...baseColor, l: Math.min(1, baseColor.l + 0.25) };
+  const baseColor = oklch;
+  const darkBase = { ...baseColor, l: Math.max(0, baseColor.l * 0.85) };
+  const lightBase = { ...baseColor, l: Math.min(1, baseColor.l * 1.15) };
+  const lightestBase = { ...baseColor, l: Math.min(1, baseColor.l * 1.25) };
+
   baseAccent = {
     ...baseColor,
     h: (baseColor.h + 10) % 360,
-    c: Math.min(0.4, baseColor.c + 0.05),
+    l: Math.min(1, baseColor.l * 1.05),
+    c: Math.min(1, baseColor.c * 1.1),
   };
 
   compColor = { ...oklch, h: (baseColor.h + 180) % 360 };
-  darkComp = { ...compColor, l: Math.max(0, compColor.l - 0.15) };
-  lightComp = { ...compColor, l: Math.min(1, compColor.l + 0.15) };
-  lightestComp = { ...compColor, l: Math.max(0, compColor.l + 0.25) };
+
+  const darkComp = { ...compColor, l: Math.max(0, compColor.l * 0.85) };
+  const lightComp = { ...compColor, l: Math.min(1, compColor.l * 1.15) };
+  const lightestComp = { ...compColor, l: Math.min(1, compColor.l * 1.25) };
+
   compAccent = {
     ...compColor,
     h: (compColor.h + 10) % 360,
-    c: Math.min(0.4, compColor.c + 0.05),
+    l: Math.min(1, compColor.l * 1.05),
+    c: Math.min(1, compColor.c * 1.1),
   };
 
   return [

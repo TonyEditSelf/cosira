@@ -13,43 +13,65 @@ export default function monochromaticPalGen(oklch) {
 
   baseColor = oklch;
 
-  darkBase = { ...baseColor, l: Math.max(0, baseColor.l - 0.15) };
-  darkerBase = { ...baseColor, l: Math.max(0, baseColor.l - 0.2) };
-  darkestBase = { ...baseColor, l: Math.max(0, baseColor.l - 0.25) };
+  darkBase = {
+    ...baseColor,
+    l: Math.max(0, baseColor.l * 0.85), // 15% darker
+  };
+
+  darkerBase = {
+    ...baseColor,
+    l: Math.max(0, baseColor.l * 0.8), // 20% darker
+  };
+
+  darkestBase = {
+    ...baseColor,
+    l: Math.max(0, baseColor.l * 0.75), // 25% darker
+  };
 
   darkerNeutralBase = {
     ...darkestBase,
-    c: Math.max(0, darkestBase.c - 0.15),
+    c: Math.min(darkestBase.c * 0.5, 0.08),
   };
 
   mutedDarkerBase = {
-    ...baseColor,
-    l: Math.max(0, baseColor.l - 0.12),
-    c: Math.max(0, baseColor.c - 0.12),
+    ...darkestBase,
+    l: darkestBase.l * 0.8, // 20% darker
+    c: Math.min(darkestBase.c * 0.5, 0.08), // 50% less saturated, capped at 0.08
   };
 
-  lightBase = { ...baseColor, l: Math.min(1, baseColor.l + 0.15) };
-  lighterBase = { ...baseColor, l: Math.min(1, baseColor.l + 0.2) };
-  lightestBase = { ...baseColor, l: Math.min(1, baseColor.l + 0.25) };
+  lightBase = {
+    ...baseColor,
+    l: Math.min(1, baseColor.l * 1.15), // 15% lighter
+  };
+
+  lighterBase = {
+    ...baseColor,
+    l: Math.min(1, baseColor.l * 1.2), // 20% lighter
+  };
+
+  lightestBase = {
+    ...baseColor,
+    l: Math.min(1, baseColor.l * 1.25), // 25% lighter
+  };
 
   lighterNeutralBase = {
-    ...baseColor,
-    l: Math.min(1, baseColor.l + 0.1),
-    c: Math.min(1, baseColor.c - 0.08),
+    ...lightestBase,
+    l: Math.min(1, lightestBase.l * 1.1), // 10% lighter (scaled)
+    c: Math.min(lightestBase.c * 0.5, 0.08), // scaled neutral chroma
   };
 
   mutedLighterBase = {
-    ...baseColor,
-    l: Math.min(1, baseColor.l + 0.12),
-    c: Math.max(0, baseColor.c - 0.12),
+    ...lightBase,
+    l: Math.min(1, lightBase.l * 1.1), // 10% lighter (scales instead of adds)
+    c: Math.min(lightBase.c * 0.6, 0.12), // 40% less chroma, capped at 0.12
   };
 
   return [
-    { name: "Base-D", value: darkBase },
-    { name: "Base-DD", value: darkerBase },
-    { name: "Base-DDD", value: darkestBase },
     { name: "Base-DN", value: darkerNeutralBase },
     { name: "Base-MD", value: mutedDarkerBase },
+    { name: "Base-DDD", value: darkestBase },
+    { name: "Base-DD", value: darkerBase },
+    { name: "Base-D", value: darkBase },
     { name: "Base", value: baseColor },
     { name: "Base-L", value: lightBase },
     { name: "Base-LL", value: lighterBase },

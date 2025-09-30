@@ -1,68 +1,52 @@
 export default function analogousPalGen(oklch, options) {
-  let baseColor,
-    darkBase,
-    lightBase,
-    analogousOne,
-    analogousOneDark,
-    analogousOneLight,
-    analogousTwo,
-    analogousTwoDark,
-    analogousTwoLight,
-    analogousThree,
-    analogousThreeDark,
-    analogousThreeLight;
+  const baseColor = oklch;
 
-  baseColor = oklch;
+  const darkBase = { ...baseColor, l: Math.max(0, baseColor.l * 0.85) };
+  const lightBase = { ...baseColor, l: Math.min(1, baseColor.l * 1.15) };
 
-  darkBase = { ...baseColor, l: Math.max(0, baseColor.l - 0.15) };
-  lightBase = {
-    ...baseColor,
-    l: Math.min(1, baseColor.l + 0.15),
-  };
-
-  analogousOne = {
+  const analogousOne = {
     ...baseColor,
     h: (baseColor.h + options.analogousAngle1 + 360) % 360,
   };
 
-  analogousOneDark = {
+  const analogousOneDark = {
     ...analogousOne,
-    l: Math.max(0, analogousOne.l - 0.15),
+    l: Math.max(0, analogousOne.l * 0.85), // 15% darker
   };
 
-  analogousOneLight = {
+  const analogousOneLight = {
     ...analogousOne,
-    l: Math.max(0, analogousOne.l + 0.15),
+    l: Math.min(1, analogousOne.l * 1.15), // 15% lighter
   };
 
-  analogousTwo = {
+  const analogousTwo = {
     ...analogousOne,
     h: (baseColor.h + options.analogousAngle2 + 360) % 360,
   };
 
-  analogousTwoDark = {
+  const analogousTwoDark = {
     ...analogousTwo,
-    l: Math.max(0, analogousTwo.l - 0.15),
+    l: Math.max(0, analogousTwo.l * 0.85), // 15% darker
   };
 
-  analogousTwoLight = {
+  const analogousTwoLight = {
     ...analogousTwo,
-    l: Math.max(0, analogousTwo.l + 0.15),
+    l: Math.min(1, analogousTwo.l * 1.15), // 15% lighter
   };
 
-  analogousThree = {
+  const analogousThree = {
     ...analogousTwo,
     h: (baseColor.h + options.analogousAngle3 + 360) % 360,
   };
 
-  analogousThreeDark = {
+  const analogousThreeDark = {
     ...analogousThree,
-    l: Math.max(0, analogousThree.l - 0.15),
+    l: Math.max(0, analogousThree.l * 0.85), // 15% darker
   };
 
-  analogousThreeLight = {
+  const analogousThreeLight = {
     ...analogousThree,
-    l: Math.max(0, analogousThree.l + 0.15),
+    l: Math.min(1, analogousThree.l * 1.15), // 15% lighter
   };
 
   return [
