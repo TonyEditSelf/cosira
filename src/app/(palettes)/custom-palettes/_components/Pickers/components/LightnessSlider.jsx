@@ -78,7 +78,7 @@ export default function LightnessSlider({ lightness, chroma, hue, onChange }) {
       <div
         ref={sliderRef}
         onMouseDown={handleMouseDown}
-        className="relative w-full h-4 cursor-pointer rounded-lg overflow-hidden shadow-inner border border-gray-200"
+        className="relative w-full h-3 cursor-pointer rounded-lg overflow-hidden shadow-inner border border-gray-200"
       >
         <canvas
           ref={canvasRef}

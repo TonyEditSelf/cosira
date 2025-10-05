@@ -1,19 +1,31 @@
-/**
- * Analyzes a palette of OKLCH colors, assigning a primitive name (based on L, C, H)
- * and a functional UI role (based on L, C, H, and accurate WCAG contrast) to each color.
- *
- * @param {Array<Object>} palette - An array of color objects, e.g., [{ l: 0.65, c: 0.18, h: 250 }].
- * @returns {Array<Object>} A new array where each object contains the original color,
- * its primitive name, its UI role, a hex value, and its contrast ratios.
- */
-export function colorNameUIrole(palette) {
-  // --- HELPER FUNCTIONS (SELF-CONTAINED WITHIN THE MAIN FUNCTION) ---
+export function colorNameUIrole(color) {
+  // Configuration for tuning contrast ratios and rules
+  const config = {
+    contrast: {
+      AA: 4.5, // WCAG AA minimum contrast
+      AAA: 7.0, // WCAG AAA minimum contrast
+      HIGH_LUM: 15.0, // High Luminance Contrast (used for default text on canvas)
+    },
+    // Allows customization of which hues are considered primary/secondary actions
+    action: {
+      primaryHues: ["blue", "purple"],
+      secondaryHues: ["green", "cyan"],
+    },
+    // Configurable background luminances (Y) for contrast calculation
+    backgroundLuminance: {
+      light: 1.0, // Default to pure white (1.0)
+      dark: 0.0, // Default to pure black (0.0)
+    },
+  };
 
   // Section 1: Accurate WCAG Contrast Calculation
   const contrastHelpers = {
     oklchToSrgb: ({ l, c, h }) => {
-      if (l === 1) return { r: 1, g: 1, b: 1 };
-      if (l === 0) return { r: 0, g: 0, b: 0 };
+      // Handle achromatic extremes directly
+      if (l === 1)
+        return { r: 1, g: 1, b: 1, r_linear: 1, g_linear: 1, b_linear: 1 };
+      if (l === 0)
+        return { r: 0, g: 0, b: 0, r_linear: 0, g_linear: 0, b_linear: 0 };
 
       const hRad = h * (Math.PI / 180);
       const a = c * Math.cos(hRad);
@@ -54,15 +66,30 @@ export function colorNameUIrole(palette) {
         r: to_srgb(r_linear),
         g: to_srgb(g_linear),
         b: to_srgb(b_linear),
+        r_linear: Math.max(0, Math.min(1, r_linear)),
+        g_linear: Math.max(0, Math.min(1, g_linear)),
+        b_linear: Math.max(0, Math.min(1, b_linear)),
       };
     },
     srgbToLinear: (c) =>
       c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4),
+    // NOTE: This function is only used for the luminance of the reference backgrounds (white/black),
+    // which are already defined as 1.0 and 0.0 in config.
     getWcagLuminance: function ({ r, g, b }) {
       const R = this.srgbToLinear(r);
       const G = this.srgbToLinear(g);
       const B = this.srgbToLinear(b);
       return 0.2126 * R + 0.7152 * G + 0.0722 * B;
+    },
+    // New helper to handle alpha blending and return the resulting opaque luminance
+    blendAndGetLuminance: function (fgLinear, alpha, bgLinear) {
+      // Blend components in linear space: C_result = C_fg * alpha + C_bg * (1 - alpha)
+      const R_blend = fgLinear.r_linear * alpha + bgLinear.r * (1 - alpha);
+      const G_blend = fgLinear.g_linear * alpha + bgLinear.g * (1 - alpha);
+      const B_blend = fgLinear.b_linear * alpha + bgLinear.b * (1 - alpha);
+
+      // WCAG Luminance is calculated from the resulting opaque linear components
+      return 0.2126 * R_blend + 0.7152 * G_blend + 0.0722 * B_blend;
     },
     getContrast: (Y1, Y2) => {
       const lighter = Math.max(Y1, Y2);
@@ -78,19 +105,26 @@ export function colorNameUIrole(palette) {
     },
   };
 
-  // Section 2: Primitive Naming based on L, C, H (IMPROVED with chroma-aware hue naming)
+  // Section 2: Primitive Naming based on L, C, H
   const namingHelpers = {
     getHueName: (h, c) => {
       // If chroma is very low, treat it as achromatic regardless of hue angle
       if (c < 0.02) return "gray";
 
       if (h === undefined || h === null) return "gray";
-      if (h >= 25 && h < 65) return "yellow";
-      if (h >= 65 && h < 155) return "green";
-      if (h >= 155 && h < 200) return "cyan";
-      if (h >= 200 && h < 275) return "blue";
-      if (h >= 275 && h < 320) return "purple";
-      if (h >= 320 || h < 25) return "red";
+      // Refined Hue Boundaries: Adjusted for perceptual balance (e.g., Yellow/Green split at 100)
+      // Red: 330-30 (60)
+      // Yellow: 30-100 (70)
+      // Green: 100-150 (50)
+      // Cyan: 150-210 (60)
+      // Blue: 210-270 (60)
+      // Purple: 270-330 (60)
+      if (h >= 30 && h < 100) return "yellow";
+      if (h >= 100 && h < 150) return "green";
+      if (h >= 150 && h < 210) return "cyan";
+      if (h >= 210 && h < 270) return "blue";
+      if (h >= 270 && h < 330) return "purple";
+      if (h >= 330 || h < 30) return "red";
       return "gray"; // Fallback
     },
     getLightnessStep: (L) => {
@@ -106,127 +140,155 @@ export function colorNameUIrole(palette) {
       return "1000";
     },
     getChromaName: (C) => {
-      if (C < 0.02) return "neutral";
-      if (C < 0.07) return "muted";
+      if (C < 0.02) return "achromatic"; // Renamed from "neutral" for clarity
+      // Updated threshold to classify C=0.08 as "muted"
+      if (C < 0.09) return "muted";
       if (C < 0.14) return "soft";
-      return "vibrant";
+      if (C < 0.22) return "strong";
+
+      if (C < 0.27) return "vibrant";
+      return "brilliant";
     },
   };
 
-  // Section 3: UI Role Assignment Logic (MODIFIED for resilient Dark Mode Text)
+  // Section 3: UI Role Assignment Logic
   const assignUiRole = (oklch, contrastData) => {
     const { l, c, h } = oklch;
     const { contrastWhite, contrastBlack } = contrastData;
     const hueName = namingHelpers.getHueName(h, c);
-    const isVibrant = c > 0.14;
-    const isNeutral = c < 0.02;
 
-    // --- NEW DARK TEXT PRIORITY (Resilient Gray Text Fix) ---
+    // Chroma Statuses
+    const isHighChroma = c > 0.14; // Vibrant/Strong/Brilliant
+    const isBrilliant = c >= 0.27;
+    const isAchromatic = c < 0.02;
+    const isErrorHue = hueName === "red"; // Simplify checking for error colors
 
-    // Priority 0: Dark Mode Neutral Text (High L colors with high contrast vs Black)
-    // This captures the necessary high-L grays (like L=0.6) for dark backgrounds.
-    if (isNeutral) {
-      // Highly light text (near white) for highest contrast on dark bg
-      if (contrastBlack >= 15.0) return "dark-text-default";
-
-      // Mid-to-high L grays that still meet WCAG AA contrast on dark bg
-      if (contrastBlack >= 4.5) return "dark-text-muted";
-    }
-
-    // --- DARK MODE ASSIGNMENT (L < 0.5) ---
-
-    if (l < 0.5) {
-      // Priority 1: Neutral Dark Surfaces
-      if (isNeutral) {
-        if (l < 0.05) return "dark-surface-canvas";
-        if (l < 0.1) return "dark-surface-base"; // Base background
-        if (l < 0.15) return "dark-surface-elevated"; // Cards, modals
+    // --- Priority 0: Achromatic Text (Theme-Agnostic, Contrast-Based Override) ---
+    // Achromatic colors with sufficient contrast are always classified as text.
+    if (isAchromatic) {
+      // Dark text on Light Surface
+      if (contrastWhite >= config.contrast.AA) {
+        if (contrastWhite >= config.contrast.HIGH_LUM)
+          return "dark-text-default";
+        return "dark-text-muted";
       }
-
-      // Priority 2: High-contrast Dark Text (Semantic Colors that are Light on Dark)
-      // These are generally vibrant colors that are high-L and passed the check above,
-      // but we use this to capture SEMANTIC light-on-dark text/icons.
-      if (contrastBlack >= 4.5) {
-        if (hueName === "red") return "dark-text-error";
-        if (hueName === "green") return "dark-text-success";
-        if (hueName === "blue" && l > 0.55) return "dark-text-link";
-        return "dark-text-high-contrast";
+      // Light text on Dark Surface
+      if (contrastBlack >= config.contrast.AA) {
+        if (contrastBlack >= config.contrast.HIGH_LUM)
+          return "light-text-default";
+        return "light-text-muted";
       }
     }
 
-    // --- LIGHT MODE ASSIGNMENT (L > 0.5) ---
+    // --- Priority 1 & 2: Achromatic Surfaces/Borders (Same as before) ---
 
-    if (l > 0.5) {
-      // Priority 1: Neutral Light Surfaces and Text
-      if (isNeutral) {
-        if (l > 0.97) return "light-surface-canvas";
-        if (l > 0.9) return "light-surface-subtle";
-        if (l > 0.8) return "light-surface-moderate";
+    // Dark Mode Achromatic Surfaces / Borders (L < 0.5)
+    if (l < 0.5 && isAchromatic) {
+      if (l < 0.05) return "dark-surface-canvas";
+      if (l < 0.1) return "dark-surface-base";
+      if (l < 0.15) return "dark-surface-elevated";
+      if (l >= 0.2 && l < 0.45) return "dark-surface-moderate";
+      if (l >= 0.15 && l < 0.2) return "dark-surface-subtle";
 
-        // Light Text (darker on light surfaces)
-        // These are low-L colors with high contrast vs white
-        if (contrastWhite >= 15.0) return "light-text-default";
-        if (contrastWhite >= 4.5) return "light-text-muted";
+      return "border-neutral-mid";
+    }
 
-        // Light Borders (mid-to-high lightness)
-        if (l >= 0.7 && l <= 0.85) return "light-border-neutral";
-      }
+    // Light Mode Achromatic Surfaces / Borders (L > 0.5)
+    if (l > 0.5 && isAchromatic) {
+      if (l > 0.97) return "light-surface-canvas";
+      if (l > 0.9) return "light-surface-subtle";
+      if (l > 0.8) return "light-surface-moderate";
+      if (l >= 0.7 && l <= 0.85) return "light-border-neutral";
+      if (l <= 0.7 && l > 0.6) return "light-surface-interactive";
+      if (l <= 0.6 && l > 0.45) return "light-surface-mid";
 
-      // Priority 2: High-contrast Light Text (Semantic Dark on Light)
-      if (contrastWhite >= 4.5) {
-        if (hueName === "red") return "light-text-error";
-        if (hueName === "green") return "light-text-success";
-        if (hueName === "blue" && l < 0.4) return "light-text-link";
-        if (hueName === "yellow") return "light-text-warning";
-        return "light-text-high-contrast";
-      }
+      return "border-neutral-mid";
+    }
+
+    // --- Priority 3: Semantic Text on Dark Backgrounds (PRACTICAL TWEAKS) ---
+    // Color is LIGHT, background is DARK. Role should be light-text-*.
+    if (l > 0.5 && contrastBlack >= config.contrast.AA) {
+      // PRACTICAL RULE: Very light, high-chroma colors (L > 0.7) are visually harsh as primary text. Skip them here.
+      // Also skip light, low-chroma colors (L > 0.75 and C < 0.14) as they should be subtle backgrounds.
+      if ((l > 0.7 && isHighChroma) || (l > 0.75 && c < 0.14)) {
+        // Force fall-through to Accent/State/Surface roles (P5, P8, P10)
+      } else if (isErrorHue) {
+        return "light-text-error";
+      } else if (hueName === "green") return "light-text-success";
+      else if (hueName === "yellow") return "light-text-warning";
+      else if (hueName === "blue" || hueName === "cyan")
+        return "light-text-link";
+
+      // Nuanced contrast fallbacks for generic high-contrast colored text
+      if (contrastBlack >= config.contrast.AAA) return "light-text-default";
+      return "light-text-muted";
+    }
+
+    // --- Priority 4: Semantic Text on Light Backgrounds (PRACTICAL TWEAKS) ---
+    // Color is DARK, background is LIGHT. Role should be dark-text-*.
+    if (l < 0.5 && contrastWhite >= config.contrast.AA) {
+      // PRACTICAL RULE: Exclude highly saturated colors (vibrant/strong) from dark text
+      // as they are too visually aggressive for body text.
+      if (isErrorHue && isHighChroma) {
+        // Skip dark-text-error assignment for vibrant reds (C>0.14). These fall to P8.
+      } else if (isErrorHue) {
+        return "dark-text-error";
+      } else if (hueName === "green") return "dark-text-success";
+      else if (hueName === "yellow") return "dark-text-warning";
+      else if (hueName === "blue" || hueName === "cyan")
+        return "dark-text-link";
+
+      // Nuanced contrast fallbacks for generic high-contrast colored text
+      if (contrastWhite >= config.contrast.AAA) return "dark-text-default";
+      return "dark-text-muted";
     }
 
     // --- THEME-AGNOSTIC ROLES (MID-TONES, ACTIONS, ETC.) ---
 
-    // Fallback for neutral colors not caught above (mid-range neutrals/borders)
-    if (isNeutral) return "border-neutral-mid";
-
-    // Priority 3: Subtle backgrounds (low contrast, muted colors)
-    if (c < 0.07 && l > 0.85) {
-      // Assuming subtle backgrounds are high L for light theme
-      if (hueName === "red") return "surface-error-subtle";
+    // Priority 5: Subtle backgrounds (catches L=0.76 to L=0.82 low-chroma colors)
+    // PRACTICAL RULE: Colors that were too bright/low-chroma for text in P3 land here.
+    if (l > 0.75 && c < 0.14) {
+      if (isErrorHue) return "surface-error-subtle";
       if (hueName === "green") return "surface-success-subtle";
       if (hueName === "blue") return "surface-info-subtle";
       if (hueName === "yellow") return "surface-warning-subtle";
       return "surface-tinted-subtle";
     }
 
-    // Priority 4: Primary action colors (vibrant blues/purples in mid-range)
-    if (isVibrant && (hueName === "blue" || hueName === "purple")) {
+    // Priority 6 & 7: Action colors (Same as before)
+    if (isBrilliant && config.action.primaryHues.includes(hueName)) {
       if (l >= 0.45 && l <= 0.65) return "action-primary-default";
       if (l >= 0.35 && l < 0.45) return "action-primary-hover";
       if (l > 0.65) return "action-primary-subtle";
     }
-
-    // Priority 5: Secondary/accent actions
-    if (isVibrant && (hueName === "green" || hueName === "cyan")) {
+    if (isBrilliant && config.action.secondaryHues.includes(hueName)) {
       if (l >= 0.45 && l <= 0.65) return "action-secondary-default";
       if (l >= 0.35 && l < 0.45) return "action-secondary-hover";
     }
 
-    // Priority 6: Status/state colors (colors that work well against both light and dark if possible)
-    if (contrastWhite >= 3.0 || contrastBlack >= 3.0) {
-      if (hueName === "red" && isVibrant) return "state-error-default";
-      if (hueName === "green" && isVibrant) return "state-success-default";
-      if (hueName === "yellow" && isVibrant) return "state-warning-default";
-      if (hueName === "blue" && isVibrant) return "state-info-default";
+    // Priority 8: Status/state colors
+    // This catches the vibrant reds (C=0.24, L ~0.45) that were rejected from P4.
+    if (isHighChroma && (contrastWhite >= 3.0 || contrastBlack >= 3.0)) {
+      if (isErrorHue) return "state-error-default";
+      if (hueName === "green") return "state-success-default";
+      if (hueName === "yellow") return "state-warning-default";
+      if (hueName === "blue") return "state-info-default";
     }
 
-    // Priority 7: Decorative/accent colors
-    if (isVibrant && l >= 0.5) {
-      return "accent-decorative";
+    // Priority 9 & 10: Decorative Accents (Same as before)
+    if (isBrilliant && l >= 0.35 && l <= 0.85) {
+      return "accent-decorative-brilliant";
+    }
+    if (isHighChroma && !isBrilliant && l >= 0.35) {
+      return "accent-decorative-vibrant";
     }
 
-    // Priority 8: Border colors
-    if (c >= 0.07 && l >= 0.4 && l <= 0.8) {
-      if (hueName === "red") return "border-error";
+    // Priority 11: Border colors
+    // This catches the L=0.76, C=0.12 (soft) that skipped P5 but isn't a dominant accent.
+    if (c >= 0.09 && l >= 0.4 && l <= 0.8) {
+      if (isErrorHue) return "border-error";
       if (hueName === "green") return "border-success";
+      if (hueName === "yellow") return "border-warning";
       return "border-accent";
     }
 
@@ -236,66 +298,115 @@ export function colorNameUIrole(palette) {
 
   // --- MAIN EXECUTION ---
 
+  // Define linear sRGB components for pure white and pure black (backgrounds)
+  const WHITE_LINEAR_RGB = { r: 1.0, g: 1.0, b: 1.0 };
+  const BLACK_LINEAR_RGB = { r: 0.0, g: 0.0, b: 0.0 };
+
   // Pre-calculate reference luminance values for contrast comparison
-  const whiteLuminance = 1.0; // Pure white
-  const blackLuminance = 0.0; // Pure black
+  const whiteLuminance = config.backgroundLuminance.light;
+  const blackLuminance = config.backgroundLuminance.dark;
 
-  return palette.map((color) => {
-    // Validate input
-    if (
-      !color ||
-      typeof color.l !== "number" ||
-      typeof color.c !== "number" ||
-      typeof color.h !== "number"
-    ) {
-      console.warn("Invalid color object:", color);
-      return {
-        oklch: color,
-        primitiveName: "invalid-color",
-        role: "utility-general",
-        hex: "#000000",
-        contrastWhite: 1,
-        contrastBlack: 21,
-      };
-    }
+  // Determine alpha, defaulting to 1 (opaque)
+  const alpha =
+    typeof color.a === "number" && color.a >= 0 && color.a <= 1 ? color.a : 1;
 
-    // Convert to sRGB for hex and contrast calculation
-    const srgb = contrastHelpers.oklchToSrgb(color);
-    const luminance = contrastHelpers.getWcagLuminance(srgb);
+  // Validate input
+  if (
+    !color ||
+    typeof color.l !== "number" ||
+    typeof color.c !== "number" ||
+    typeof color.h !== "number"
+  ) {
+    console.warn("Invalid color object:", color);
+    // Return a single object
+    return {
+      oklch: color,
+      primitiveName: "invalid-color",
+      role: "utility-general",
+      hex: "#000000",
+      contrastWhite: 1,
+      contrastBlack: 21,
+    };
+  }
 
-    // Calculate contrast ratios
-    const contrastWhite = contrastHelpers.getContrast(
-      luminance,
+  // Convert to sRGB for hex and linear sRGB for blending/contrast calculation
+  const srgb = contrastHelpers.oklchToSrgb(color);
+
+  let finalLuminance;
+  let finalContrastWhite;
+  let finalContrastBlack;
+
+  // If alpha is 1 (opaque), use the calculated luminance directly
+  if (alpha === 1) {
+    // Luminance of the foreground color (which is opaque)
+    finalLuminance = contrastHelpers.blendAndGetLuminance(
+      srgb,
+      1,
+      WHITE_LINEAR_RGB
+    ); // Effectively just calculating its luminance
+
+    finalContrastWhite = contrastHelpers.getContrast(
+      finalLuminance,
       whiteLuminance
     );
-    const contrastBlack = contrastHelpers.getContrast(
-      luminance,
+    finalContrastBlack = contrastHelpers.getContrast(
+      finalLuminance,
+      blackLuminance
+    );
+  } else {
+    // If translucent, calculate the blended luminance against white and black backgrounds
+    const blendedLuminanceWhite = contrastHelpers.blendAndGetLuminance(
+      srgb,
+      alpha,
+      WHITE_LINEAR_RGB
+    );
+    const blendedLuminanceBlack = contrastHelpers.blendAndGetLuminance(
+      srgb,
+      alpha,
+      BLACK_LINEAR_RGB
+    );
+
+    // We use the blended luminance to determine contrast
+    finalContrastWhite = contrastHelpers.getContrast(
+      blendedLuminanceWhite,
+      whiteLuminance
+    );
+    finalContrastBlack = contrastHelpers.getContrast(
+      blendedLuminanceBlack,
       blackLuminance
     );
 
-    const contrastData = { contrastWhite, contrastBlack };
+    // For the primitive name/display, we still primarily use the original Oklch L
+    finalLuminance = color.l;
+  }
 
-    // Generate primitive name
-    const primitiveName = `${namingHelpers.getHueName(
-      color.h,
-      color.c
-    )}-${namingHelpers.getChromaName(color.c)}-${namingHelpers.getLightnessStep(
-      color.l
-    )}`;
+  const contrastData = {
+    contrastWhite: finalContrastWhite,
+    contrastBlack: finalContrastBlack,
+  };
 
-    // Assign UI role
-    const role = assignUiRole(color, contrastData);
+  // Generate primitive name
+  const primitiveName = `${namingHelpers.getHueName(
+    color.h,
+    color.c
+  )}-${namingHelpers.getChromaName(color.c)}-${namingHelpers.getLightnessStep(
+    color.l
+  )}`;
 
-    // Generate hex representation
-    const hex = contrastHelpers.srgbToHex(srgb);
+  // Assign UI role
+  const role = assignUiRole(color, contrastData);
 
-    return {
-      oklch: color,
-      primitiveName,
-      role,
-      hex: hex.toUpperCase(),
-      contrastWhite: Math.round(contrastWhite * 100) / 100, // Round to 2 decimal places
-      contrastBlack: Math.round(contrastBlack * 100) / 100,
-    };
-  });
+  // Generate hex representation (without alpha in the #RRGGBB format)
+  const hex = contrastHelpers.srgbToHex(srgb);
+
+  // Return a single object instead of an array.
+  return {
+    oklch: color,
+    primitiveName,
+    role,
+    hex: hex.toUpperCase(),
+    alpha: alpha,
+    contrastWhite: Math.round(finalContrastWhite * 100) / 100, // Round to 2 decimal places
+    contrastBlack: Math.round(finalContrastBlack * 100) / 100,
+  };
 }

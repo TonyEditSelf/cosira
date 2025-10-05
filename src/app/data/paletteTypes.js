@@ -110,4 +110,14 @@ export const paletteTypes = [
     value: "muted",
     description: "Multiple distinct hues",
   },
+  {
+    label: "UI Palette",
+    value: "uipalette",
+    description: "Multiple distinct hues",
+  },
+  {
+    label: "Brand Palette",
+    value: "brandPalette",
+    description: "Multiple distinct hues",
+  },
 ];

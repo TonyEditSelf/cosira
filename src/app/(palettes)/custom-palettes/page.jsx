@@ -3,6 +3,7 @@
 import nearestColor from "nearest-color";
 import chroma from "chroma-js";
 import { FaCrosshairs, FaLayerGroup } from "react-icons/fa";
+import { colorNameUIrole } from "./_components/Pickers/components/colorNameUIrole";
 import { MdGradient } from "react-icons/md";
 import PalettteProperties from "./_components/PalettteProperties";
 import CustomPalToolbar from "./_components/CustomPalToolbar";
@@ -80,6 +81,10 @@ export default function CustomPalettes() {
                 const { l, c, h, a } = colorObj.value;
                 let textColor;
                 const hex = oklchToHex(l, c, h, a);
+
+                const colorinfo = colorNameUIrole(colorObj.value);
+
+                const { primitiveName, role } = colorinfo;
 
                 let color;
 
@@ -169,6 +174,8 @@ export default function CustomPalettes() {
                     ) : (
                       <>
                         <div className="flex flex-col gap-3 justify-center text-xs items-center">
+                          {/* <span>{primitiveName}</span>
+                          <span> {role}</span> */}
                           {toggles.colorTypes && <span>{colorObj.name}</span>}
                           {toggles.hexOn && <span>{hex.toUpperCase()}</span>}
                           {toggles.lightOn && <span>L: {l.toFixed(2)}</span>}

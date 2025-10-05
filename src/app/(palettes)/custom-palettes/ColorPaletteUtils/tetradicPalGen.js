@@ -6,7 +6,5 @@ export default function tetradicPalGen(oklch, tetradicOptions) {
     h: (baseColor.h + tetradicOptions.tetradicAngle) % 360,
   };
 
-  
-
   return null;
 }

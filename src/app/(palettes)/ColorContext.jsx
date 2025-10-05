@@ -45,12 +45,12 @@ export function ColorPaletteContextProvider({ children }) {
 
   const [toggles, setToggles] = useState({
     colorNames: false,
-    colorTypes: true,
+    colorTypes: false,
     makeBaseOn: false,
     hexOn: false,
     hueOn: true,
-    lightOn: true,
-    chromaOn: true,
+    lightOn: false,
+    chromaOn: false,
     alphaOn: false,
     whiteContrastOn: false,
     blackContrastOn: false,
