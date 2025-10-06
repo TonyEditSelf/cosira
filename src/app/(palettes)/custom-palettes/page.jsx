@@ -174,10 +174,20 @@ export default function CustomPalettes() {
                     ) : (
                       <>
                         <div className="flex flex-col gap-3 justify-center text-xs items-center">
-                          {/* <span>{primitiveName}</span>
-                          <span> {role}</span> */}
+                          {toggles.primitiveName && (
+                            <span className="text-[9px] break-words text-center">
+                              {primitiveName}
+                            </span>
+                          )}
+                          {toggles.role && (
+                            <span className="text-[9px] break-words text-center">
+                              {role}
+                            </span>
+                          )}
                           {toggles.colorTypes && <span>{colorObj.name}</span>}
-                          {toggles.hexOn && <span>{hex.toUpperCase()}</span>}
+                          {toggles.hexOn && (
+                            <span className="text-xs">{hex.toUpperCase()}</span>
+                          )}
                           {toggles.lightOn && <span>L: {l.toFixed(2)}</span>}
                           {toggles.chromaOn && <span>C: {c.toFixed(2)}</span>}
                           {toggles.hueOn && <span>H: {h.toFixed(2)}</span>}
@@ -199,7 +209,7 @@ export default function CustomPalettes() {
                               }`}
                             >
                               <FaCrosshairs
-                                className={`w-[14px] h-[14px] cursor-pointer ${
+                                className={`w-[12px] h-[12px] cursor-pointer ${
                                   colorObj.name === "Base"
                                     ? "invisible"
                                     : "visible"
@@ -225,7 +235,7 @@ export default function CustomPalettes() {
                             } `}
                           >
                             <BsCircleHalf
-                              className={`w-[14px] h-[14px] cursor-pointer } `}
+                              className={`w-[12px] h-[12px] cursor-pointer } `}
                             />
                           </span>
                           <span
@@ -242,13 +252,13 @@ export default function CustomPalettes() {
                             } `}
                           >
                             <FaLayerGroup
-                              className={`w-[14px] h-[14px] cursor-pointer } `}
+                              className={`w-[12px] h-[12px] cursor-pointer } `}
                             />
                           </span>
                         </div>
 
                         {toggles.colorNames && (
-                          <span className="px-3 w-full text-[13px] text-center">
+                          <span className="px-3 w-full text-[10px] text-center">
                             {color.name}
                           </span>
                         )}

@@ -88,6 +88,20 @@ export default function PalettteProperties() {
           <span>Show Color Names: </span>
 
           <OffAndOn
+            isItOn={toggles.primitiveName}
+            setItOn={() => handleToggle("primitiveName")}
+          />
+
+          <span>Show UI Role: </span>
+
+          <OffAndOn
+            isItOn={toggles.role}
+            setItOn={() => handleToggle("role")}
+          />
+
+          <span>Show Fancy Color Names: </span>
+
+          <OffAndOn
             isItOn={toggles.colorNames}
             setItOn={() => handleToggle("colorNames")}
           />

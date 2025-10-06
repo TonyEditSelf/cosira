@@ -140,13 +140,18 @@ export function colorNameUIrole(color) {
       return "1000";
     },
     getChromaName: (C) => {
-      if (C < 0.02) return "achromatic"; // Renamed from "neutral" for clarity
-      // Updated threshold to classify C=0.08 as "muted"
-      if (C < 0.09) return "muted";
-      if (C < 0.14) return "soft";
-      if (C < 0.22) return "strong";
+      if (C <= 0.01) return "pure neutral";
 
-      if (C < 0.27) return "vibrant";
+      if (C <= 0.04) return "near neutral";
+
+      if (C <= 0.09) return "muted";
+
+      if (C <= 0.14) return "soft";
+
+      if (C <= 0.22) return "strong";
+
+      if (C <= 0.27) return "vibrant";
+
       return "brilliant";
     },
   };
@@ -160,7 +165,7 @@ export function colorNameUIrole(color) {
     // Chroma Statuses
     const isHighChroma = c > 0.14; // Vibrant/Strong/Brilliant
     const isBrilliant = c >= 0.27;
-    const isAchromatic = c < 0.02;
+    const isAchromatic = c <= 0.01;
     const isErrorHue = hueName === "red"; // Simplify checking for error colors
 
     // --- Priority 0: Achromatic Text (Theme-Agnostic, Contrast-Based Override) ---
