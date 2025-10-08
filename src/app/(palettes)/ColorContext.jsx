@@ -38,7 +38,7 @@ export function ColorPaletteContextProvider({ children }) {
     splitCompAngle2: 30,
   });
 
-  const [tetradicOption, setTetradicOption] = useState();
+  const [tetradicAngle, setTetradicAngle] = useState(90);
 
   const [rgbcopied, setRgbCopied] = useState(false);
   const [csscopied, setCssCopied] = useState(false);
@@ -46,11 +46,11 @@ export function ColorPaletteContextProvider({ children }) {
   const [toggles, setToggles] = useState({
     colorNames: false,
     colorTypes: false,
-    makeBaseOn: false,
-    role: true,
-    primitiveName: true,
+    makeBaseOn: true,
+    role: false,
+    primitiveName: false,
     hexOn: false,
-    hueOn: false,
+    hueOn: true,
     lightOn: false,
     chromaOn: false,
     alphaOn: false,
@@ -74,6 +74,10 @@ export function ColorPaletteContextProvider({ children }) {
 
   const handleSplitCompAngleChange = useCallback((value, id) => {
     setSplitCompOptions((prev) => ({ ...prev, [id]: value }));
+  }, []);
+
+  const handleTetradicAngleChange = useCallback((value) => {
+    setTetradicAngle(value);
   }, []);
 
   const handleCopy = async (color) => {
@@ -153,8 +157,7 @@ export function ColorPaletteContextProvider({ children }) {
 
   const [leftPaletteAdjusterOpen, setLeftPaletteAdjusterOpen] = useState(false);
 
-  const [selectedPaletteType, setSelectedPaletteType] =
-    useState("monochromatic");
+  const [selectedPaletteType, setSelectedPaletteType] = useState("tetradic");
   const [palette, setPalette] = useState([]);
 
   useEffect(() => {
@@ -163,10 +166,17 @@ export function ColorPaletteContextProvider({ children }) {
       oklch,
       analogOptions,
       splitCompOptions,
+      tetradicAngle,
       selectedPaletteType
     );
     setPalette(pal);
-  }, [oklch, analogOptions, splitCompOptions, selectedPaletteType]);
+  }, [
+    oklch,
+    analogOptions,
+    splitCompOptions,
+    tetradicAngle,
+    selectedPaletteType,
+  ]);
 
   const values = {
     toggles,
@@ -205,6 +215,8 @@ export function ColorPaletteContextProvider({ children }) {
     setPickedShadesOrTones,
     handleSplitCompAngleChange,
     splitCompOptions,
+    tetradicAngle,
+    handleTetradicAngleChange,
   };
 
   return (

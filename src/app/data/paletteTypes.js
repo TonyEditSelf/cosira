@@ -36,24 +36,9 @@ export const paletteTypes = [
       "Muted, warm, and desaturated tones inspired by retro aesthetics",
   },
   {
-    label: "Square",
-    value: "square",
-    description: "Four colors evenly spaced, like tetradic but balanced",
-  },
-  {
     label: "Neutral",
     value: "neutral",
     description: "Whites, grays, blacks, taupes",
-  },
-  {
-    label: "Warm",
-    value: "warm",
-    description: "Reds, oranges, yellows",
-  },
-  {
-    label: "Cool",
-    value: "cool",
-    description: "Blues, greens, purples",
   },
   {
     label: "Pastel",
@@ -81,11 +66,6 @@ export const paletteTypes = [
     description: "Subtle tonal differences",
   },
   {
-    label: "Gradient",
-    value: "gradient",
-    description: "Smooth transition between colors",
-  },
-  {
     label: "Duotone",
     value: "duotone",
     description: "Two strong contrasting tones",
@@ -93,11 +73,6 @@ export const paletteTypes = [
   {
     label: "Polychromatic",
     value: "polychromatic",
-    description: "Multiple distinct hues",
-  },
-  {
-    label: "Pure Neutrals",
-    value: "pureNeutrals",
     description: "Multiple distinct hues",
   },
   {

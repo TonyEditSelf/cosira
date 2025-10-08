@@ -7,6 +7,7 @@ import AnalogousOptions from "../ColorPaletteUtils/AnalogousOptions";
 import SplitCompOptions from "../ColorPaletteUtils/SplitCompOptions";
 import { useColorPaletteContext } from "../../ColorContext";
 import OffAndOn from "./OffAndOn";
+import TetradicOptions from "../ColorPaletteUtils/TetradicOptions";
 
 export default function PalettteProperties() {
   const {
@@ -80,6 +81,8 @@ export default function PalettteProperties() {
       {selectedPaletteType === "analogous" && <AnalogousOptions />}
 
       {selectedPaletteType === "splitComplementary" && <SplitCompOptions />}
+
+      {selectedPaletteType === "tetradic" && <TetradicOptions />}
 
       <div className="w-full">
         <h1 className="text-[15px] font-bold space-y-3 mb-3">SHOW/HIDE</h1>

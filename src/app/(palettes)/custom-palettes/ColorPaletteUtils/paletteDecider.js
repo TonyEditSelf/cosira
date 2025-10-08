@@ -4,11 +4,13 @@ import analogousPalGen from "./analogousPalGen";
 import splitCompPalGen from "./splitCompPalGen";
 import triadicPalGen from "./triadicPalGen";
 import tetradicPalGen from "./tetradicPalGen";
+import vintagePalGen from "./vintagePalGen";
 
 export default function paletteDecider(
   oklch,
   analogOptions,
   splitCompAngles,
+  tetradicAngle,
   selectedPaletteType
 ) {
   if (selectedPaletteType === "complementary") {
@@ -22,7 +24,9 @@ export default function paletteDecider(
   } else if (selectedPaletteType === "triadic") {
     return triadicPalGen(oklch);
   } else if (selectedPaletteType === "tetradic") {
-    return tetradicPalGen(oklch, tetradicOptions);
+    return tetradicPalGen(oklch, tetradicAngle);
+  } else if (selectedPaletteType === "vintage") {
+    return vintagePalGen(oklch);
   }
 
   return null;
