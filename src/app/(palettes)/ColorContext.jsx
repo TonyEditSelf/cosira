@@ -157,7 +157,7 @@ export function ColorPaletteContextProvider({ children }) {
 
   const [leftPaletteAdjusterOpen, setLeftPaletteAdjusterOpen] = useState(false);
 
-  const [selectedPaletteType, setSelectedPaletteType] = useState("tetradic");
+  const [selectedPaletteType, setSelectedPaletteType] = useState("vintage");
   const [palette, setPalette] = useState([]);
 
   useEffect(() => {

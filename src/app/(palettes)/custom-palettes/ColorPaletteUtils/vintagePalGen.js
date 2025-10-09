@@ -1,12 +1,12 @@
 export default function vintagePalGen(oklch) {
   const baseColor = { ...oklch, l: 0.45, c: 0.28 };
 
-  const baseColorDark = { ...oklch, l: 0.35, c: 0.2 };
+  const baseColorDark = { ...baseColor, l: 0.35, c: 0.2 };
 
-  const baseColorLight = { ...oklch, l: 0.65, c: 0.15 };
+  const baseColorLight = { ...baseColor, l: 0.65, c: 0.15 };
 
-  const baseColorMuted = { ...oklch, l: 0.55, c: 0.1 };
-  const baseColorModSaturated = { ...oklch, l: 0.5, c: 0.2 };
+  const baseColorMuted = { ...baseColor, l: 0.55, c: 0.1 };
+  const baseColorModSaturated = { ...baseColor, l: 0.5, c: 0.2 };
 
   const compColor = {
     ...baseColor,
