@@ -42,11 +42,11 @@ export default function vintagePalGen(oklch) {
     { name: "Base", value: baseColor },
     { name: "Base-D", value: baseColorDark },
     { name: "Base-L", value: baseColorLight },
+    { name: "Base-M", value: baseColorMuted },
+    { name: "Base-Mod-S", value: baseColorModSaturated },
     { name: "Comp", value: compColor },
     { name: "Comp-D", value: compColorDark },
     { name: "Comp-L", value: compColorLight },
-    { name: "Base-M", value: baseColorMuted },
-    { name: "Base-Mod-S", value: baseColorModSaturated },
     { name: "Comp-M", value: compColorMuted },
     { name: "Comp-Mod-S", value: compColorModSaturated },
   ];
