@@ -3,12 +3,12 @@ export default function tetradicPalGen(oklch, tetradicAngle) {
 
   const baseColor1Dark = {
     ...baseColor1,
-    l: Math.max(0, baseColor1.l * 0.85),
+    l: Math.min(1, Math.max(0, baseColor1.l * 0.85)),
   };
 
   const baseColor1Light = {
     ...baseColor1,
-    l: Math.min(1, baseColor1.l * 1.15),
+    l: Math.min(1, Math.max(0, baseColor1.l * 1.15)),
   };
 
   const baseColor1Comp = {
@@ -18,12 +18,12 @@ export default function tetradicPalGen(oklch, tetradicAngle) {
 
   const baseColor1CompDark = {
     ...baseColor1Comp,
-    l: Math.max(0, baseColor1Comp.l * 0.85),
+    l: Math.min(1, Math.max(0, baseColor1Comp.l * 0.85)),
   };
 
   const baseColor1CompLight = {
     ...baseColor1Comp,
-    l: Math.min(1, baseColor1Comp.l * 1.15),
+    l: Math.min(1, Math.max(0, baseColor1Comp.l * 1.15)),
   };
 
   const baseColor1CompNeutral = {
@@ -38,7 +38,7 @@ export default function tetradicPalGen(oklch, tetradicAngle) {
 
   const baseColor2Light = {
     ...baseColor2,
-    l: Math.min(1, baseColor2.l * 1.15),
+    l: Math.min(1, Math.max(0, baseColor2.l * 1.15)),
   };
 
   const baseColor2Comp = {
@@ -48,7 +48,7 @@ export default function tetradicPalGen(oklch, tetradicAngle) {
 
   const baseColor2CompLight = {
     ...baseColor2Comp,
-    l: Math.min(1, baseColor2Comp.l * 1.15),
+    l: Math.min(1, Math.max(0, baseColor2Comp.l * 1.15)),
   };
 
   return [

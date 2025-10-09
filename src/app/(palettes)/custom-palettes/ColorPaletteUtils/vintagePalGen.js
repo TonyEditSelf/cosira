@@ -1,53 +1,75 @@
 export default function vintagePalGen(oklch) {
-  const baseColor = { ...oklch, l: 0.45, c: 0.28 };
+  const baseColor = {
+    ...oklch,
+    l: Math.min(0.7, Math.max(0.3, oklch.l)),
+    c: Math.min(0.35, Math.max(0, oklch.c)),
+  };
 
-  const baseColorDark = { ...baseColor, l: 0.35, c: 0.2 };
+  const baseColorDark = {
+    ...oklch,
+    l: Math.min(0.7, Math.max(0.3, oklch.l * 0.8)),
+    c: Math.min(0.35, Math.max(0, oklch.c * 0.71)),
+  };
 
-  const baseColorLight = { ...baseColor, l: 0.65, c: 0.15 };
+  const baseColorLight = {
+    ...oklch,
+    l: Math.min(0.7, Math.max(0.3, oklch.l * 1.44)),
+    c: Math.min(0.35, Math.max(0, oklch.c * 0.53)),
+  };
 
-  const baseColorMuted = { ...baseColor, l: 0.55, c: 0.1 };
-  const baseColorModSaturated = { ...baseColor, l: 0.5, c: 0.2 };
+  const baseColorMuted = {
+    ...oklch,
+    l: Math.min(0.7, Math.max(0.3, oklch.l * 1.2)),
+    c: Math.min(0.35, Math.max(0, oklch.c * 0.36)),
+  };
+
+  const baseColorModSaturated = {
+    ...oklch,
+    l: Math.min(0.7, Math.max(0.3, oklch.l * 1.0)),
+    c: Math.min(0.35, Math.max(0, oklch.c * 0.71)),
+  };
 
   const compColor = {
-    ...baseColor,
-    h: (baseColor.h + 180) % 360,
-    l: 0.45,
-    c: 0.25,
+    ...oklch,
+    h: (oklch.h + 180) % 360,
+    l: Math.min(0.7, Math.max(0.3, oklch.l * 1.0)),
+    c: Math.min(0.35, Math.max(0, oklch.c * 0.78)),
   };
 
   const compColorDark = {
     ...compColor,
-    l: 0.35,
-    c: 0.18,
+    l: Math.min(0.7, Math.max(0.3, compColor.l * 0.78)),
+    c: Math.min(0.35, Math.max(0, compColor.c * 0.72)),
   };
 
   const compColorLight = {
     ...compColor,
-    l: 0.65,
-    c: 0.12,
+    l: Math.min(0.7, Math.max(0.3, compColor.l * 1.44)),
+    c: Math.min(0.35, Math.max(0, compColor.c * 0.48)),
   };
 
   const compColorMuted = {
     ...compColor,
-    l: 0.55,
-    c: 0.1,
+    l: Math.min(0.7, Math.max(0.3, compColor.l * 1.2)),
+    c: Math.min(0.35, Math.max(0, compColor.c * 0.4)),
   };
+
   const compColorModSaturated = {
     ...compColor,
-    l: 0.55,
-    c: 0.2,
+    l: Math.min(0.7, Math.max(0.3, compColor.l * 1.0)),
+    c: Math.min(0.35, Math.max(0, compColor.c * 0.8)),
   };
 
   return [
     { name: "Base", value: baseColor },
     { name: "Base-D", value: baseColorDark },
+    { name: "Base-Mod-S", value: baseColorModSaturated },
     { name: "Base-L", value: baseColorLight },
     { name: "Base-M", value: baseColorMuted },
-    { name: "Base-Mod-S", value: baseColorModSaturated },
     { name: "Comp", value: compColor },
     { name: "Comp-D", value: compColorDark },
+    { name: "Comp-Mod-S", value: compColorModSaturated },
     { name: "Comp-L", value: compColorLight },
     { name: "Comp-M", value: compColorMuted },
-    { name: "Comp-Mod-S", value: compColorModSaturated },
   ];
 }

@@ -127,14 +127,14 @@ export function ColorPaletteContextProvider({ children }) {
       const middleShade = obj.l;
       let shadesAndTints = [];
 
-      for (let i = 0.03; i < middleShade; i += 0.03) {
+      for (let i = 0.02; i < middleShade; i += 0.02) {
         let newObj = { ...newShadeObj, l: newShadeObj.l + i };
         shadesAndTints.push(newObj);
       }
 
       shadesAndTints.push(obj);
 
-      for (let i = middleShade + 0.03; i <= 1; i += 0.03) {
+      for (let i = middleShade + 0.02; i <= 1; i += 0.02) {
         let newObj = { ...newShadeObj, l: newShadeObj.l + i };
         shadesAndTints.push(newObj);
       }

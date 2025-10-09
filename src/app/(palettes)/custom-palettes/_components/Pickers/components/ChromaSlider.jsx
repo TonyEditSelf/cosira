@@ -97,7 +97,7 @@ export default function ChromaSlider({ lightness, chroma, hue, onChange }) {
       </div>
 
       {/* Chroma Value Label */}
-      <div className="flex justify-between mt-2 text-xs  font-medium">
+      <div className="flex justify-between mt-2 text-[10px]  font-medium">
         <span>0.000</span>
         <span className="bg-[var(--background)] px-2 py-1 rounded backdrop-blur-sm">
           {chroma.toFixed(3)}

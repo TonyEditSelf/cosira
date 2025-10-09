@@ -1,8 +1,14 @@
 export default function analogousPalGen(oklch, options) {
   const baseColor = oklch;
 
-  const darkBase = { ...baseColor, l: Math.max(0, baseColor.l * 0.85) };
-  const lightBase = { ...baseColor, l: Math.min(1, baseColor.l * 1.15) };
+  const darkBase = {
+    ...baseColor,
+    l: Math.min(1, Math.max(0, baseColor.l * 0.85)),
+  };
+  const lightBase = {
+    ...baseColor,
+    l: Math.min(1, Math.max(0, baseColor.l * 1.15)),
+  };
 
   const analogousOne = {
     ...baseColor,
@@ -11,12 +17,12 @@ export default function analogousPalGen(oklch, options) {
 
   const analogousOneDark = {
     ...analogousOne,
-    l: Math.max(0, analogousOne.l * 0.85), // 15% darker
+    l: Math.min(1, Math.max(0, analogousOne.l * 0.85)), // 15% darker, clamped between 0–1
   };
 
   const analogousOneLight = {
     ...analogousOne,
-    l: Math.min(1, analogousOne.l * 1.15), // 15% lighter
+    l: Math.min(1, Math.max(0, analogousOne.l * 1.15)), // 15% lighter, clamped between 0–1
   };
 
   const analogousTwo = {
@@ -26,12 +32,12 @@ export default function analogousPalGen(oklch, options) {
 
   const analogousTwoDark = {
     ...analogousTwo,
-    l: Math.max(0, analogousTwo.l * 0.85), // 15% darker
+    l: Math.min(1, Math.max(0, analogousTwo.l * 0.85)), // 15% darker, clamped between 0–1
   };
 
   const analogousTwoLight = {
     ...analogousTwo,
-    l: Math.min(1, analogousTwo.l * 1.15), // 15% lighter
+    l: Math.min(1, Math.max(0, analogousTwo.l * 1.15)), // 15% lighter,
   };
 
   const analogousThree = {
@@ -41,12 +47,12 @@ export default function analogousPalGen(oklch, options) {
 
   const analogousThreeDark = {
     ...analogousThree,
-    l: Math.max(0, analogousThree.l * 0.85), // 15% darker
+    l: Math.min(1, Math.max(0, analogousThree.l * 0.85)), // 15% darker,
   };
 
   const analogousThreeLight = {
     ...analogousThree,
-    l: Math.min(1, analogousThree.l * 1.15), // 15% lighter
+    l: Math.min(1, Math.max(0, analogousThree.l * 1.15)), // 15% lighter,
   };
 
   return [

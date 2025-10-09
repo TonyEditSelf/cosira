@@ -19,14 +19,14 @@ export default function PalettteProperties() {
   } = useColorPaletteContext();
 
   return (
-    <div className="flex flex-col gap-10">
+    <div className="flex px-4 py-2 flex-col gap-10">
       <div className="flex flex-col w-full">
-        <h1 className="text-[15px] font-bold space-y-3 mb-5">
+        <h1 className="text-[12px] font-bold space-y-3 mb-5">
           ADJUST BY BASE COLOR
         </h1>
         <div className="flex flex-1 flex-col w-full gap-4">
           <div>
-            <h4 className="text-sm font-semibold mb-3">Hue</h4>
+            <h4 className="text-[11px] font-semibold mb-3">Hue</h4>
             <HueSlider
               hue={oklch.h}
               lightness={oklch.l}
@@ -36,7 +36,7 @@ export default function PalettteProperties() {
             />
           </div>
           <div>
-            <h4 className="text-sm font-semibold mb-3">Lightness</h4>
+            <h4 className="text-[11px] font-semibold mb-3">Lightness</h4>
             <LightnessSlider
               lightness={oklch.l}
               chroma={oklch.c}
@@ -46,7 +46,7 @@ export default function PalettteProperties() {
             />
           </div>
           <div>
-            <h4 className="text-sm font-semibold mb-3">Chroma</h4>
+            <h4 className="text-[11px] font-semibold mb-3">Chroma</h4>
             <ChromaSlider
               lightness={oklch.l}
               chroma={oklch.c}
@@ -56,7 +56,7 @@ export default function PalettteProperties() {
             />
           </div>
           <div>
-            <h4 className="text-sm font-semibold mb-3">Temperature</h4>
+            <h4 className="text-[11px] font-semibold mb-3">Temperature</h4>
             <TemperatureSlider
               lightness={oklch.l}
               chroma={oklch.c}
@@ -66,7 +66,7 @@ export default function PalettteProperties() {
             />
           </div>
           <div>
-            <h4 className="text-sm font-semibold mb-3">Alpha</h4>
+            <h4 className="text-[11px] font-semibold mb-3">Alpha</h4>
             <AlphaSlider
               lightness={oklch.l}
               chroma={oklch.c}
@@ -85,9 +85,9 @@ export default function PalettteProperties() {
       {selectedPaletteType === "tetradic" && <TetradicOptions />}
 
       <div className="w-full">
-        <h1 className="text-[15px] font-bold space-y-3 mb-3">SHOW/HIDE</h1>
+        <h1 className="text-[12px] font-bold space-y-3 mb-3">SHOW/HIDE</h1>
 
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1 text-[11px]">
           <span>Show Color Names: </span>
 
           <OffAndOn

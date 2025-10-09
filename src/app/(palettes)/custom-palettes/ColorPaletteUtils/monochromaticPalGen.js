@@ -1,69 +1,57 @@
 export default function monochromaticPalGen(oklch) {
-  let baseColor,
-    darkBase,
-    darkerBase,
-    darkestBase,
-    lightBase,
-    lighterBase,
-    lightestBase,
-    darkerNeutralBase,
-    mutedDarkerBase,
-    lighterNeutralBase,
-    mutedLighterBase;
+  let baseColor = oklch;
 
-  baseColor = oklch;
-
-  darkBase = {
+  let darkBase = {
     ...baseColor,
-    l: Math.max(0, baseColor.l * 0.85), // 15% darker
+    l: Math.min(1, Math.max(0, baseColor.l * 0.85)), // 15% darker
   };
 
-  darkerBase = {
+  let darkerBase = {
     ...baseColor,
-    l: Math.max(0, baseColor.l * 0.8), // 20% darker
+    l: Math.min(1, Math.max(0, baseColor.l * 0.8)), // 20% darker
   };
 
-  darkestBase = {
+  let darkestBase = {
     ...baseColor,
-    l: Math.max(0, baseColor.l * 0.75), // 25% darker
+    l: Math.min(1, Math.max(0, baseColor.l * 0.75)), // 25% darker
   };
 
-  darkerNeutralBase = {
+  let darkerNeutralBase = {
     ...darkestBase,
-    c: Math.min(darkestBase.c * 0.5, 0.08),
+    c: Math.min(0.08, Math.max(0, darkestBase.c * 0.5)),
   };
 
-  mutedDarkerBase = {
+  let mutedDarkerBase = {
     ...darkestBase,
-    l: darkestBase.l * 0.8, // 20% darker
-    c: Math.min(darkestBase.c * 0.5, 0.08), // 50% less saturated, capped at 0.08
+    l: Math.min(1, Math.max(0, darkestBase.l * 0.8)), // 20% darker, clamped
+    c: Math.min(0.08, Math.max(0, darkestBase.c * 0.5)), // chroma clamped
   };
 
-  lightBase = {
+  let lightBase = {
     ...baseColor,
-    l: Math.min(1, baseColor.l * 1.15), // 15% lighter
+    l: Math.min(1, Math.max(0, baseColor.l * 1.15)), // 15% lighter
   };
 
-  lighterBase = {
+  let lighterBase = {
     ...baseColor,
-    l: Math.min(1, baseColor.l * 1.2), // 20% lighter
+    l: Math.min(1, Math.max(0, baseColor.l * 1.2)), // 20% lighter
   };
 
-  lightestBase = {
+  let lightestBase = {
     ...baseColor,
-    l: Math.min(1, baseColor.l * 1.25), // 25% lighter
+    l: Math.min(1, Math.max(0, baseColor.l * 1.25)), // 25% lighter
   };
 
-  lighterNeutralBase = {
+  let lighterNeutralBase = {
     ...lightestBase,
-    l: Math.min(1, lightestBase.l * 1.1), // 10% lighter (scaled)
-    c: Math.min(lightestBase.c * 0.5, 0.08), // scaled neutral chroma
+    l: Math.min(1, Math.max(0, lightestBase.l * 1.1)), // 10% lighter (scaled), clamped
+    c: Math.min(0.08, Math.max(0, lightestBase.c * 0.5)), // chroma clamped
   };
 
-  mutedLighterBase = {
+  let mutedLighterBase = {
     ...lightBase,
-    l: Math.min(1, lightBase.l * 1.1), // 10% lighter (scales instead of adds)
-    c: Math.min(lightBase.c * 0.6, 0.12), // 40% less chroma, capped at 0.12
+    l: Math.min(1, Math.max(0, lightBase.l * 1.1)), // 10% lighter, clamped
+    c: Math.min(0.12, Math.max(0, lightBase.c * 0.6)), // chroma clamped
   };
 
   return [

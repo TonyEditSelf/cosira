@@ -1,39 +1,47 @@
 export default function triadicPalGen(oklch) {
   let baseColor = oklch;
 
-  const darkBase = { ...baseColor, l: Math.max(0, baseColor.l * 0.85) };
-  const lightBase = { ...baseColor, l: Math.min(1, baseColor.l * 1.15) };
+  const darkBase = {
+    ...baseColor,
+    l: Math.min(1, Math.max(0, baseColor.l * 0.85)),
+  };
+  const lightBase = {
+    ...baseColor,
+    l: Math.min(1, Math.max(0, baseColor.l * 1.15)),
+  };
 
   const triadicColor1 = { ...baseColor, h: (baseColor.h + 120) % 360 };
+
   const darkTriad1 = {
     ...triadicColor1,
-    l: Math.max(0, triadicColor1.l * 0.85),
+    l: Math.min(1, Math.max(0, triadicColor1.l * 0.85)),
   };
 
   const lightTriad1 = {
     ...triadicColor1,
-    l: Math.min(1, triadicColor1.l * 1.15),
+    l: Math.min(1, Math.max(0, triadicColor1.l * 1.15)),
   };
 
   const darkestTriad1 = {
     ...darkTriad1,
-    l: Math.max(0, darkTriad1.l * 0.85),
+    l: Math.min(1, Math.max(0, darkTriad1.l * 0.85)),
   };
 
   const triadicColor2 = { ...baseColor, h: (baseColor.h + 240) % 360 };
+
   const darkTriad2 = {
     ...triadicColor2,
-    l: Math.max(0, triadicColor2.l * 0.85),
+    l: Math.min(1, Math.max(0, triadicColor2.l * 0.85)),
   };
 
   const lightTriad2 = {
     ...triadicColor2,
-    l: Math.min(1, triadicColor2.l * 1.15),
+    l: Math.min(1, Math.max(0, triadicColor2.l * 1.15)),
   };
 
   const darkestTriad2 = {
     ...darkTriad2,
-    l: Math.max(0, darkTriad2.l * 0.85),
+    l: Math.min(1, Math.max(0, darkTriad2.l * 0.85)),
   };
 
   return [
