@@ -1,5 +1,6 @@
 "use client";
 
+import OffAndOn from "./_components/OffAndOn";
 import nearestColor from "nearest-color";
 import chroma from "chroma-js";
 import { FaCrosshairs, FaLayerGroup } from "react-icons/fa";
@@ -29,6 +30,7 @@ const nearestColorName = nearestColor.from(colors);
 
 export default function CustomPalettes() {
   const {
+    handleToggle,
     toggles,
     leftPaletteAdjusterOpen,
     myColorPickerOpen,
@@ -46,6 +48,8 @@ export default function CustomPalettes() {
     shadesTintsTonesFunction,
     pickedShadesOrTones,
     setPickedShadesOrTones,
+    showHidePanelOpen,
+    setShowHidePanelOpen,
   } = useColorPaletteContext();
 
   return (
@@ -61,7 +65,7 @@ export default function CustomPalettes() {
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: -200, opacity: 0 }}
                 transition={{ duration: 0.3, ease: easeIn }}
-                className="flex gap-6 h-[calc(100vh-122px)] overflow-y-scroll flex-col items-center ml-3 mr-0 pt-5 py-4 px-6 w-[260px] rounded-md border border-[var(--navBorder)]"
+                className="flex gap-6 h-[calc(100vh-122px)] overflow-y-scroll flex-col items-center ml-3 mr-0 pt-5 py-4 px-6 w-[310px] rounded-md border border-[var(--navBorder)]"
               >
                 <PalettteProperties />
               </motion.aside>
@@ -267,6 +271,89 @@ export default function CustomPalettes() {
                   </div>
                 );
               })}
+
+              {showHidePanelOpen && (
+                <div className="absolute top-20 bottom-2 left-2 bg-[var(--background)] border border-[var(--navBorder)] py-4 px-8 overflow-auto">
+                  <h1 className="text-[12px] font-bold space-y-3 mb-3">
+                    SHOW/HIDE
+                  </h1>
+
+                  <div className="flex flex-col gap-1 text-[11px]">
+                    <span>Show Color Names: </span>
+
+                    <OffAndOn
+                      isItOn={toggles.primitiveName}
+                      setItOn={() => handleToggle("primitiveName")}
+                    />
+
+                    <span>Show UI Role: </span>
+
+                    <OffAndOn
+                      isItOn={toggles.role}
+                      setItOn={() => handleToggle("role")}
+                    />
+
+                    <span>Show Fancy Color Names: </span>
+
+                    <OffAndOn
+                      isItOn={toggles.colorNames}
+                      setItOn={() => handleToggle("colorNames")}
+                    />
+
+                    <span>Show Color Types: </span>
+
+                    <OffAndOn
+                      isItOn={toggles.colorTypes}
+                      setItOn={() => handleToggle("colorTypes")}
+                    />
+
+                    <span>Show Make Base: </span>
+
+                    <OffAndOn
+                      isItOn={toggles.makeBaseOn}
+                      setItOn={() => handleToggle("makeBaseOn")}
+                    />
+                    <span>Show Hex: </span>
+
+                    <OffAndOn
+                      isItOn={toggles.hexOn}
+                      setItOn={() => handleToggle("hexOn")}
+                    />
+
+                    <span>Show Hue: </span>
+                    <OffAndOn
+                      isItOn={toggles.hueOn}
+                      setItOn={() => handleToggle("hueOn")}
+                    />
+                    <span>Show Lightness</span>
+                    <OffAndOn
+                      isItOn={toggles.lightOn}
+                      setItOn={() => handleToggle("lightOn")}
+                    />
+
+                    <span>Show Chroma</span>
+                    <OffAndOn
+                      isItOn={toggles.chromaOn}
+                      setItOn={() => handleToggle("chromaOn")}
+                    />
+                    <span>Show Alpha</span>
+                    <OffAndOn
+                      isItOn={toggles.alphaOn}
+                      setItOn={() => handleToggle("alphaOn")}
+                    />
+                    <span>Show White Contrast</span>
+                    <OffAndOn
+                      isItOn={toggles.whiteContrastOn}
+                      setItOn={() => handleToggle("whiteContrastOn")}
+                    />
+                    <span>Show Black Contrast</span>
+                    <OffAndOn
+                      isItOn={toggles.blackContrastOn}
+                      setItOn={() => handleToggle("blackContrastOn")}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* MY COLORPICKER COMP  */}

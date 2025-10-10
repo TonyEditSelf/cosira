@@ -156,6 +156,7 @@ export function ColorPaletteContextProvider({ children }) {
   const pickerRef = useRef(null);
 
   const [leftPaletteAdjusterOpen, setLeftPaletteAdjusterOpen] = useState(false);
+  const [showHidePanelOpen, setShowHidePanelOpen] = useState(false);
 
   const [selectedPaletteType, setSelectedPaletteType] = useState("vintage");
   const [palette, setPalette] = useState([]);
@@ -217,6 +218,8 @@ export function ColorPaletteContextProvider({ children }) {
     splitCompOptions,
     tetradicAngle,
     handleTetradicAngleChange,
+    showHidePanelOpen,
+    setShowHidePanelOpen,
   };
 
   return (

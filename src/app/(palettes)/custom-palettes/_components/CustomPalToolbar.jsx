@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { IoContrast } from "react-icons/io5";
+import { SiShowtime } from "react-icons/si";
 import { paletteTypes } from "@/app/data/paletteTypes";
 import SelectComp from "./SelectComp";
 import { HiMiniAdjustmentsHorizontal } from "react-icons/hi2";
@@ -27,17 +28,23 @@ export default function CustomPalToolbar() {
     cssColor,
     selectedPaletteType,
     setSelectedPaletteType,
-    setFullScreenOn,
+    showHidePanelOpen,
+    setShowHidePanelOpen,
   } = useColorPaletteContext();
 
   return (
     <section className="flex gap-3 items-center justify-center border border-[var(--navBorder)] py-2 ml-3 mr-2 mb-2 mt-2 rounded-md">
+      <SiShowtime
+        onClick={() => setShowHidePanelOpen((prev) => !prev)}
+        className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]"
+      />
+
       <HiMiniAdjustmentsHorizontal
         onClick={() => setLeftPaletteAdjusterOpen((prev) => !prev)}
-        className={`size-9 cursor-pointer font-black border py-2 px-2 rounded-md ${
+        className={`size-9 cursor-pointer font-black py-2 px-2 rounded-md ${
           leftPaletteAdjusterOpen
-            ? "border-[var(--brand)] hover:border-2"
-            : "border-[var(--navBorder)] hover:border-[var(--muted-foreground)]"
+            ? "border-[var(--navBorder)] hover:border-[var(--muted-foreground)] border"
+            : "border-[var(--brand)] border-2 hover:border-2"
         } `}
       />
       <SelectComp

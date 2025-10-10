@@ -78,7 +78,7 @@ export default function HueSlider({ hue, lightness, chroma, onChange }) {
       <div
         ref={sliderRef}
         onMouseDown={handleMouseDown}
-        className="relative w-full h-3 cursor-pointer rounded-xl overflow-hidden shadow-inner border border-gray-200"
+        className="relative w-full h-2 cursor-pointer rounded-xl overflow-hidden shadow-inner border border-gray-200"
       >
         <canvas
           ref={canvasRef}

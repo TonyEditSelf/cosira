@@ -6,15 +6,15 @@ import TemperatureSlider from "./Pickers/components/TemperatureSlider";
 import AnalogousOptions from "../ColorPaletteUtils/AnalogousOptions";
 import SplitCompOptions from "../ColorPaletteUtils/SplitCompOptions";
 import { useColorPaletteContext } from "../../ColorContext";
-import OffAndOn from "./OffAndOn";
+import VintageOptions from "../ColorPaletteUtils/VintageOptions";
+
 import TetradicOptions from "../ColorPaletteUtils/TetradicOptions";
 
 export default function PalettteProperties() {
   const {
     oklch,
     handleColorChange,
-    toggles,
-    handleToggle,
+
     selectedPaletteType,
   } = useColorPaletteContext();
 
@@ -84,84 +84,7 @@ export default function PalettteProperties() {
 
       {selectedPaletteType === "tetradic" && <TetradicOptions />}
 
-      <div className="w-full">
-        <h1 className="text-[12px] font-bold space-y-3 mb-3">SHOW/HIDE</h1>
-
-        <div className="flex flex-col gap-1 text-[11px]">
-          <span>Show Color Names: </span>
-
-          <OffAndOn
-            isItOn={toggles.primitiveName}
-            setItOn={() => handleToggle("primitiveName")}
-          />
-
-          <span>Show UI Role: </span>
-
-          <OffAndOn
-            isItOn={toggles.role}
-            setItOn={() => handleToggle("role")}
-          />
-
-          <span>Show Fancy Color Names: </span>
-
-          <OffAndOn
-            isItOn={toggles.colorNames}
-            setItOn={() => handleToggle("colorNames")}
-          />
-
-          <span>Show Color Types: </span>
-
-          <OffAndOn
-            isItOn={toggles.colorTypes}
-            setItOn={() => handleToggle("colorTypes")}
-          />
-
-          <span>Show Make Base: </span>
-
-          <OffAndOn
-            isItOn={toggles.makeBaseOn}
-            setItOn={() => handleToggle("makeBaseOn")}
-          />
-          <span>Show Hex: </span>
-
-          <OffAndOn
-            isItOn={toggles.hexOn}
-            setItOn={() => handleToggle("hexOn")}
-          />
-
-          <span>Show Hue: </span>
-          <OffAndOn
-            isItOn={toggles.hueOn}
-            setItOn={() => handleToggle("hueOn")}
-          />
-          <span>Show Lightness</span>
-          <OffAndOn
-            isItOn={toggles.lightOn}
-            setItOn={() => handleToggle("lightOn")}
-          />
-
-          <span>Show Chroma</span>
-          <OffAndOn
-            isItOn={toggles.chromaOn}
-            setItOn={() => handleToggle("chromaOn")}
-          />
-          <span>Show Alpha</span>
-          <OffAndOn
-            isItOn={toggles.alphaOn}
-            setItOn={() => handleToggle("alphaOn")}
-          />
-          <span>Show White Contrast</span>
-          <OffAndOn
-            isItOn={toggles.whiteContrastOn}
-            setItOn={() => handleToggle("whiteContrastOn")}
-          />
-          <span>Show Black Contrast</span>
-          <OffAndOn
-            isItOn={toggles.blackContrastOn}
-            setItOn={() => handleToggle("blackContrastOn")}
-          />
-        </div>
-      </div>
+      {selectedPaletteType === "vintage" && <VintageOptions />}
     </div>
   );
 }

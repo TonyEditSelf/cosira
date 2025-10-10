@@ -5,8 +5,8 @@ export default function AnalogousOptions() {
 
   return (
     <div>
-      <h1 className="text-[15px] font-bold mb-3">ANALOGUE OPTIONS</h1>
-      <div className="flex flex-col gap-4 text-sm font-semibold ">
+      <h1 className="text-[12px] font-bold mb-3">ANALOGUE OPTIONS</h1>
+      <div className="flex flex-col gap-4 text-[11px] font-semibold ">
         <div className="flex flex-col w-fit">
           <label htmlFor="analogousStep2">Analog1 1 Angle:</label>
           <input

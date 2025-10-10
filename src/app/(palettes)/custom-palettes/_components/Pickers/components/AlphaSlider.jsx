@@ -101,7 +101,7 @@ export default function AlphaSlider({
       <div
         ref={sliderRef}
         onMouseDown={handleMouseDown}
-        className="relative w-full h-3 cursor-pointer rounded-lg overflow-hidden shadow-inner border border-gray-200"
+        className="relative w-full h-2 cursor-pointer rounded-lg overflow-hidden shadow-inner border border-gray-200"
       >
         <canvas ref={canvasRef} className="w-full h-full" />
 
