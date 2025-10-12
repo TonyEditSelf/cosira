@@ -7,15 +7,18 @@ import AnalogousOptions from "../ColorPaletteUtils/AnalogousOptions";
 import SplitCompOptions from "../ColorPaletteUtils/SplitCompOptions";
 import { useColorPaletteContext } from "../../ColorContext";
 import VintageOptions from "../ColorPaletteUtils/VintageOptions";
-
+import NeutralOptions from "../ColorPaletteUtils/NeutralOptions";
+import KidsPalOptions from "../ColorPaletteUtils/KidsPalOptions";
 import TetradicOptions from "../ColorPaletteUtils/TetradicOptions";
 
 export default function PalettteProperties() {
   const {
     oklch,
     handleColorChange,
-
     selectedPaletteType,
+    vintagePalType,
+    neutralPalType,
+    kidsPalType,
   } = useColorPaletteContext();
 
   return (
@@ -85,6 +88,38 @@ export default function PalettteProperties() {
       {selectedPaletteType === "tetradic" && <TetradicOptions />}
 
       {selectedPaletteType === "vintage" && <VintageOptions />}
+
+      {selectedPaletteType === "vintage" &&
+        vintagePalType === "vintageSplitComp" && <SplitCompOptions />}
+
+      {selectedPaletteType === "vintage" &&
+        vintagePalType === "vintageAnalog" && <AnalogousOptions />}
+
+      {selectedPaletteType === "vintage" &&
+        vintagePalType === "vintageTetra" && <TetradicOptions />}
+
+      {selectedPaletteType === "neutral" && <NeutralOptions />}
+
+      {selectedPaletteType === "neutral" &&
+        neutralPalType === "neutralSplitComp" && <SplitCompOptions />}
+
+      {selectedPaletteType === "neutral" &&
+        neutralPalType === "neutralAnalog" && <AnalogousOptions />}
+
+      {selectedPaletteType === "neutral" &&
+        neutralPalType === "neutralTetra" && <TetradicOptions />}
+
+      {selectedPaletteType === "kidFriendly" && <KidsPalOptions />}
+
+      {selectedPaletteType === "kidFriendly" &&
+        kidsPalType === "kidsSplitComp" && <SplitCompOptions />}
+
+      {selectedPaletteType === "kidFriendly" &&
+        kidsPalType === "kidsAnalog" && <AnalogousOptions />}
+
+      {selectedPaletteType === "kidFriendly" && kidsPalType === "kidsTetra" && (
+        <TetradicOptions />
+      )}
     </div>
   );
 }
