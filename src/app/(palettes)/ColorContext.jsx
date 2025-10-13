@@ -45,7 +45,7 @@ export function ColorPaletteContextProvider({ children }) {
 
   const [toggles, setToggles] = useState({
     colorNames: false,
-    colorTypes: false,
+    colorTypes: true,
     makeBaseOn: false,
     role: false,
     primitiveName: false,
@@ -147,7 +147,7 @@ export function ColorPaletteContextProvider({ children }) {
 
   const [neutralPalType, setNeutralPalType] = useState("neutralComp");
 
-  const [kidsPalType, setKidsPalType] = useState("kidsComp");
+  const [kidsPalType, setKidsPalType] = useState("kidsMono");
 
   const [r, g, b] = oklchToRgb(oklch.l, oklch.c, oklch.h);
   const cssColor = oklchToCss(oklch.l, oklch.c, oklch.h, oklch.a);

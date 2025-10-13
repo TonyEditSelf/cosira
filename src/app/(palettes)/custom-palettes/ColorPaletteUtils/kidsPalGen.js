@@ -27,7 +27,7 @@ export default function kidsPalGen(
     );
     return kidsSplitCompPal;
   } else if (kidsPalType === "kidsMono") {
-    const kidsMonoPal = monochromaticPalGen(oklch, null, kidsPalType);
+    const kidsMonoPal = monochromaticPalGen(oklch, null, null, kidsPalType);
     return kidsMonoPal;
   } else if (kidsPalType === "kidsAnalog") {
     const kidsAnalogPal = analogousPalGen(

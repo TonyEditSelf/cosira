@@ -1,7 +1,8 @@
 export default function monochromaticPalGen(
   oklch,
   vintagePalType = null,
-  neutralPalType = null
+  neutralPalType = null,
+  kidsPalType = null
 ) {
   let darkerNeutralBase,
     mutedDarkerBase,
@@ -15,7 +16,11 @@ export default function monochromaticPalGen(
     lighterNeutralBase,
     mutedLighterBase;
 
-  if (vintagePalType === null && neutralPalType === null) {
+  if (
+    vintagePalType === null &&
+    neutralPalType === null &&
+    kidsPalType === null
+  ) {
     baseColor = oklch;
 
     darkBase = {
@@ -259,6 +264,78 @@ export default function monochromaticPalGen(
       // Moderate desaturation
       c: Math.min(NEUTRAL_CHROMA_MAX, Math.max(0.01, lightBase.c * 0.6)),
     };
+  } else if (kidsPalType === "kidsMono") {
+    const minChroma = 0.25;
+    const maxChroma = 0.32;
+    const minLightness = 0.75;
+    const maxLightness = 0.95;
+
+    const baseColor = {
+      ...oklch,
+      c: 0.285,
+      l: 0.85,
+    };
+
+    const ddddBase = {
+      ...baseColor,
+      c: Math.min(maxChroma, Math.max(minChroma, baseColor.c * 1.123)),
+      l: Math.min(maxLightness, Math.max(minLightness, baseColor.l * 0.882)),
+    };
+
+    const dddBase = {
+      ...baseColor,
+      c: Math.min(maxChroma, Math.max(minChroma, minChroma * 1.245)), // 0.3113
+      l: Math.min(maxLightness, Math.max(minLightness, minLightness * 1.033)), // 0.775
+    };
+
+    const ddBase = {
+      ...baseColor,
+      c: Math.min(maxChroma, Math.max(minChroma, minChroma * 1.21)), // 0.3025
+      l: Math.min(maxLightness, Math.max(minLightness, minLightness * 1.0667)), // 0.8
+    };
+
+    const dBase = {
+      ...baseColor,
+      c: Math.min(maxChroma, Math.max(minChroma, minChroma * 1.175)), // 0.2938
+      l: Math.min(maxLightness, Math.max(minLightness, minLightness * 1.1)), // 0.825
+    };
+
+    const lBase = {
+      ...baseColor,
+      c: Math.min(maxChroma, Math.max(minChroma, minChroma * 1.1052)), // 0.2763
+      l: Math.min(maxLightness, Math.max(minLightness, minLightness * 1.1667)), // 0.875
+    };
+
+    const llBase = {
+      ...baseColor,
+      c: Math.min(maxChroma, Math.max(minChroma, minChroma * 1.07)), // 0.2675
+      l: Math.min(maxLightness, Math.max(minLightness, minLightness * 1.2)), // 0.9
+    };
+
+    const lllBase = {
+      ...baseColor,
+      c: Math.min(maxChroma, Math.max(minChroma, minChroma * 1.0352)), // 0.2588
+      l: Math.min(maxLightness, Math.max(minLightness, minLightness * 1.2333)), // 0.925
+    };
+
+    const llllBase = {
+      ...baseColor,
+      c: Math.min(maxChroma, Math.max(minChroma, minChroma * 1)), // 0.25
+      l: Math.min(maxLightness, Math.max(minLightness, minLightness * 1.2667)), // 0.95
+    };
+
+    // --- 4. RETURN STRUCTURE (11 Colors) ---
+    return [
+      { name: "Base-DDDD", value: ddddBase },
+      { name: "Base-DDD", value: dddBase },
+      { name: "Base-DD", value: ddBase },
+      { name: "Base-D", value: dBase },
+      { name: "Base", value: baseColor }, // Center color
+      { name: "Base-L", value: lBase },
+      { name: "Base-LL", value: llBase },
+      { name: "Base-LLL", value: lllBase },
+      { name: "Base-LLLL", value: llllBase },
+    ];
   }
 
   return [
