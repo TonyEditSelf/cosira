@@ -38,26 +38,30 @@ export default function PalettteProperties() {
               onChange={handleColorChange}
             />
           </div>
-          <div>
-            <h4 className="text-[11px] font-semibold mb-3">Lightness</h4>
-            <LightnessSlider
-              lightness={oklch.l}
-              chroma={oklch.c}
-              hue={oklch.h}
-              alpha={oklch.a}
-              onChange={handleColorChange}
-            />
-          </div>
-          <div>
-            <h4 className="text-[11px] font-semibold mb-3">Chroma</h4>
-            <ChromaSlider
-              lightness={oklch.l}
-              chroma={oklch.c}
-              hue={oklch.h}
-              alpha={oklch.a}
-              onChange={handleColorChange}
-            />
-          </div>
+          {!kidsPalType && (
+            <div>
+              <h4 className="text-[11px] font-semibold mb-3">Lightness</h4>
+              <LightnessSlider
+                lightness={oklch.l}
+                chroma={oklch.c}
+                hue={oklch.h}
+                alpha={oklch.a}
+                onChange={handleColorChange}
+              />
+            </div>
+          )}
+          {!kidsPalType && (
+            <div>
+              <h4 className="text-[11px] font-semibold mb-3">Chroma</h4>
+              <ChromaSlider
+                lightness={oklch.l}
+                chroma={oklch.c}
+                hue={oklch.h}
+                alpha={oklch.a}
+                onChange={handleColorChange}
+              />
+            </div>
+          )}
           <div>
             <h4 className="text-[11px] font-semibold mb-3">Temperature</h4>
             <TemperatureSlider
@@ -68,16 +72,18 @@ export default function PalettteProperties() {
               onChange={handleColorChange}
             />
           </div>
-          <div>
-            <h4 className="text-[11px] font-semibold mb-3">Alpha</h4>
-            <AlphaSlider
-              lightness={oklch.l}
-              chroma={oklch.c}
-              hue={oklch.h}
-              alpha={oklch.a}
-              onChange={handleColorChange}
-            />
-          </div>
+          {!kidsPalType && (
+            <div>
+              <h4 className="text-[11px] font-semibold mb-3">Alpha</h4>
+              <AlphaSlider
+                lightness={oklch.l}
+                chroma={oklch.c}
+                hue={oklch.h}
+                alpha={oklch.a}
+                onChange={handleColorChange}
+              />
+            </div>
+          )}
         </div>
       </div>
 

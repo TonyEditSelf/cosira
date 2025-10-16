@@ -102,44 +102,54 @@ export function ColorPaletteContextProvider({ children }) {
   const [colorForShadesTintsTones, setColorForShadesTintsTones] = useState();
   const [allShadesTintsTones, setAllShadesTintsTones] = useState();
   const [pickedShadesOrTones, setPickedShadesOrTones] = useState(null);
+  const [shadesTintsTonesValues, setShadesTintsTonesValues] = useState();
 
   const shadesTintsTonesFunction = (obj, typeShadeOrTint) => {
     if (typeShadeOrTint === "tones") {
       const newToneObj = { ...obj, c: 0 };
       const middleTone = obj.c;
       let tones = [];
+      let iValues = [];
 
       for (let i = 0.01; i < middleTone; i += 0.01) {
         let newObj = { ...newToneObj, c: newToneObj.c + i };
         tones.push(newObj);
+        iValues.push(i);
       }
 
       tones.push(obj);
+      iValues.push(middleTone);
 
       for (let i = middleTone + 0.01; i <= 0.4; i += 0.01) {
         let newObj = { ...newToneObj, c: newToneObj.c + i };
         tones.push(newObj);
+        iValues.push(i);
       }
 
       setAllShadesTintsTones(tones);
+      setShadesTintsTonesValues(iValues);
     } else if (typeShadeOrTint === "shadesTints") {
       const newShadeObj = { ...obj, l: 0 };
       const middleShade = obj.l;
       let shadesAndTints = [];
+      let iValues = [];
 
-      for (let i = 0.02; i < middleShade; i += 0.02) {
+      for (let i = 0.01; i < middleShade; i += 0.01) {
         let newObj = { ...newShadeObj, l: newShadeObj.l + i };
         shadesAndTints.push(newObj);
+        iValues.push(i);
       }
 
       shadesAndTints.push(obj);
+      iValues.push(middleShade);
 
-      for (let i = middleShade + 0.02; i <= 1; i += 0.02) {
+      for (let i = middleShade + 0.01; i <= 1; i += 0.01) {
         let newObj = { ...newShadeObj, l: newShadeObj.l + i };
         shadesAndTints.push(newObj);
+        iValues.push(i);
       }
-
       setAllShadesTintsTones(shadesAndTints);
+      setShadesTintsTonesValues(iValues);
     }
   };
 
@@ -175,6 +185,7 @@ export function ColorPaletteContextProvider({ children }) {
       selectedPaletteType !== "neutral" &&
       selectedPaletteType !== "kidFriendly"
     ) {
+      setKidsPalType(null);
       const pal = paletteDecider(
         oklch,
         analogOptions,
@@ -254,6 +265,7 @@ export function ColorPaletteContextProvider({ children }) {
     setNeutralPalType,
     kidsPalType,
     setKidsPalType,
+    shadesTintsTonesValues,
   };
 
   return (

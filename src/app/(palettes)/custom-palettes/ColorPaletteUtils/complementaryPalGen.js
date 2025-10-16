@@ -275,8 +275,8 @@ export default function complementaryPalGen(
     });
 
     const L_MIN_SAFE = 0.75; // All output colors must be lighter than this (no moody darks)
-    const L_MAX_SAFE = 0.97; // Prevents washing out to pure white (L=1.0)
-    const C_MAX_SAFE = 0.3; // Maximum allowed saturation (no aggressive/electric colors)
+    const L_MAX_SAFE = 0.95; // Prevents washing out to pure white (L=1.0)
+    const C_MAX_SAFE = 0.32; // Maximum allowed saturation (no aggressive/electric colors)
     const C_MIN_VISIBLE = 0.25; // Minimum allowed saturation for light colors (RAISED to guarantee cheerfulness)
     const H_SHIFT_COOL = 10; // Hue shift applied to cool lightest variant for distinction
 

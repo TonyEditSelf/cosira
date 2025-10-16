@@ -1,7 +1,8 @@
 export default function triadicPalGen(
   oklch,
   vintagePalType = null,
-  neutralPalType = null
+  neutralPalType = null,
+  kidsPalType = null
 ) {
   let lightBase,
     baseColor,
@@ -15,7 +16,11 @@ export default function triadicPalGen(
     darkTriad2,
     darkestTriad2;
 
-  if (vintagePalType === null && neutralPalType === null) {
+  if (
+    vintagePalType === null &&
+    neutralPalType === null &&
+    kidsPalType === null
+  ) {
     baseColor = oklch;
 
     darkBase = {
@@ -236,6 +241,150 @@ export default function triadicPalGen(
       // Retain high saturation (relative to the NEUTRAL_CHROMA_MAX)
       c: Math.min(NEUTRAL_CHROMA_MAX, Math.max(0.01, darkTriad2.c * 1.05)),
     };
+  } else if (kidsPalType === "kidsTriad") {
+    const CF_MIN_L = 0.75;
+    const CF_MAX_L = 0.95;
+    const CF_MIN_C = 0.25;
+    const CF_MAX_C = 0.32;
+
+    // --- KID-FRIENDLY IDEAL TARGET (Scaling Center) ---
+    const CF_IDEAL_L = 0.85;
+    const CF_IDEAL_C = 0.285;
+
+    // --- 1. Calculate the Scaled and Clamped Base L and C (FIXED FOR NaN) ---
+
+    let scaledL;
+    // === FIX 1: Guard against zero or near-zero lightness input to prevent NaN ===
+    if (oklch.l < 0.0001) {
+      scaledL = CF_MIN_L;
+    } else {
+      const lightnessMultiplier = CF_IDEAL_L / oklch.l;
+      scaledL = oklch.l * lightnessMultiplier;
+    }
+    // =======================================================================
+
+    let scaledC;
+    // === FIX 2: Guard against zero or near-zero chroma input to prevent NaN (Original Fix) ===
+    if (oklch.c < 0.0001) {
+      scaledC = CF_MIN_C;
+    } else {
+      const chromaMultiplier = CF_IDEAL_C / oklch.c;
+      scaledC = oklch.c * chromaMultiplier;
+    }
+    // ======================================================================
+
+    // Define the common BASE L and C for the entire palette by clamping
+    const baseL = Math.min(CF_MAX_L, Math.max(CF_MIN_L, scaledL));
+    const baseC = Math.min(CF_MAX_C, Math.max(CF_MIN_C, scaledC));
+
+    // --- 2. Define the Triadic Hues ---
+    const h0 = oklch.h;
+    const h1 = (oklch.h + 120) % 360;
+    const h2 = (oklch.h + 240) % 360;
+
+    // --- 3. Helper to Apply Step and Clamp Final Color ---
+    const calculateClampedColor = (hue, lFactor, cFactor) => {
+      const newL = baseL * lFactor;
+      const newC = baseC * cFactor;
+
+      return {
+        h: hue,
+        l: Math.min(CF_MAX_L, Math.max(CF_MIN_L, newL)),
+        c: Math.min(CF_MAX_C, Math.max(CF_MIN_C, newC)),
+      };
+    };
+
+    // --- 4. Define Step Factors ---
+    const stepFactors = {
+      lighter: { l: 1.1, c: 0.9, name: "Lighter" },
+      base: { l: 1.0, c: 1.0, name: "Base" },
+      darker: { l: 0.9, c: 1.1, name: "Darker" },
+    };
+
+    // --- 5. Generate the 9-Color Palette ---
+
+    const palette = [
+      // --- HUE 0 (Primary) ---
+      {
+        name: "Base",
+        value: calculateClampedColor(
+          h0,
+          stepFactors.base.l,
+          stepFactors.base.c
+        ),
+      },
+      {
+        name: "pri-lighter",
+        value: calculateClampedColor(
+          h0,
+          stepFactors.lighter.l,
+          stepFactors.lighter.c
+        ),
+      },
+      {
+        name: "pri-darker",
+        value: calculateClampedColor(
+          h0,
+          stepFactors.darker.l,
+          stepFactors.darker.c
+        ),
+      },
+
+      // --- HUE 1 (Secondary) ---
+      {
+        name: "sec-base",
+        value: calculateClampedColor(
+          h1,
+          stepFactors.base.l,
+          stepFactors.base.c
+        ),
+      },
+      {
+        name: "sec-lighter",
+        value: calculateClampedColor(
+          h1,
+          stepFactors.lighter.l,
+          stepFactors.lighter.c
+        ),
+      },
+      {
+        name: "sec-darker",
+        value: calculateClampedColor(
+          h1,
+          stepFactors.darker.l,
+          stepFactors.darker.c
+        ),
+      },
+
+      // --- HUE 2 (Tertiary) ---
+      {
+        name: "tert-base",
+        value: calculateClampedColor(
+          h2,
+          stepFactors.base.l,
+          stepFactors.base.c
+        ),
+      },
+      {
+        name: "tert-lighter",
+        value: calculateClampedColor(
+          h2,
+          stepFactors.lighter.l,
+          stepFactors.lighter.c
+        ),
+      },
+      {
+        name: "tert-darker",
+        value: calculateClampedColor(
+          h2,
+          stepFactors.darker.l,
+          stepFactors.darker.c
+        ),
+      },
+    ];
+
+    // --- Return the 9-color Polychromatic Palette ---
+    return palette;
   }
 
   return [

@@ -265,77 +265,61 @@ export default function monochromaticPalGen(
       c: Math.min(NEUTRAL_CHROMA_MAX, Math.max(0.01, lightBase.c * 0.6)),
     };
   } else if (kidsPalType === "kidsMono") {
-    const minChroma = 0.25;
-    const maxChroma = 0.32;
-    const minLightness = 0.75;
-    const maxLightness = 0.95;
+    const SLIDER_STEP = 0.01;
+    const MAX_DELTA = 0.05;
 
-    const baseColor = {
-      ...oklch,
-      c: 0.285,
-      l: 0.85,
-    };
+    // Example slider ticks
+    const lightnessTicks = 3; // +0.03
+    const chromaTicks = -2; // -0.02
 
-    const ddddBase = {
-      ...baseColor,
-      c: Math.min(maxChroma, Math.max(minChroma, baseColor.c * 1.123)),
-      l: Math.min(maxLightness, Math.max(minLightness, baseColor.l * 0.882)),
-    };
+    // Strict kid-friendly constraints
+    const CF_MIN_L = 0.75;
+    const CF_MAX_L = 0.95;
+    const CF_MIN_C = 0.25;
+    const CF_MAX_C = 0.32;
 
-    const dddBase = {
-      ...baseColor,
-      c: Math.min(maxChroma, Math.max(minChroma, minChroma * 1.245)), // 0.3113
-      l: Math.min(maxLightness, Math.max(minLightness, minLightness * 1.033)), // 0.775
-    };
+    // Base ideal target
+    const CF_IDEAL_L = 0.85;
+    const CF_IDEAL_C = 0.285;
 
-    const ddBase = {
-      ...baseColor,
-      c: Math.min(maxChroma, Math.max(minChroma, minChroma * 1.21)), // 0.3025
-      l: Math.min(maxLightness, Math.max(minLightness, minLightness * 1.0667)), // 0.8
-    };
+    // Convert ticks → deltas (clamped)
+    const lightnessDelta = Math.min(
+      MAX_DELTA,
+      Math.max(-MAX_DELTA, lightnessTicks * SLIDER_STEP)
+    );
+    const chromaDelta = Math.min(
+      MAX_DELTA,
+      Math.max(-MAX_DELTA, chromaTicks * SLIDER_STEP)
+    );
 
-    const dBase = {
-      ...baseColor,
-      c: Math.min(maxChroma, Math.max(minChroma, minChroma * 1.175)), // 0.2938
-      l: Math.min(maxLightness, Math.max(minLightness, minLightness * 1.1)), // 0.825
-    };
-
-    const lBase = {
-      ...baseColor,
-      c: Math.min(maxChroma, Math.max(minChroma, minChroma * 1.1052)), // 0.2763
-      l: Math.min(maxLightness, Math.max(minLightness, minLightness * 1.1667)), // 0.875
-    };
-
-    const llBase = {
-      ...baseColor,
-      c: Math.min(maxChroma, Math.max(minChroma, minChroma * 1.07)), // 0.2675
-      l: Math.min(maxLightness, Math.max(minLightness, minLightness * 1.2)), // 0.9
-    };
-
-    const lllBase = {
-      ...baseColor,
-      c: Math.min(maxChroma, Math.max(minChroma, minChroma * 1.0352)), // 0.2588
-      l: Math.min(maxLightness, Math.max(minLightness, minLightness * 1.2333)), // 0.925
-    };
-
-    const llllBase = {
-      ...baseColor,
-      c: Math.min(maxChroma, Math.max(minChroma, minChroma * 1)), // 0.25
-      l: Math.min(maxLightness, Math.max(minLightness, minLightness * 1.2667)), // 0.95
-    };
-
-    // --- 4. RETURN STRUCTURE (11 Colors) ---
-    return [
-      { name: "Base-DDDD", value: ddddBase },
-      { name: "Base-DDD", value: dddBase },
-      { name: "Base-DD", value: ddBase },
-      { name: "Base-D", value: dBase },
-      { name: "Base", value: baseColor }, // Center color
-      { name: "Base-L", value: lBase },
-      { name: "Base-LL", value: llBase },
-      { name: "Base-LLL", value: lllBase },
-      { name: "Base-LLLL", value: llllBase },
+    // --- Define palette steps as *absolute offsets* from center ---
+    const stepOffsets = [
+      { name: "Base-DDDD", lOffset: -0.12, cOffset: +0.02 },
+      { name: "Base-DDD", lOffset: -0.08, cOffset: +0.01 },
+      { name: "Base-DD", lOffset: -0.04, cOffset: +0.0 },
+      { name: "Base-D", lOffset: -0.02, cOffset: -0.01 },
+      { name: "Base", lOffset: 0.0, cOffset: 0.0 },
+      { name: "Base-L", lOffset: +0.02, cOffset: -0.01 },
+      { name: "Base-LL", lOffset: +0.04, cOffset: -0.02 },
+      { name: "Base-LLL", lOffset: +0.08, cOffset: -0.03 },
+      { name: "Base-LLLL", lOffset: +0.12, cOffset: -0.04 },
     ];
+
+    // Generate palette
+    const palette = stepOffsets.map((step) => {
+      const l = Math.min(
+        CF_MAX_L,
+        Math.max(CF_MIN_L, CF_IDEAL_L + lightnessDelta + step.lOffset)
+      );
+      const c = Math.min(
+        CF_MAX_C,
+        Math.max(CF_MIN_C, CF_IDEAL_C + chromaDelta + step.cOffset)
+      );
+      return { name: step.name, value: { h: oklch.h, l, c } };
+    });
+
+    console.log(palette);
+    return palette;
   }
 
   return [

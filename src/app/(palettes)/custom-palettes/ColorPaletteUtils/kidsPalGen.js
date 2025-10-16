@@ -46,7 +46,7 @@ export default function kidsPalGen(
     );
     return kidsTetraPal;
   } else if (kidsPalType === "kidsTriad") {
-    const kidsTriadPal = triadicPalGen(oklch, null, kidsPalType);
+    const kidsTriadPal = triadicPalGen(oklch, null, null, kidsPalType);
     return kidsTriadPal;
   }
 }

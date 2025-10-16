@@ -50,6 +50,8 @@ export default function CustomPalettes() {
     setPickedShadesOrTones,
     showHidePanelOpen,
     setShowHidePanelOpen,
+    shadesTintsTonesValues,
+    selectedPaletteType,
   } = useColorPaletteContext();
 
   return (
@@ -137,7 +139,7 @@ export default function CustomPalettes() {
 
                             return (
                               <div
-                                className={`flex-1 cursor-pointer ${
+                                className={`relative group flex-1 cursor-pointer text-[5px] text-center ${
                                   pickedShadesOrTones === "tones"
                                     ? "hover:border-t border-gray-400"
                                     : null
@@ -170,7 +172,11 @@ export default function CustomPalettes() {
                                     )
                                   );
                                 }}
-                              ></div>
+                              >
+                                <span className="absolute hidden group-hover:block bottom-4 left-1/2 -translate-x-1/2 z-50 text-xs bg-[var(--navBorder)] px-2 py-1 rounded-xs text-white">
+                                  {shadesTintsTonesValues[STTIndex].toFixed(2)}
+                                </span>
+                              </div>
                             );
                           }
                         )}
@@ -195,33 +201,38 @@ export default function CustomPalettes() {
                           {toggles.lightOn && <span>L: {l.toFixed(2)}</span>}
                           {toggles.chromaOn && <span>C: {c.toFixed(2)}</span>}
                           {toggles.hueOn && <span>H: {h.toFixed(2)}</span>}
-                          {toggles.alphaOn && <span>A: {a.toFixed(2)}</span>}
+                          {toggles.alphaOn && (
+                            <span>A: {(a ?? 1).toFixed(2)}</span>
+                          )}
                           {toggles.whiteContrastOn && (
                             <span>WC: {contrast1.toFixed(2)}</span>
                           )}
                           {toggles.blackContrastOn && (
                             <span>BC: {contrast2.toFixed(2)}</span>
                           )}
-                          {toggles.makeBaseOn && (
-                            <span
-                              className={`p-1 rounded-md border ${
-                                colorObj.name === "Base" ? "border-0" : "border"
-                              } ${
-                                textColor === "white"
-                                  ? "border-white "
-                                  : "border-black "
-                              }`}
-                            >
-                              <FaCrosshairs
-                                className={`w-[12px] h-[12px] cursor-pointer ${
+                          {toggles.makeBaseOn &&
+                            selectedPaletteType !== "kidFriendly" && (
+                              <span
+                                className={`p-1 rounded-md border ${
                                   colorObj.name === "Base"
-                                    ? "invisible"
-                                    : "visible"
-                                }  `}
-                                onClick={() => setOklch(colorObj.value)}
-                              />
-                            </span>
-                          )}
+                                    ? "border-0"
+                                    : "border"
+                                } ${
+                                  textColor === "white"
+                                    ? "border-white "
+                                    : "border-black "
+                                }`}
+                              >
+                                <FaCrosshairs
+                                  className={`w-[12px] h-[12px] cursor-pointer ${
+                                    colorObj.name === "Base"
+                                      ? "invisible"
+                                      : "visible"
+                                  }  `}
+                                  onClick={() => setOklch(colorObj.value)}
+                                />
+                              </span>
+                            )}
                           <span
                             onClick={() => {
                               shadesTintsTonesFunction(
@@ -273,7 +284,7 @@ export default function CustomPalettes() {
               })}
 
               {showHidePanelOpen && (
-                <div className="absolute top-20 bottom-2 left-2 bg-[var(--background)] border border-[var(--navBorder)] py-4 px-8 overflow-auto">
+                <div className="absolute top-2 bottom-2 left-2 bg-[var(--background)] border border-[var(--navBorder)] py-4 px-8 overflow-auto">
                   <h1 className="text-[12px] font-bold space-y-3 mb-3">
                     SHOW/HIDE
                   </h1>
@@ -307,12 +318,16 @@ export default function CustomPalettes() {
                       setItOn={() => handleToggle("colorTypes")}
                     />
 
-                    <span>Show Make Base: </span>
+                    {selectedPaletteType !== "kidFriendly" && (
+                      <div>
+                        <span>Show Make Base: </span>
 
-                    <OffAndOn
-                      isItOn={toggles.makeBaseOn}
-                      setItOn={() => handleToggle("makeBaseOn")}
-                    />
+                        <OffAndOn
+                          isItOn={toggles.makeBaseOn}
+                          setItOn={() => handleToggle("makeBaseOn")}
+                        />
+                      </div>
+                    )}
                     <span>Show Hex: </span>
 
                     <OffAndOn
