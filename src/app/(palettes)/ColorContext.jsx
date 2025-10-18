@@ -174,7 +174,11 @@ export function ColorPaletteContextProvider({ children }) {
   const [leftPaletteAdjusterOpen, setLeftPaletteAdjusterOpen] = useState(false);
   const [showHidePanelOpen, setShowHidePanelOpen] = useState(false);
 
-  const [selectedPaletteType, setSelectedPaletteType] = useState("kidFriendly");
+  const [selectedPaletteType, setSelectedPaletteType] =
+    useState("complementary");
+
+  const [compPalType, setCompPalType] = useState("classicComp");
+
   const [palette, setPalette] = useState([]);
 
   useEffect(() => {
@@ -266,6 +270,8 @@ export function ColorPaletteContextProvider({ children }) {
     kidsPalType,
     setKidsPalType,
     shadesTintsTonesValues,
+    compPalType,
+    setCompPalType,
   };
 
   return (

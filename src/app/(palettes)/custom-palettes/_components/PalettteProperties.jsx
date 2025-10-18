@@ -10,6 +10,7 @@ import VintageOptions from "../ColorPaletteUtils/VintageOptions";
 import NeutralOptions from "../ColorPaletteUtils/NeutralOptions";
 import KidsPalOptions from "../ColorPaletteUtils/KidsPalOptions";
 import TetradicOptions from "../ColorPaletteUtils/TetradicOptions";
+import ComplementaryOptions from "../ColorPaletteUtils/ComplementaryOptions";
 
 export default function PalettteProperties() {
   const {
@@ -86,6 +87,8 @@ export default function PalettteProperties() {
           )}
         </div>
       </div>
+
+      {selectedPaletteType === "complementary" && <ComplementaryOptions />}
 
       {selectedPaletteType === "analogous" && <AnalogousOptions />}
 
