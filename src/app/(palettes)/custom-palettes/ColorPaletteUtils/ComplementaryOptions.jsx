@@ -15,7 +15,7 @@ export default function ComplementaryOptions() {
             setCompPalType(e.target.value);
           }}
         />
-        <label htmlFor="classicComp">Classic Complementary</label>
+        <label htmlFor="classicComp">Classic Comp</label>
       </div>
       <div className="flex gap-4">
         <input
@@ -28,7 +28,7 @@ export default function ComplementaryOptions() {
             setCompPalType(e.target.value);
           }}
         />
-        <label htmlFor="vibrantComp">Vibrant Complementary</label>
+        <label htmlFor="vibrantComp">Vibrant Comp</label>
       </div>
       <div className="flex gap-4">
         <input
@@ -41,7 +41,7 @@ export default function ComplementaryOptions() {
             setCompPalType(e.target.value);
           }}
         />
-        <label htmlFor="kidsComp">Kids Complementary</label>
+        <label htmlFor="kidsComp">Kids Comp</label>
       </div>
       <div className="flex gap-4">
         <input
@@ -54,7 +54,7 @@ export default function ComplementaryOptions() {
             setCompPalType(e.target.value);
           }}
         />
-        <label htmlFor="neutralComp">Neutral Complementary</label>
+        <label htmlFor="neutralComp">Neutral Comp</label>
       </div>
       <div className="flex gap-4">
         <input
@@ -67,7 +67,7 @@ export default function ComplementaryOptions() {
             setCompPalType(e.target.value);
           }}
         />
-        <label htmlFor="vintageComp">Vintage Complementary</label>
+        <label htmlFor="vintageComp">Vintage Comp</label>
       </div>
 
       <div className="flex gap-4">
@@ -81,7 +81,7 @@ export default function ComplementaryOptions() {
             setCompPalType(e.target.value);
           }}
         />
-        <label htmlFor="pastelComp">Pastel Complementary</label>
+        <label htmlFor="pastelComp">Pastel Comp</label>
       </div>
 
       <div className="flex gap-4">
@@ -95,7 +95,7 @@ export default function ComplementaryOptions() {
             setCompPalType(e.target.value);
           }}
         />
-        <label htmlFor="retroComp">Retro Complementary</label>
+        <label htmlFor="retroComp">Retro Comp</label>
       </div>
 
       <div className="flex gap-4">
@@ -109,7 +109,7 @@ export default function ComplementaryOptions() {
             setCompPalType(e.target.value);
           }}
         />
-        <label htmlFor="moodyComp">Moody Complementary</label>
+        <label htmlFor="moodyComp">Moody Comp</label>
       </div>
 
       <div className="flex gap-4">
@@ -123,7 +123,7 @@ export default function ComplementaryOptions() {
             setCompPalType(e.target.value);
           }}
         />
-        <label htmlFor="neonComp">Neon Complementary</label>
+        <label htmlFor="neonComp">Neon Comp</label>
       </div>
 
       <div className="flex gap-4">
@@ -137,7 +137,7 @@ export default function ComplementaryOptions() {
             setCompPalType(e.target.value);
           }}
         />
-        <label htmlFor="earthyComp">Earthy/Muted Complementary</label>
+        <label htmlFor="earthyComp">Earthy/Muted Comp</label>
       </div>
 
       <div className="flex gap-4">
@@ -151,7 +151,7 @@ export default function ComplementaryOptions() {
             setCompPalType(e.target.value);
           }}
         />
-        <label htmlFor="luxuriousComp">Luxurious Complementary</label>
+        <label htmlFor="luxuriousComp">Luxurious Comp</label>
       </div>
     </div>
   );
