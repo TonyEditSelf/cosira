@@ -43,59 +43,6 @@ export const paletteTypes = [
     description: "Four colors in a rectangle (two complementary pairs)",
   },
   {
-    label: "Vintage",
-    value: "vintage",
-    description:
-      "Muted, warm, and desaturated tones inspired by retro aesthetics",
-  },
-  {
-    label: "Neutral",
-    value: "neutral",
-    description: "Whites, grays, blacks, taupes",
-  },
-  {
-    label: "Kids-Friendly",
-    value: "kidFriendly",
-    description:
-      "Bright, high-lightness, high-chroma palette with simple, emotionally positive hues for child-oriented design.",
-  },
-
-  {
-    label: "Pastel",
-    value: "pastel",
-    description: "Soft, low-saturation tones",
-  },
-  {
-    label: "Vibrant",
-    value: "vibrant",
-    description: "Bright, saturated colors",
-  },
-  {
-    label: "Moody",
-    value: "moody",
-    description: "Dark, cinematic tones with low lightness and rich contrast",
-  },
-  {
-    label: "Jewel",
-    value: "jewel",
-    description: "Deep, luminous colors — high chroma, medium-dark lightness",
-  },
-  {
-    label: "Neon",
-    value: "neon",
-    description: "Bright, high-chroma electric tones for bold digital palettes",
-  },
-  {
-    label: "Retro",
-    value: "retro",
-    description: "Faded pop tones with nostalgic warmth",
-  },
-  {
-    label: "Muted/Earthy",
-    value: "muted",
-    description: "Mid-to-low chroma, mid-lightness range",
-  },
-  {
     label: "Achromatic",
     value: "achromatic",
     description:
@@ -111,12 +58,7 @@ export const paletteTypes = [
     value: "brandPalette",
     description: "Multiple distinct hues",
   },
-  {
-    label: "Clash / Vibrating",
-    value: "clash",
-    description:
-      "Near-complementary high-chroma hues for expressive, attention-grabbing design.",
-  },
+
   {
     label: "Gradient / Transitional",
     value: "gradient",

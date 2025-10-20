@@ -1,14 +1,5 @@
-export default function complementaryPalGen(
-  oklch,
-  vintagePalType = null,
-  neutralPalType = null,
-  kidsPalType = null
-) {
-  if (
-    vintagePalType === null &&
-    neutralPalType === null &&
-    kidsPalType === null
-  ) {
+export default function complementaryPalGen(oklch, compPalType) {
+  if (compPalType === "classicComp") {
     const baseColor = oklch;
     const darkBase = {
       ...baseColor,
@@ -64,7 +55,7 @@ export default function complementaryPalGen(
       { name: "Comp-D", value: darkComp },
       { name: "Comp-DD", value: darkestComp },
     ];
-  } else if (vintagePalType === "vintageComp") {
+  } else if (compPalType === "vintageComp") {
     const VINTAGE_HUE_SHIFT = 15; // Shift hues toward yellow/warm
     const VINTAGE_CHROMA_FACTOR = 0.5; // Overall desaturation (50%)
     const VINTAGE_CHROMA_MAX = 0.2; // Max chroma limit for muted tones
@@ -174,7 +165,7 @@ export default function complementaryPalGen(
       { name: "Comp-L", value: compColorLight },
       { name: "Comp-M", value: compColorMuted },
     ];
-  } else if (neutralPalType === "neutralComp") {
+  } else if (compPalType === "neutralComp") {
     const NEUTRAL_CHROMA_MAX = 0.08; // Maximum allowed chroma for neutral tones
     const CHROMA_DEGRADATION = 0.4; // Factor to push input chroma to neutral range
     const L_MIN = 0.3; // Consistent minimum lightness clamp
@@ -267,7 +258,7 @@ export default function complementaryPalGen(
       { name: "Comp", value: compColor },
       { name: "Comp-D", value: darkComp },
     ];
-  } else if (kidsPalType === "kidsComp") {
+  } else if (compPalType === "kidsComp") {
     const clampOklch = (l, c, h) => ({
       l: Math.min(1, Math.max(0.2, l)),
       c: Math.min(0.37, Math.max(0, c)),

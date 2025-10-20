@@ -1,9 +1,4 @@
-export default function analogousPalGen(
-  oklch,
-  analogOptions,
-  vintagePalType = null,
-  neutralPalType = null
-) {
+export default function analogousPalGen(oklch, analogOptions, analogPalType) {
   let analogousOneDark,
     analogousOne,
     analogousOneLight,
@@ -17,7 +12,7 @@ export default function analogousPalGen(
     analogousThree,
     analogousThreeLight;
 
-  if (vintagePalType === null && neutralPalType === null) {
+  if (analogPalType === "classicAnalog") {
     baseColor = oklch;
 
     darkBase = {
@@ -58,22 +53,7 @@ export default function analogousPalGen(
       ...analogousTwo,
       l: Math.min(1, Math.max(0, analogousTwo.l * 1.15)), // 15% lighter,
     };
-
-    analogousThree = {
-      ...analogousTwo,
-      h: (baseColor.h + analogOptions.analogousAngle3 + 360) % 360,
-    };
-
-    analogousThreeDark = {
-      ...analogousThree,
-      l: Math.min(1, Math.max(0, analogousThree.l * 0.85)), // 15% darker,
-    };
-
-    analogousThreeLight = {
-      ...analogousThree,
-      l: Math.min(1, Math.max(0, analogousThree.l * 1.15)), // 15% lighter,
-    };
-  } else if (vintagePalType === "vintageAnalog") {
+  } else if (analogPalType === "vintageAnalog") {
     const VINTAGE_HUE_SHIFT = 15; // Warm yellow-red bias (Hues shift toward warmer tones)
     const VINTAGE_CHROMA_FACTOR = 0.5; // Overall desaturation factor (50% of original Chroma)
     const VINTAGE_CHROMA_MAX = 0.2; // Max Chroma for the whole palette (keeps colors muted)
@@ -152,24 +132,7 @@ export default function analogousPalGen(
       l: Math.min(L_MAX, Math.max(L_MIN, analogousTwo.l * 1.15)),
       c: Math.min(VINTAGE_CHROMA_MAX, Math.max(0.02, analogousTwo.c * 0.8)),
     };
-
-    analogousThree = {
-      ...baseColor,
-      h: (baseColor.h + analogOptions.analogousAngle3 + 360) % 360,
-    };
-
-    analogousThreeDark = {
-      ...analogousThree,
-      l: Math.min(L_MAX, Math.max(L_MIN, analogousThree.l * 0.85)),
-      c: Math.min(VINTAGE_CHROMA_MAX, Math.max(0.02, analogousThree.c * 1.1)),
-    };
-
-    analogousThreeLight = {
-      ...analogousThree,
-      l: Math.min(L_MAX, Math.max(L_MIN, analogousThree.l * 1.15)),
-      c: Math.min(VINTAGE_CHROMA_MAX, Math.max(0.02, analogousThree.c * 0.8)),
-    };
-  } else if (neutralPalType === "neutralAnalog") {
+  } else if (analogPalType === "neutralAnalog") {
     const NEUTRAL_CHROMA_MAX = 0.08; // Strict max chroma limit for near-gray/beige tones
     const CHROMA_DEGRADATION = 0.4; // Factor to push input chroma to neutral range (e.g., 40% of original C)
     const L_MIN = 0.3; // Min Lightness for soft shadow (Atmospheric Neutral range)
@@ -239,24 +202,6 @@ export default function analogousPalGen(
       l: Math.min(L_MAX, Math.max(L_MIN, analogousTwo.l * 1.15)),
       c: Math.min(NEUTRAL_CHROMA_MAX, Math.max(0.01, analogousTwo.c * 0.8)),
     };
-
-    // --- 5. Analogous Color 3 (Note: You may only need two analogous colors for a palette) ---
-    analogousThree = {
-      ...baseColor,
-      h: (baseColor.h + analogOptions.analogousAngle3 + 360) % 360,
-    };
-
-    analogousThreeDark = {
-      ...analogousThree,
-      l: Math.min(L_MAX, Math.max(L_MIN, analogousThree.l * 0.85)),
-      c: Math.min(NEUTRAL_CHROMA_MAX, Math.max(0.01, analogousThree.c * 1.1)),
-    };
-
-    analogousThreeLight = {
-      ...analogousThree,
-      l: Math.min(L_MAX, Math.max(L_MIN, analogousThree.l * 1.15)),
-      c: Math.min(NEUTRAL_CHROMA_MAX, Math.max(0.01, analogousThree.c * 0.8)),
-    };
   }
 
   return [
@@ -269,8 +214,5 @@ export default function analogousPalGen(
     { name: "A2-D", value: analogousTwoDark },
     { name: "A2", value: analogousTwo },
     { name: "A2-L", value: analogousTwoLight },
-    { name: "A3-D", value: analogousThreeDark },
-    { name: "A3", value: analogousThree },
-    { name: "A3-L", value: analogousThreeLight },
   ];
 }

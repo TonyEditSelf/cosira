@@ -28,9 +28,8 @@ export function ColorPaletteContextProvider({ children }) {
   });
 
   const [analogOptions, setAnalogOptions] = useState({
-    analogousAngle1: -30,
-    analogousAngle2: 30,
-    analogousAngle3: 60,
+    analogousAngle1: -40,
+    analogousAngle2: 40,
   });
 
   const [splitCompOptions, setSplitCompOptions] = useState({
@@ -153,12 +152,6 @@ export function ColorPaletteContextProvider({ children }) {
     }
   };
 
-  const [vintagePalType, setVintagePalType] = useState("vintageComp");
-
-  const [neutralPalType, setNeutralPalType] = useState("neutralComp");
-
-  const [kidsPalType, setKidsPalType] = useState("kidsMono");
-
   const [r, g, b] = oklchToRgb(oklch.l, oklch.c, oklch.h);
   const cssColor = oklchToCss(oklch.l, oklch.c, oklch.h, oklch.a);
   const alpha = oklch?.a ?? 1;
@@ -174,52 +167,33 @@ export function ColorPaletteContextProvider({ children }) {
   const [leftPaletteAdjusterOpen, setLeftPaletteAdjusterOpen] = useState(false);
   const [showHidePanelOpen, setShowHidePanelOpen] = useState(false);
 
-  const [selectedPaletteType, setSelectedPaletteType] =
-    useState("complementary");
+  const [selectedPaletteType, setSelectedPaletteType] = useState("analogous");
 
   const [compPalType, setCompPalType] = useState("classicComp");
-
+  const [monoPalType, setMonoPalType] = useState("classicMono");
+  const [analogPalType, setAnalogPalType] = useState("classicAnalog");
   const [palette, setPalette] = useState([]);
 
   useEffect(() => {
     setShadesTintsTonesIndex(null);
 
-    if (
-      selectedPaletteType !== "vintage" &&
-      selectedPaletteType !== "neutral" &&
-      selectedPaletteType !== "kidFriendly"
-    ) {
-      setKidsPalType(null);
-      const pal = paletteDecider(
-        oklch,
-        analogOptions,
-        splitCompOptions,
-        tetradicAngle,
-        selectedPaletteType
-      );
-      setPalette(pal);
-    } else {
-      const pal = paletteDecider(
-        oklch,
-        analogOptions,
-        splitCompOptions,
-        tetradicAngle,
-        selectedPaletteType,
-        vintagePalType,
-        neutralPalType,
-        kidsPalType
-      );
-      setPalette(pal);
-    }
+    const pal = paletteDecider(
+      oklch,
+      analogOptions,
+      splitCompOptions,
+      tetradicAngle,
+      selectedPaletteType,
+      compPalType,
+      monoPalType,
+      analogPalType
+    );
+    setPalette(pal);
   }, [
     oklch,
     analogOptions,
     splitCompOptions,
     tetradicAngle,
     selectedPaletteType,
-    vintagePalType,
-    neutralPalType,
-    kidsPalType,
   ]);
 
   const values = {
@@ -263,15 +237,13 @@ export function ColorPaletteContextProvider({ children }) {
     handleTetradicAngleChange,
     showHidePanelOpen,
     setShowHidePanelOpen,
-    vintagePalType,
-    setVintagePalType,
-    neutralPalType,
-    setNeutralPalType,
-    kidsPalType,
-    setKidsPalType,
     shadesTintsTonesValues,
     compPalType,
     setCompPalType,
+    monoPalType,
+    setMonoPalType,
+    analogPalType,
+    setAnalogPalType,
   };
 
   return (

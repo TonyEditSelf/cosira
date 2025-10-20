@@ -1,30 +1,30 @@
 import { useColorPaletteContext } from "../../ColorContext";
-import complementaryPalGen from "./complementaryPalGen";
+import monochromaticPalGen from "./monochromaticPalGen";
 
-export default function ComplementaryOptions() {
-  const { setPalette, oklch, compPalType, setCompPalType } =
+export default function MonochromaticOptions() {
+  const { setPalette, oklch, monoPalType, setMonoPalType } =
     useColorPaletteContext();
   return (
     <div>
       <div className="flex gap-4">
         <input
           type="radio"
-          name="compPal"
-          id="classicComp"
-          value={"classicComp"}
-          checked={compPalType === "classicComp"}
+          name="monoPal"
+          id="classicMono"
+          value={"classicMono"}
+          checked={monoPalType === "classicMono"}
           onChange={(e) => {
-            setCompPalType(e.target.value);
-            const pal = complementaryPalGen(oklch, e.target.value);
+            setMonoPalType(e.target.value);
+            const pal = monochromaticPalGen(oklch, e.target.value);
             setPalette(pal);
           }}
         />
-        <label htmlFor="classicComp">Classic Comp</label>
+        <label htmlFor="classicMono">Classic Mono</label>
       </div>
       {/* <div className="flex gap-4">
         <input
           type="radio"
-          name="compPal"
+          name="monoPal"
           id="vibrantComp"
           value={"vibrantComp"}
           checked={compPalType === "vibrantComp"}
@@ -38,53 +38,53 @@ export default function ComplementaryOptions() {
       <div className="flex gap-4">
         <input
           type="radio"
-          name="compPal"
-          id="vintageComp"
-          value={"vintageComp"}
-          checked={compPalType === "vintageComp"}
+          name="monoPal"
+          id="vintageMono"
+          value={"vintageMono"}
+          checked={monoPalType === "vintageMono"}
           onChange={(e) => {
-            setCompPalType(e.target.value);
-            const pal = complementaryPalGen(oklch, e.target.value);
+            setMonoPalType(e.target.value);
+            const pal = monochromaticPalGen(oklch, e.target.value);
             setPalette(pal);
           }}
         />
-        <label htmlFor="vintageComp">Vintage Comp</label>
+        <label htmlFor="vintageMono">Vintage Mono</label>
       </div>
       <div className="flex gap-4">
         <input
           type="radio"
-          name="compPal"
-          id="neutralComp"
-          value={"neutralComp"}
-          checked={compPalType === "neutralComp"}
+          name="monoPal"
+          id="neutralMono"
+          value={"neutralMono"}
+          checked={monoPalType === "neutralMono"}
           onChange={(e) => {
-            setCompPalType(e.target.value);
-            const pal = complementaryPalGen(oklch, e.target.value);
+            setMonoPalType(e.target.value);
+            const pal = monochromaticPalGen(oklch, e.target.value);
             setPalette(pal);
           }}
         />
-        <label htmlFor="neutralComp">Neutral Comp</label>
+        <label htmlFor="neutralMono">Neutral Mono</label>
       </div>
 
       <div className="flex gap-4">
         <input
           type="radio"
-          name="compPal"
-          id="kidsComp"
-          value={"kidsComp"}
-          checked={compPalType === "kidsComp"}
+          name="monoPal"
+          id="kidsMono"
+          value={"kidsMono"}
+          checked={monoPalType === "kidsMono"}
           onChange={(e) => {
-            setCompPalType(e.target.value);
-            const pal = complementaryPalGen(oklch, e.target.value);
+            setMonoPalType(e.target.value);
+            const pal = monochromaticPalGen(oklch, e.target.value);
             setPalette(pal);
           }}
         />
-        <label htmlFor="kidsComp">Kids Comp</label>
+        <label htmlFor="kidsMono">Kids Mono</label>
       </div>
       {/* <div className="flex gap-4">
         <input
           type="radio"
-          name="compPal"
+          name="monoPal"
           id="pastelComp"
           value={"pastelComp"}
           checked={compPalType === "pastelComp"}
@@ -98,7 +98,7 @@ export default function ComplementaryOptions() {
       <div className="flex gap-4">
         <input
           type="radio"
-          name="compPal"
+          name="monoPal"
           id="retroComp"
           value={"retroComp"}
           checked={compPalType === "retroComp"}
@@ -112,7 +112,7 @@ export default function ComplementaryOptions() {
       <div className="flex gap-4">
         <input
           type="radio"
-          name="compPal"
+          name="monoPal"
           id="moodyComp"
           value={"moodyComp"}
           checked={compPalType === "moodyComp"}
@@ -126,7 +126,7 @@ export default function ComplementaryOptions() {
       <div className="flex gap-4">
         <input
           type="radio"
-          name="compPal"
+          name="monoPal"
           id="neonComp"
           value={"neonComp"}
           checked={compPalType === "neonComp"}
@@ -140,7 +140,7 @@ export default function ComplementaryOptions() {
       <div className="flex gap-4">
         <input
           type="radio"
-          name="compPal"
+          name="monoPal"
           id="earthyComp"
           value={"earthyComp"}
           checked={compPalType === "earthyComp"}
@@ -154,7 +154,7 @@ export default function ComplementaryOptions() {
       <div className="flex gap-4">
         <input
           type="radio"
-          name="compPal"
+          name="monoPal"
           id="luxuriousComp"
           value={"luxuriousComp"}
           checked={compPalType === "luxuriousComp"}

@@ -1,9 +1,4 @@
-export default function monochromaticPalGen(
-  oklch,
-  vintagePalType = null,
-  neutralPalType = null,
-  kidsPalType = null
-) {
+export default function monochromaticPalGen(oklch, monoPalType) {
   let darkerNeutralBase,
     mutedDarkerBase,
     darkestBase,
@@ -16,11 +11,7 @@ export default function monochromaticPalGen(
     lighterNeutralBase,
     mutedLighterBase;
 
-  if (
-    vintagePalType === null &&
-    neutralPalType === null &&
-    kidsPalType === null
-  ) {
+  if (monoPalType === "classicMono") {
     baseColor = oklch;
 
     darkBase = {
@@ -75,7 +66,7 @@ export default function monochromaticPalGen(
       l: Math.min(1, Math.max(0, lightBase.l * 1.1)), // 10% lighter, clamped
       c: Math.min(0.12, Math.max(0, lightBase.c * 0.6)), // chroma clamped
     };
-  } else if (vintagePalType === "vintageMono") {
+  } else if (monoPalType === "vintageMono") {
     const VINTAGE_HUE_SHIFT = 15; // Warm yellow-red bias
     const VINTAGE_CHROMA_FACTOR = 0.5; // Global desaturation factor
     const VINTAGE_CHROMA_MAX = 0.2; // Maximum allowed chroma for vintage tone
@@ -170,7 +161,7 @@ export default function monochromaticPalGen(
       // Moderate desaturation
       c: Math.min(VINTAGE_CHROMA_MAX, Math.max(0.02, lightBase.c * 0.6)),
     };
-  } else if (neutralPalType === "neutralMono") {
+  } else if (monoPalType === "neutralMono") {
     const NEUTRAL_CHROMA_MAX = 0.08; // Strict max chroma limit for near-gray/beige tones
     const CHROMA_DEGRADATION = 0.3; // Aggressive factor to push input chroma toward neutrality
     const L_MIN = 0.3; // Min Lightness for soft shadows (Atmospheric Neutral)
@@ -264,7 +255,7 @@ export default function monochromaticPalGen(
       // Moderate desaturation
       c: Math.min(NEUTRAL_CHROMA_MAX, Math.max(0.01, lightBase.c * 0.6)),
     };
-  } else if (kidsPalType === "kidsMono") {
+  } else if (monoPalType === "kidsMono") {
     const SLIDER_STEP = 0.01;
     const MAX_DELTA = 0.05;
 
