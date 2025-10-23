@@ -167,9 +167,13 @@ export function ColorPaletteContextProvider({ children }) {
   const [leftPaletteAdjusterOpen, setLeftPaletteAdjusterOpen] = useState(false);
   const [showHidePanelOpen, setShowHidePanelOpen] = useState(false);
 
-  const [selectedPaletteType, setSelectedPaletteType] = useState("analogous");
+  const [sliderLightValue, setSliderLightValue] = useState(0);
+  const [sliderChromaValue, setSliderChromaValue] = useState(0);
 
-  const [compPalType, setCompPalType] = useState("classicComp");
+  const [selectedPaletteType, setSelectedPaletteType] =
+    useState("complementary");
+
+  const [compPalType, setCompPalType] = useState("vintageComp");
   const [monoPalType, setMonoPalType] = useState("classicMono");
   const [analogPalType, setAnalogPalType] = useState("classicAnalog");
   const [palette, setPalette] = useState([]);
@@ -244,6 +248,10 @@ export function ColorPaletteContextProvider({ children }) {
     setMonoPalType,
     analogPalType,
     setAnalogPalType,
+    sliderLightValue,
+    setSliderLightValue,
+    sliderChromaValue,
+    setSliderChromaValue,
   };
 
   return (

@@ -21,7 +21,7 @@ export default function ComplementaryOptions() {
         />
         <label htmlFor="classicComp">Classic Comp</label>
       </div>
-      {/* <div className="flex gap-4">
+      <div className="flex gap-4">
         <input
           type="radio"
           name="compPal"
@@ -30,10 +30,12 @@ export default function ComplementaryOptions() {
           checked={compPalType === "vibrantComp"}
           onChange={(e) => {
             setCompPalType(e.target.value);
+            const pal = complementaryPalGen(oklch, e.target.value);
+            setPalette(pal);
           }}
         />
         <label htmlFor="vibrantComp">Vibrant Comp</label>
-      </div> */}
+      </div>
 
       <div className="flex gap-4">
         <input
@@ -44,7 +46,7 @@ export default function ComplementaryOptions() {
           checked={compPalType === "vintageComp"}
           onChange={(e) => {
             setCompPalType(e.target.value);
-            const pal = complementaryPalGen(oklch, e.target.value);
+            const pal = complementaryPalGen(oklch, e.target.value, null);
             setPalette(pal);
           }}
         />
@@ -150,6 +152,7 @@ export default function ComplementaryOptions() {
         />
         <label htmlFor="earthyComp">Earthy/Muted Comp</label>
       </div>
+       */}
 
       <div className="flex gap-4">
         <input
@@ -160,10 +163,12 @@ export default function ComplementaryOptions() {
           checked={compPalType === "luxuriousComp"}
           onChange={(e) => {
             setCompPalType(e.target.value);
+            const pal = complementaryPalGen(oklch, e.target.value);
+            setPalette(pal);
           }}
         />
         <label htmlFor="luxuriousComp">Luxurious Comp</label>
-      </div> */}
+      </div>
     </div>
   );
 }
