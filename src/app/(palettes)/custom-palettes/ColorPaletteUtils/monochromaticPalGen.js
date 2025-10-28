@@ -1,4 +1,9 @@
-export default function monochromaticPalGen(oklch, monoPalType) {
+export default function monochromaticPalGen(
+  oklch,
+  monoPalType,
+  sliderLightValue = 0,
+  sliderChromaValue = 0
+) {
   let darkerNeutralBase,
     mutedDarkerBase,
     darkestBase,
@@ -67,99 +72,98 @@ export default function monochromaticPalGen(oklch, monoPalType) {
       c: Math.min(0.12, Math.max(0, lightBase.c * 0.6)), // chroma clamped
     };
   } else if (monoPalType === "vintageMono") {
-    const VINTAGE_HUE_SHIFT = 15; // Warm yellow-red bias
-    const VINTAGE_CHROMA_FACTOR = 0.5; // Global desaturation factor
-    const VINTAGE_CHROMA_MAX = 0.2; // Maximum allowed chroma for vintage tone
-    const L_MIN = 0.3; // Conservative minimum lightness
-    const L_MAX = 0.9; // Conservative maximum lightness
+    // --- Vintage tonal bounds (authentic faded film look) ---
+    const LMAX = 0.68; // softer highlights
+    const LMIN = 0.38; // deeper but not crushed shadows
+    const CMAX = 0.14; // muted chroma ceiling
+    const CMIN = 0.04; // near-neutral floor
 
-    // --- 1. Base Color (Vintage-Tuned) ---
-    // *CORRECTION: Calculate base chroma using the VINTAGE_CHROMA_FACTOR*
-    const vintageChromaBase = Math.min(
-      VINTAGE_CHROMA_MAX,
-      Math.max(0.02, oklch.c * VINTAGE_CHROMA_FACTOR) // Apply global desaturation here
-    );
-
+    // --- Base color setup (already in OKLCH) ---
     baseColor = {
       ...oklch,
-      l: Math.min(L_MAX, Math.max(L_MIN, oklch.l)), // Consistent L clamp
-      c: vintageChromaBase, // Corrected base chroma
-      h: (oklch.h + VINTAGE_HUE_SHIFT) % 360, // Warm hue shift
+      l: Math.max(LMIN, Math.min(LMAX, 0.54 + (sliderLightValue || 0))),
+      c: Math.max(CMIN, Math.min(CMAX, 0.08 + (sliderChromaValue || 0))),
     };
 
-    // --- 2. Darker Variants (Use baseColor.c as a reference) ---
-    darkBase = {
-      ...baseColor,
-      l: Math.min(L_MAX, Math.max(L_MIN, baseColor.l * 0.85)), // Consistent L clamp
-      // Darker: slightly more saturated than the base (x 1.1)
-      c: Math.min(VINTAGE_CHROMA_MAX, Math.max(0.02, baseColor.c * 1.1)),
-    };
+    // --- Vintage tonal curve (monochromatic adaptation) ---
 
-    darkerBase = {
-      ...baseColor,
-      l: Math.min(L_MAX, Math.max(L_MIN, baseColor.l * 0.8)), // Consistent L clamp
-      // Darker: slight increase in saturation (x 1.2)
-      c: Math.min(VINTAGE_CHROMA_MAX, Math.max(0.02, baseColor.c * 1.2)),
-    };
-
+    // Darkest base (deep vintage shadow)
     darkestBase = {
       ...baseColor,
-      l: Math.min(L_MAX, Math.max(L_MIN, baseColor.l * 0.75)), // Consistent L clamp
-      // Darkest: Highest saturation in the dark tones (x 1.3)
-      c: Math.min(VINTAGE_CHROMA_MAX, Math.max(0.02, baseColor.c * 1.3)),
+      l: Math.max(LMIN, baseColor.l * 0.75), // proportional darkening
+      c: Math.min(CMAX, baseColor.c * 1.15), // slight chroma lift in shadows
+      h: (baseColor.h - 3 + 360) % 360, // warmer shadows
     };
 
-    // Slightly neutralized darker tone (aged, less vibrant)
+    // Darker base
+    darkerBase = {
+      ...baseColor,
+      l: Math.max(LMIN, baseColor.l * 0.85),
+      c: Math.min(CMAX, baseColor.c * 1.08),
+      h: (baseColor.h - 1.5 + 360) % 360,
+    };
+
+    // Dark base (slightly less faded mid-tone dark)
+    darkBase = {
+      ...baseColor,
+      l: Math.max(LMIN, baseColor.l * 0.9),
+      c: Math.min(CMAX, baseColor.c * 1.05),
+      h: (baseColor.h - 0.5 + 360) % 360,
+    };
+
+    // Darker neutral base (lower saturation)
     darkerNeutralBase = {
       ...darkestBase,
-      // Deeper saturation reduction for a highly faded/near-neutral look
-      c: Math.min(VINTAGE_CHROMA_MAX * 0.4, Math.max(0, darkestBase.c * 0.3)),
+      c: Math.max(CMIN, Math.min(CMAX, darkestBase.c * 0.55)), // desaturated shadow
+      h: (darkestBase.h - 2 + 360) % 360,
     };
 
-    // Muted deep variant — sepia-like and soft
+    // Muted darker base (heavily faded dark)
     mutedDarkerBase = {
       ...darkestBase,
-      l: Math.min(L_MAX, Math.max(L_MIN, darkestBase.l * 0.8)), // deeper L
-      // Highly desaturated, near-neutral
-      c: Math.min(VINTAGE_CHROMA_MAX * 0.4, Math.max(0, darkestBase.c * 0.2)),
+      l: Math.max(LMIN, darkestBase.l * 0.85),
+      c: Math.max(CMIN, Math.min(CMAX, darkestBase.c * 0.5)),
+      h: (darkestBase.h - 3 + 360) % 360,
     };
 
-    // --- 3. Lighter Variants (Use baseColor.c as a reference) ---
+    // Light base (vintage highlight)
     lightBase = {
       ...baseColor,
-      l: Math.min(L_MAX, Math.max(L_MIN, baseColor.l * 1.15)), // Consistent L clamp
-      // Lighter: slight desaturation (x 0.9)
-      c: Math.min(VINTAGE_CHROMA_MAX, Math.max(0.02, baseColor.c * 0.9)),
+      l: Math.min(LMAX, baseColor.l + (LMAX - baseColor.l) * 0.35),
+      c: Math.max(CMIN, baseColor.c * 0.85), // desaturate in highlights
+      h: (baseColor.h + 2) % 360,
     };
 
+    // Lighter base
     lighterBase = {
       ...baseColor,
-      l: Math.min(L_MAX, Math.max(L_MIN, baseColor.l * 1.2)), // Consistent L clamp
-      // Lighter: stronger desaturation (x 0.7)
-      c: Math.min(VINTAGE_CHROMA_MAX, Math.max(0.02, baseColor.c * 0.7)),
+      l: Math.min(LMAX, baseColor.l + (LMAX - baseColor.l) * 0.5),
+      c: Math.max(CMIN, baseColor.c * 0.78),
+      h: (baseColor.h + 3) % 360,
     };
 
+    // Lightest base
     lightestBase = {
       ...baseColor,
-      l: Math.min(L_MAX, Math.max(L_MIN, baseColor.l * 1.25)), // Consistent L clamp
-      // Lightest: highest desaturation (x 0.5) to simulate fading/washout
-      c: Math.min(VINTAGE_CHROMA_MAX, Math.max(0.02, baseColor.c * 0.5)),
+      l: Math.min(LMAX, baseColor.l + (LMAX - baseColor.l) * 0.65),
+      c: Math.max(CMIN, baseColor.c * 0.7), // more faded
+      h: (baseColor.h + 4) % 360,
     };
 
-    // Softly neutralized light tone (aged paper tone)
+    // Lighter neutral base (very faded highlight)
     lighterNeutralBase = {
       ...lightestBase,
-      l: Math.min(L_MAX, Math.max(L_MIN, lightestBase.l * 1.1)), // slight boost in L
-      // Very highly desaturated (near neutral)
-      c: Math.min(VINTAGE_CHROMA_MAX * 0.4, Math.max(0, lightestBase.c * 0.2)),
+      l: Math.min(LMAX, lightestBase.l + (LMAX - lightestBase.l) * 0.1),
+      c: Math.max(CMIN, lightestBase.c * 0.5),
+      h: (lightestBase.h + 2) % 360,
     };
 
-    // Gentle faded highlight tone (vintage pastel)
+    // Muted lighter base (faded light tone)
     mutedLighterBase = {
       ...lightBase,
-      l: Math.min(L_MAX, Math.max(L_MIN, lightBase.l * 1.1)), // gentle lift
-      // Moderate desaturation
-      c: Math.min(VINTAGE_CHROMA_MAX, Math.max(0.02, lightBase.c * 0.6)),
+      l: Math.min(LMAX, lightBase.l + (LMAX - lightBase.l) * 0.1),
+      c: Math.max(CMIN, lightBase.c * 0.6),
+      h: (lightBase.h + 1.5) % 360,
     };
   } else if (monoPalType === "neutralMono") {
     const NEUTRAL_CHROMA_MAX = 0.08; // Strict max chroma limit for near-gray/beige tones

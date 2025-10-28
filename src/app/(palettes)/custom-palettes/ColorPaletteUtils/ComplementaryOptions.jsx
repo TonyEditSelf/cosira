@@ -1,9 +1,17 @@
+import { useEffect } from "react";
 import { useColorPaletteContext } from "../../ColorContext";
 import complementaryPalGen from "./complementaryPalGen";
 
 export default function ComplementaryOptions() {
-  const { setPalette, oklch, compPalType, setCompPalType } =
-    useColorPaletteContext();
+  const {
+    setPalette,
+    oklch,
+    compPalType,
+    setCompPalType,
+    setSliderLightValue,
+    setSliderChromaValue,
+  } = useColorPaletteContext();
+
   return (
     <div>
       <div className="flex gap-4">
@@ -83,7 +91,7 @@ export default function ComplementaryOptions() {
         />
         <label htmlFor="kidsComp">Kids Comp</label>
       </div>
-      {/* <div className="flex gap-4">
+      <div className="flex gap-4">
         <input
           type="radio"
           name="compPal"
@@ -92,6 +100,8 @@ export default function ComplementaryOptions() {
           checked={compPalType === "pastelComp"}
           onChange={(e) => {
             setCompPalType(e.target.value);
+            const pal = complementaryPalGen(oklch, e.target.value);
+            setPalette(pal);
           }}
         />
         <label htmlFor="pastelComp">Pastel Comp</label>
@@ -106,6 +116,8 @@ export default function ComplementaryOptions() {
           checked={compPalType === "retroComp"}
           onChange={(e) => {
             setCompPalType(e.target.value);
+            const pal = complementaryPalGen(oklch, e.target.value);
+            setPalette(pal);
           }}
         />
         <label htmlFor="retroComp">Retro Comp</label>
@@ -120,6 +132,8 @@ export default function ComplementaryOptions() {
           checked={compPalType === "moodyComp"}
           onChange={(e) => {
             setCompPalType(e.target.value);
+            const pal = complementaryPalGen(oklch, e.target.value);
+            setPalette(pal);
           }}
         />
         <label htmlFor="moodyComp">Moody Comp</label>
@@ -134,6 +148,8 @@ export default function ComplementaryOptions() {
           checked={compPalType === "neonComp"}
           onChange={(e) => {
             setCompPalType(e.target.value);
+            const pal = complementaryPalGen(oklch, e.target.value);
+            setPalette(pal);
           }}
         />
         <label htmlFor="neonComp">Neon Comp</label>
@@ -148,11 +164,12 @@ export default function ComplementaryOptions() {
           checked={compPalType === "earthyComp"}
           onChange={(e) => {
             setCompPalType(e.target.value);
+            const pal = complementaryPalGen(oklch, e.target.value);
+            setPalette(pal);
           }}
         />
         <label htmlFor="earthyComp">Earthy/Muted Comp</label>
       </div>
-       */}
 
       <div className="flex gap-4">
         <input

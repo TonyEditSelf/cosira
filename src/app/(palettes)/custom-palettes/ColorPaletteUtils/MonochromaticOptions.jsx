@@ -2,8 +2,14 @@ import { useColorPaletteContext } from "../../ColorContext";
 import monochromaticPalGen from "./monochromaticPalGen";
 
 export default function MonochromaticOptions() {
-  const { setPalette, oklch, monoPalType, setMonoPalType } =
-    useColorPaletteContext();
+  const {
+    setPalette,
+    oklch,
+    monoPalType,
+    setMonoPalType,
+    setSliderLightValue,
+    setSliderChromaValue,
+  } = useColorPaletteContext();
   return (
     <div>
       <div className="flex gap-4">

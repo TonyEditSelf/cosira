@@ -17,10 +17,8 @@ export default function PalettteProperties() {
     oklch,
     handleColorChange,
     selectedPaletteType,
-    vintagePalType,
-    neutralPalType,
-    kidsPalType,
     compPalType,
+    monoPalType,
     sliderLightValue,
     setSliderLightValue,
     setPalette,
@@ -32,7 +30,7 @@ export default function PalettteProperties() {
         <h1 className="text-[12px] font-bold space-y-3 mb-5">
           ADJUST BY BASE COLOR
         </h1>
-        <div className="flex flex-1 flex-col w-full gap-4">
+        <div className="flex flex-1 flex-col w-full gap-5">
           <div>
             <h4 className="text-[11px] font-semibold mb-3">Hue</h4>
             <HueSlider
@@ -43,34 +41,30 @@ export default function PalettteProperties() {
               onChange={handleColorChange}
             />
           </div>
-          {compPalType !== "vintageComp" &&
-            compPalType !== "kidsComp" &&
-            compPalType !== "neutralComp" && (
-              <div>
-                <h4 className="text-[11px] font-semibold mb-3">Lightness</h4>
-                <LightnessSlider
-                  lightness={oklch.l}
-                  chroma={oklch.c}
-                  hue={oklch.h}
-                  alpha={oklch.a}
-                  onChange={handleColorChange}
-                />
-              </div>
-            )}
-          {compPalType !== "vintageComp" &&
-            compPalType !== "kidsComp" &&
-            compPalType !== "neutralComp" && (
-              <div>
-                <h4 className="text-[11px] font-semibold mb-3">Chroma</h4>
-                <ChromaSlider
-                  lightness={oklch.l}
-                  chroma={oklch.c}
-                  hue={oklch.h}
-                  alpha={oklch.a}
-                  onChange={handleColorChange}
-                />
-              </div>
-            )}
+          {(compPalType === "classicComp" || compPalType === "vibrantComp") && (
+            <div>
+              <h4 className="text-[11px] font-semibold mb-3">Lightness</h4>
+              <LightnessSlider
+                lightness={oklch.l}
+                chroma={oklch.c}
+                hue={oklch.h}
+                alpha={oklch.a}
+                onChange={handleColorChange}
+              />
+            </div>
+          )}
+          {(compPalType === "classicComp" || compPalType === "vibrantComp") && (
+            <div>
+              <h4 className="text-[11px] font-semibold mb-3">Chroma</h4>
+              <ChromaSlider
+                lightness={oklch.l}
+                chroma={oklch.c}
+                hue={oklch.h}
+                alpha={oklch.a}
+                onChange={handleColorChange}
+              />
+            </div>
+          )}
           <div>
             <h4 className="text-[11px] font-semibold mb-3">Temperature</h4>
             <TemperatureSlider
@@ -81,37 +75,19 @@ export default function PalettteProperties() {
               onChange={handleColorChange}
             />
           </div>
-          {compPalType !== "vintageComp" &&
-            compPalType !== "kidsComp" &&
-            compPalType !== "neutralComp" && (
-              <div>
-                <h4 className="text-[11px] font-semibold mb-3">Alpha</h4>
-                <AlphaSlider
-                  lightness={oklch.l}
-                  chroma={oklch.c}
-                  hue={oklch.h}
-                  alpha={oklch.a}
-                  onChange={handleColorChange}
-                />
-              </div>
-            )}
+          {(compPalType === "classicComp" || compPalType === "vibrantComp") && (
+            <div>
+              <h4 className="text-[11px] font-semibold mb-3">Alpha</h4>
+              <AlphaSlider
+                lightness={oklch.l}
+                chroma={oklch.c}
+                hue={oklch.h}
+                alpha={oklch.a}
+                onChange={handleColorChange}
+              />
+            </div>
+          )}
         </div>
-
-        {(compPalType === "vintageComp" ||
-          compPalType === "kidsComp" ||
-          compPalType === "neutralComp") && (
-          <div>
-            <LandCStepper type="light" />
-          </div>
-        )}
-
-        {(compPalType === "vintageComp" ||
-          compPalType === "kidsComp" ||
-          compPalType === "neutralComp") && (
-          <div>
-            <LandCStepper type="chroma" />
-          </div>
-        )}
       </div>
 
       {selectedPaletteType === "monochromatic" && <MonochromaticOptions />}
@@ -123,6 +99,29 @@ export default function PalettteProperties() {
       {selectedPaletteType === "splitComplementary" && <SplitCompOptions />}
 
       {selectedPaletteType === "tetradic" && <TetradicOptions />}
+
+      <div className="flex flex-col gap-2">
+        <div>
+          {compPalType !== "classicComp" && compPalType !== "vibrantComp" && (
+            <div className="flex justify-between">
+              <label htmlFor="lightInput">Lightness</label>
+              <div>
+                <LandCStepper id="lightInput" type="light" />
+              </div>
+            </div>
+          )}
+        </div>
+        <div>
+          {compPalType !== "classicComp" && compPalType !== "vibrantComp" && (
+            <div className="flex justify-between">
+              <label htmlFor="chromaInput">Chroma</label>
+              <div>
+                <LandCStepper id="chromaInput" type="chroma" />
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

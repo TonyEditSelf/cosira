@@ -173,10 +173,15 @@ export function ColorPaletteContextProvider({ children }) {
   const [selectedPaletteType, setSelectedPaletteType] =
     useState("complementary");
 
-  const [compPalType, setCompPalType] = useState("vintageComp");
+  const [compPalType, setCompPalType] = useState("luxuriousComp");
   const [monoPalType, setMonoPalType] = useState("classicMono");
   const [analogPalType, setAnalogPalType] = useState("classicAnalog");
   const [palette, setPalette] = useState([]);
+
+  useEffect(() => {
+    setSliderChromaValue(0);
+    setSliderLightValue(0);
+  }, [compPalType, monoPalType]);
 
   useEffect(() => {
     setShadesTintsTonesIndex(null);
