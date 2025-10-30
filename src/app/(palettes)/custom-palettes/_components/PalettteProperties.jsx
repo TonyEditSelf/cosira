@@ -41,7 +41,10 @@ export default function PalettteProperties() {
               onChange={handleColorChange}
             />
           </div>
-          {(compPalType === "classicComp" || compPalType === "vibrantComp") && (
+          {(compPalType === "classicComp" ||
+            compPalType === "vibrantComp" ||
+            monoPalType === "classicMono" ||
+            monoPalType === "vibrantMono") && (
             <div>
               <h4 className="text-[11px] font-semibold mb-3">Lightness</h4>
               <LightnessSlider
@@ -53,7 +56,10 @@ export default function PalettteProperties() {
               />
             </div>
           )}
-          {(compPalType === "classicComp" || compPalType === "vibrantComp") && (
+          {(compPalType === "classicComp" ||
+            compPalType === "vibrantComp" ||
+            monoPalType === "classicMono" ||
+            monoPalType === "vibrantMono") && (
             <div>
               <h4 className="text-[11px] font-semibold mb-3">Chroma</h4>
               <ChromaSlider
@@ -75,7 +81,10 @@ export default function PalettteProperties() {
               onChange={handleColorChange}
             />
           </div>
-          {(compPalType === "classicComp" || compPalType === "vibrantComp") && (
+          {(compPalType === "classicComp" ||
+            compPalType === "vibrantComp" ||
+            monoPalType === "classicMono" ||
+            monoPalType === "vibrantMono") && (
             <div>
               <h4 className="text-[11px] font-semibold mb-3">Alpha</h4>
               <AlphaSlider
@@ -102,24 +111,30 @@ export default function PalettteProperties() {
 
       <div className="flex flex-col gap-2">
         <div>
-          {compPalType !== "classicComp" && compPalType !== "vibrantComp" && (
-            <div className="flex justify-between">
-              <label htmlFor="lightInput">Lightness</label>
-              <div>
-                <LandCStepper id="lightInput" type="light" />
+          {compPalType !== "classicComp" &&
+            compPalType !== "vibrantComp" &&
+            monoPalType !== "classicMono" &&
+            monoPalType !== "vibrantMono" && (
+              <div className="flex justify-between">
+                <label htmlFor="lightInput">Lightness</label>
+                <div>
+                  <LandCStepper id="lightInput" type="light" />
+                </div>
               </div>
-            </div>
-          )}
+            )}
         </div>
         <div>
-          {compPalType !== "classicComp" && compPalType !== "vibrantComp" && (
-            <div className="flex justify-between">
-              <label htmlFor="chromaInput">Chroma</label>
-              <div>
-                <LandCStepper id="chromaInput" type="chroma" />
+          {compPalType !== "classicComp" &&
+            compPalType !== "vibrantComp" &&
+            monoPalType !== "classicMono" &&
+            monoPalType !== "vibrantMono" && (
+              <div className="flex justify-between">
+                <label htmlFor="chromaInput">Chroma</label>
+                <div>
+                  <LandCStepper id="chromaInput" type="chroma" />
+                </div>
               </div>
-            </div>
-          )}
+            )}
         </div>
       </div>
     </div>

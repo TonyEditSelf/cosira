@@ -47,7 +47,7 @@ export function ColorPaletteContextProvider({ children }) {
     colorTypes: true,
     makeBaseOn: false,
     role: false,
-    primitiveName: false,
+    primitiveName: true,
     hexOn: false,
     hueOn: true,
     lightOn: true,
@@ -171,7 +171,7 @@ export function ColorPaletteContextProvider({ children }) {
   const [sliderChromaValue, setSliderChromaValue] = useState(0);
 
   const [selectedPaletteType, setSelectedPaletteType] =
-    useState("complementary");
+    useState("monochromatic");
 
   const [compPalType, setCompPalType] = useState("luxuriousComp");
   const [monoPalType, setMonoPalType] = useState("classicMono");
