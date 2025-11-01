@@ -14,6 +14,7 @@ export default function LandCStepper({ type }) {
     setSliderLightValue,
     sliderChromaValue,
     setSliderChromaValue,
+    selectedPaletteType,
   } = useColorPaletteContext();
 
   let chromaLightValue, setChromaLightValue;
@@ -27,24 +28,24 @@ export default function LandCStepper({ type }) {
   }
 
   useEffect(() => {
-    const pal = complementaryPalGen(
-      oklch,
-      compPalType,
-      sliderLightValue,
-      sliderChromaValue
-    );
+    let pal;
+    if (selectedPaletteType === "complementary") {
+      pal = complementaryPalGen(
+        oklch,
+        compPalType,
+        sliderLightValue,
+        sliderChromaValue
+      );
+    } else if (selectedPaletteType === "monochromatic") {
+      pal = monochromaticPalGen(
+        oklch,
+        monoPalType,
+        sliderLightValue,
+        sliderChromaValue
+      );
+    }
     setPalette(pal);
-  }, [oklch, compPalType, sliderLightValue, sliderChromaValue]);
-
-  useEffect(() => {
-    const pal = monochromaticPalGen(
-      oklch,
-      monoPalType,
-      sliderLightValue,
-      sliderChromaValue
-    );
-    setPalette(pal);
-  }, [oklch, monoPalType, sliderLightValue, sliderChromaValue]);
+  }, [sliderLightValue, sliderChromaValue]);
 
   return (
     <div className="flex gap-2">
