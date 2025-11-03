@@ -29,22 +29,87 @@ export default function ComplementaryOptions() {
         />
         <label htmlFor="classicComp">Classic Comp</label>
       </div>
+
       <div className="flex gap-4">
         <input
           type="radio"
           name="compPal"
-          id="vibrantComp"
-          value={"vibrantComp"}
-          checked={compPalType === "vibrantComp"}
+          id="OpalComp"
+          value={"OpalComp"}
+          checked={compPalType === "OpalComp"}
           onChange={(e) => {
             setCompPalType(e.target.value);
-            const pal = complementaryPalGen(oklch, e.target.value);
+            const pal = complementaryPalGen(oklch, e.target.value, null);
             setPalette(pal);
           }}
         />
-        <label htmlFor="vibrantComp">Vibrant Comp</label>
+        <label htmlFor="OpalComp">Opalescent Comp</label>
       </div>
 
+      <div className="flex gap-4">
+        <input
+          type="radio"
+          name="compPal"
+          id="BioLumComp"
+          value={"BioLumComp"}
+          checked={compPalType === "BioLumComp"}
+          onChange={(e) => {
+            setCompPalType(e.target.value);
+            const pal = complementaryPalGen(oklch, e.target.value, null);
+            setPalette(pal);
+          }}
+        />
+        <label htmlFor="BioLumComp">Bioluminescent Comp</label>
+      </div>
+
+      <div className="flex gap-4">
+        <input
+          type="radio"
+          name="compPal"
+          id="TemporalComp"
+          value={"TemporalComp"}
+          checked={compPalType === "TemporalComp"}
+          onChange={(e) => {
+            setCompPalType(e.target.value);
+            const pal = complementaryPalGen(oklch, e.target.value, null);
+            setPalette(pal);
+          }}
+        />
+        <label htmlFor="TemporalComp">Temporal Comp</label>
+      </div>
+
+      <div className="flex gap-4">
+        <input
+          type="radio"
+          name="compPal"
+          id="AtmosphericComp"
+          value={"AtmosphericComp"}
+          checked={compPalType === "AtmosphericComp"}
+          onChange={(e) => {
+            setCompPalType(e.target.value);
+            const pal = complementaryPalGen(oklch, e.target.value, null);
+            setPalette(pal);
+          }}
+        />
+        <label htmlFor="AtmosphericComp">Atmospheric Comp</label>
+      </div>
+
+      <div className="flex gap-4">
+        <input
+          type="radio"
+          name="compPal"
+          id="EtherealComp"
+          value={"EtherealComp"}
+          checked={compPalType === "EtherealComp"}
+          onChange={(e) => {
+            setCompPalType(e.target.value);
+            const pal = complementaryPalGen(oklch, e.target.value, null);
+            setPalette(pal);
+          }}
+        />
+        <label htmlFor="EtherealComp">Ethereal Comp</label>
+      </div>
+      
       <div className="flex gap-4">
         <input
           type="radio"
@@ -60,6 +125,87 @@ export default function ComplementaryOptions() {
         />
         <label htmlFor="vintageComp">Vintage Comp</label>
       </div>
+
+      <div className="flex gap-4">
+        <input
+          type="radio"
+          name="compPal"
+          id="80sNeonComp"
+          value={"80sNeonComp"}
+          checked={compPalType === "80sNeonComp"}
+          onChange={(e) => {
+            setCompPalType(e.target.value);
+            const pal = complementaryPalGen(oklch, e.target.value, null);
+            setPalette(pal);
+          }}
+        />
+        <label htmlFor="80sNeonComp">80sNeon Comp</label>
+      </div>
+
+      <div className="flex gap-4">
+        <input
+          type="radio"
+          name="compPal"
+          id="MCMComp"
+          value={"MCMComp"}
+          checked={compPalType === "MCMComp"}
+          onChange={(e) => {
+            setCompPalType(e.target.value);
+            const pal = complementaryPalGen(oklch, e.target.value, null);
+            setPalette(pal);
+          }}
+        />
+        <label htmlFor="MCMComp">Mid-Century Modern</label>
+      </div>
+
+      <div className="flex gap-4">
+        <input
+          type="radio"
+          name="compPal"
+          id="retroComp"
+          value={"retroComp"}
+          checked={compPalType === "retroComp"}
+          onChange={(e) => {
+            setCompPalType(e.target.value);
+            const pal = complementaryPalGen(oklch, e.target.value);
+            setPalette(pal);
+          }}
+        />
+        <label htmlFor="retroComp">Retro Comp</label>
+      </div>
+
+      <div className="flex gap-4">
+        <input
+          type="radio"
+          name="compPal"
+          id="moodyComp"
+          value={"moodyComp"}
+          checked={compPalType === "moodyComp"}
+          onChange={(e) => {
+            setCompPalType(e.target.value);
+            const pal = complementaryPalGen(oklch, e.target.value);
+            setPalette(pal);
+          }}
+        />
+        <label htmlFor="moodyComp">Moody Comp</label>
+      </div>
+
+      <div className="flex gap-4">
+        <input
+          type="radio"
+          name="compPal"
+          id="earthyComp"
+          value={"earthyComp"}
+          checked={compPalType === "earthyComp"}
+          onChange={(e) => {
+            setCompPalType(e.target.value);
+            const pal = complementaryPalGen(oklch, e.target.value);
+            setPalette(pal);
+          }}
+        />
+        <label htmlFor="earthyComp">Earthy/Muted Comp</label>
+      </div>
+
       <div className="flex gap-4">
         <input
           type="radio"
@@ -111,38 +257,6 @@ export default function ComplementaryOptions() {
         <input
           type="radio"
           name="compPal"
-          id="retroComp"
-          value={"retroComp"}
-          checked={compPalType === "retroComp"}
-          onChange={(e) => {
-            setCompPalType(e.target.value);
-            const pal = complementaryPalGen(oklch, e.target.value);
-            setPalette(pal);
-          }}
-        />
-        <label htmlFor="retroComp">Retro Comp</label>
-      </div>
-
-      <div className="flex gap-4">
-        <input
-          type="radio"
-          name="compPal"
-          id="moodyComp"
-          value={"moodyComp"}
-          checked={compPalType === "moodyComp"}
-          onChange={(e) => {
-            setCompPalType(e.target.value);
-            const pal = complementaryPalGen(oklch, e.target.value);
-            setPalette(pal);
-          }}
-        />
-        <label htmlFor="moodyComp">Moody Comp</label>
-      </div>
-
-      <div className="flex gap-4">
-        <input
-          type="radio"
-          name="compPal"
           id="neonComp"
           value={"neonComp"}
           checked={compPalType === "neonComp"}
@@ -153,22 +267,6 @@ export default function ComplementaryOptions() {
           }}
         />
         <label htmlFor="neonComp">Neon Comp</label>
-      </div>
-
-      <div className="flex gap-4">
-        <input
-          type="radio"
-          name="compPal"
-          id="earthyComp"
-          value={"earthyComp"}
-          checked={compPalType === "earthyComp"}
-          onChange={(e) => {
-            setCompPalType(e.target.value);
-            const pal = complementaryPalGen(oklch, e.target.value);
-            setPalette(pal);
-          }}
-        />
-        <label htmlFor="earthyComp">Earthy/Muted Comp</label>
       </div>
 
       <div className="flex gap-4">
@@ -187,5 +285,5 @@ export default function ComplementaryOptions() {
         <label htmlFor="luxuriousComp">Luxurious Comp</label>
       </div>
     </div>
-  );
+  )
 }

@@ -28,6 +28,13 @@ export default function LandCStepper({ type }) {
   }
 
   useEffect(() => {
+
+    setSliderChromaValue(0);
+    setSliderLightValue(0);
+
+  }, [oklch]);
+
+  useEffect(() => {
     let pal;
     if (selectedPaletteType === "complementary") {
       pal = complementaryPalGen(

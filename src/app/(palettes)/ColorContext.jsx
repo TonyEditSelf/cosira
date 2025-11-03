@@ -174,7 +174,7 @@ export function ColorPaletteContextProvider({ children }) {
     useState("complementary");
 
   const [compPalType, setCompPalType] = useState("classicComp");
-  const [monoPalType, setMonoPalType] = useState("kidsMono");
+  const [monoPalType, setMonoPalType] = useState("classicMono");
   const [analogPalType, setAnalogPalType] = useState("classicAnalog");
   const [palette, setPalette] = useState([]);
 
