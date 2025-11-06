@@ -19,10 +19,12 @@ import { useColorPaletteContext } from "../../ColorContext";
 
 export default function CustomPalToolbar() {
   const {
-    // editCell,
-    // setEditCell,
-    // editPalette,
-    // setEditPalette,
+    palette,
+    setPalette,
+    paletteHistory,
+    setPaletteHistory,
+    paletteHistoryCounter,
+    setPaletteHistoryCounter,
     setLeftPaletteAdjusterOpen,
     setMyColorPickerOpen,
     leftPaletteAdjusterOpen,
@@ -32,6 +34,50 @@ export default function CustomPalToolbar() {
     showHidePanelOpen,
     setShowHidePanelOpen,
   } = useColorPaletteContext();
+
+  const goBackPalHistory = () => {
+    if (paletteHistoryCounter <= 0) return;
+    if (paletteHistoryCounter === paletteHistory.length) {
+      setPaletteHistory((prevHistory) => {
+        if (palette.length > 0) {
+          const lastEntry = prevHistory[prevHistory.length - 1];
+
+          if (JSON.stringify(lastEntry) !== JSON.stringify(palette)) {
+            const updatedHistory = [...prevHistory, palette];
+            return updatedHistory;
+          }
+        }
+        return prevHistory;
+      });
+      setPaletteHistory((prevHistory) => {
+        if (palette.length > 0) {
+          const lastEntry = prevHistory[prevHistory.length - 1];
+
+          if (JSON.stringify(lastEntry) !== JSON.stringify(palette)) {
+            const updatedHistory = [...prevHistory, palette];
+            return updatedHistory;
+          }
+        }
+        return prevHistory;
+      });
+    }
+    setPalette(paletteHistory[paletteHistoryCounter - 1]);
+
+    setPaletteHistoryCounter((prevCounter) => {
+      const newCounter = prevCounter - 1;
+      return newCounter;
+    });
+  };
+
+  const goForwardPalHistory = () => {
+    if (paletteHistoryCounter >= paletteHistory.length) return;
+    setPalette(paletteHistory[paletteHistoryCounter + 1]);
+
+    setPaletteHistoryCounter((prevCounter) => {
+      const newCounter = prevCounter + 1;
+      return newCounter;
+    });
+  };
 
   return (
     <section className="flex gap-3 items-center justify-center border border-[var(--navBorder)] py-2 ml-3 mr-2 mb-2 mt-2 rounded-md">
@@ -83,10 +129,17 @@ export default function CustomPalToolbar() {
       <Link href={"/palette-tester"} className="size-9">
         <IoContrast className="size-9 cursor-pointer border border-[var(--navBorder)] hover:border-[var(--muted-foreground)] p-2 rounded-md" />
       </Link>
-      <FaAnglesLeft className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]" />
+      <FaAnglesLeft
+        className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]"
+        onClick={goBackPalHistory}
+      />
       <FaPlay className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]" />
 
-      <FaAnglesRight className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]" />
+      <FaAnglesRight
+        className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]"
+        onClick={goForwardPalHistory}
+      />
+
       <FaSave className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]" />
       <CgExport className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]" />
     </section>

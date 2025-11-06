@@ -7,6 +7,7 @@ import {
   useRef,
   useEffect,
   useCallback,
+  use,
 } from "react";
 
 import {
@@ -171,12 +172,45 @@ export function ColorPaletteContextProvider({ children }) {
   const [sliderChromaValue, setSliderChromaValue] = useState(0);
 
   const [selectedPaletteType, setSelectedPaletteType] =
-    useState("complementary");
+    useState("monochromatic");
 
   const [compPalType, setCompPalType] = useState("classicComp");
   const [monoPalType, setMonoPalType] = useState("classicMono");
   const [analogPalType, setAnalogPalType] = useState("classicAnalog");
   const [palette, setPalette] = useState([]);
+  const [paletteHistory, setPaletteHistory] = useState([]);
+  const [paletteHistoryCounter, setPaletteHistoryCounter] = useState(0);
+
+  useEffect(() => {
+    setPaletteHistory((prevHistory) => {
+      if (palette.length > 0) {
+        const lastEntry = prevHistory[prevHistory.length - 1];
+
+        if (JSON.stringify(lastEntry) !== JSON.stringify(palette)) {
+          const updatedHistory = [...prevHistory, palette];
+          return updatedHistory;
+        }
+      }
+      return prevHistory;
+    });
+    setPaletteHistoryCounter(paletteHistory.length + 1);
+  }, [
+    selectedPaletteType,
+    compPalType,
+    monoPalType,
+    oklch,
+    sliderLightValue,
+    sliderChromaValue,
+    analogOptions,
+    splitCompOptions,
+    tetradicAngle,
+  ]);
+
+  useEffect(() => {
+    console.log("PaletteHistory: ", paletteHistory);
+    console.log("PaletteHistoryCounter: ", paletteHistoryCounter);
+    console.log("historyLength", paletteHistory.length);
+  }, [paletteHistory]);
 
   useEffect(() => {
     setSliderChromaValue(0);
@@ -212,6 +246,10 @@ export function ColorPaletteContextProvider({ children }) {
     setAnalogOptions,
     palette,
     setPalette,
+    paletteHistory,
+    setPaletteHistory,
+    paletteHistoryCounter,
+    setPaletteHistoryCounter,
     oklch,
     setOklch,
     cssColor,
