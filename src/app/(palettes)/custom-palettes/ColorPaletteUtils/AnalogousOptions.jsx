@@ -29,6 +29,7 @@ export default function AnalogousOptions() {
               setAnalogPalType(e.target.value);
               const pal = analogousPalGen(oklch, e.target.value);
               setPalette(pal);
+              setDuplicatePalette(pal);
             }}
           />
           <label htmlFor="classicCenteredAnalog">Classic Centered Analog</label>
@@ -45,6 +46,7 @@ export default function AnalogousOptions() {
               setAnalogPalType(e.target.value);
               const pal = analogousPalGen(oklch, e.target.value);
               setPalette(pal);
+              setDuplicatePalette(pal);
             }}
           />
           <label htmlFor="classicLeftAnalog">Left-Leaning Classic</label>
@@ -61,6 +63,7 @@ export default function AnalogousOptions() {
               setAnalogPalType(e.target.value);
               const pal = analogousPalGen(oklch, e.target.value);
               setPalette(pal);
+              setDuplicatePalette(pal);
             }}
           />
           <label htmlFor="classicRightAnalog">Right-Leaning Classic</label>
@@ -118,6 +121,7 @@ export default function AnalogousOptions() {
               setAnalogPalType(e.target.value);
               const pal = analogousPalGen(oklch, e.target.value);
               setPalette(pal);
+              setDuplicatePalette(pal);
             }}
           />
           <label htmlFor="vintageCenteredAnalog">Vintage Centered Analog</label>
@@ -133,6 +137,7 @@ export default function AnalogousOptions() {
               setAnalogPalType(e.target.value);
               const pal = analogousPalGen(oklch, e.target.value);
               setPalette(pal);
+              setDuplicatePalette(pal);
             }}
           />
           <label htmlFor="vintageLeftAnalog">Left-Leaning Vintage</label>
@@ -149,6 +154,7 @@ export default function AnalogousOptions() {
               setAnalogPalType(e.target.value);
               const pal = analogousPalGen(oklch, e.target.value);
               setPalette(pal);
+              setDuplicatePalette(pal);
             }}
           />
           <label htmlFor="vintageRightAnalog">Right-Leaning Vintage</label>
@@ -165,6 +171,7 @@ export default function AnalogousOptions() {
               setAnalogPalType(e.target.value);
               const pal = analogousPalGen(oklch, e.target.value);
               setPalette(pal);
+              setDuplicatePalette(pal);
             }}
           />
           <label htmlFor="neutralCenteredAnalog">Neutral Centered Analog</label>
@@ -181,6 +188,7 @@ export default function AnalogousOptions() {
               setAnalogPalType(e.target.value);
               const pal = analogousPalGen(oklch, e.target.value);
               setPalette(pal);
+              setDuplicatePalette(pal);
             }}
           />
           <label htmlFor="neutralLeftAnalog">Left-Leaning Neutral</label>
@@ -197,6 +205,7 @@ export default function AnalogousOptions() {
               setAnalogPalType(e.target.value);
               const pal = analogousPalGen(oklch, e.target.value);
               setPalette(pal);
+              setDuplicatePalette(pal);
             }}
           />
           <label htmlFor="neutralRightAnalog">Right-Leaning Neutral</label>
@@ -213,6 +222,7 @@ export default function AnalogousOptions() {
               setAnalogPalType(e.target.value);
               const pal = analogousPalGen(oklch, e.target.value);
               setPalette(pal);
+              setDuplicatePalette(pal);
             }}
           />
           <label htmlFor="kidsCenteredAnalog">Kids Centered Analog</label>
@@ -229,6 +239,7 @@ export default function AnalogousOptions() {
               setAnalogPalType(e.target.value);
               const pal = analogousPalGen(oklch, e.target.value);
               setPalette(pal);
+              setDuplicatePalette(pal);
             }}
           />
           <label htmlFor="kidsLeftAnalog">Left Kids-Friendly</label>
@@ -245,6 +256,7 @@ export default function AnalogousOptions() {
               setAnalogPalType(e.target.value);
               const pal = analogousPalGen(oklch, e.target.value);
               setPalette(pal);
+              setDuplicatePalette(pal);
             }}
           />
           <label htmlFor="kidsRightAnalog">Kids Right Analog</label>

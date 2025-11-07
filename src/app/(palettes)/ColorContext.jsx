@@ -178,8 +178,9 @@ export function ColorPaletteContextProvider({ children }) {
   const [monoPalType, setMonoPalType] = useState("classicMono");
   const [analogPalType, setAnalogPalType] = useState("classicAnalog");
   const [palette, setPalette] = useState([]);
+  const [duplicatePalette, setDuplicatePalette] = useState([]);
   const [paletteHistory, setPaletteHistory] = useState([]);
-  const [paletteHistoryCounter, setPaletteHistoryCounter] = useState(0);
+  const [paletteHistoryCounter, setPaletteHistoryCounter] = useState(-1);
 
   useEffect(() => {
     setPaletteHistory((prevHistory) => {
@@ -193,24 +194,14 @@ export function ColorPaletteContextProvider({ children }) {
       }
       return prevHistory;
     });
-    setPaletteHistoryCounter(paletteHistory.length + 1);
-  }, [
-    selectedPaletteType,
-    compPalType,
-    monoPalType,
-    oklch,
-    sliderLightValue,
-    sliderChromaValue,
-    analogOptions,
-    splitCompOptions,
-    tetradicAngle,
-  ]);
+    setPaletteHistoryCounter((prev) => prev + 1);
+  }, [duplicatePalette]);
 
   useEffect(() => {
     console.log("PaletteHistory: ", paletteHistory);
     console.log("PaletteHistoryCounter: ", paletteHistoryCounter);
     console.log("historyLength", paletteHistory.length);
-  }, [paletteHistory]);
+  }, [paletteHistoryCounter, paletteHistory]);
 
   useEffect(() => {
     setSliderChromaValue(0);
@@ -231,6 +222,7 @@ export function ColorPaletteContextProvider({ children }) {
       analogPalType
     );
     setPalette(pal);
+    setDuplicatePalette(pal);
   }, [
     oklch,
     analogOptions,
@@ -246,6 +238,8 @@ export function ColorPaletteContextProvider({ children }) {
     setAnalogOptions,
     palette,
     setPalette,
+    duplicatePalette,
+    setDuplicatePalette,
     paletteHistory,
     setPaletteHistory,
     paletteHistoryCounter,

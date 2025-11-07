@@ -4,6 +4,7 @@ import monochromaticPalGen from "./monochromaticPalGen";
 export default function MonochromaticOptions() {
   const {
     setPalette,
+    setDuplicatePalette,
     oklch,
     monoPalType,
     setMonoPalType,
@@ -23,6 +24,7 @@ export default function MonochromaticOptions() {
             setMonoPalType(e.target.value);
             const pal = monochromaticPalGen(oklch, e.target.value);
             setPalette(pal);
+            setDuplicatePalette(pal);
           }}
         />
         <label htmlFor="classicMono">Classic Mono</label>
@@ -52,6 +54,7 @@ export default function MonochromaticOptions() {
             setMonoPalType(e.target.value);
             const pal = monochromaticPalGen(oklch, e.target.value);
             setPalette(pal);
+            setDuplicatePalette(pal);
           }}
         />
         <label htmlFor="vintageMono">Vintage Mono</label>
@@ -67,6 +70,7 @@ export default function MonochromaticOptions() {
             setMonoPalType(e.target.value);
             const pal = monochromaticPalGen(oklch, e.target.value);
             setPalette(pal);
+            setDuplicatePalette(pal);
           }}
         />
         <label htmlFor="neutralMono">Neutral Mono</label>
@@ -83,6 +87,7 @@ export default function MonochromaticOptions() {
             setMonoPalType(e.target.value);
             const pal = monochromaticPalGen(oklch, e.target.value);
             setPalette(pal);
+            setDuplicatePalette(pal);
           }}
         />
         <label htmlFor="kidsMono">Kids Mono</label>

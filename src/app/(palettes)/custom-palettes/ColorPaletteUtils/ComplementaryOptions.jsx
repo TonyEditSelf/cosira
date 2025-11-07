@@ -5,6 +5,7 @@ import complementaryPalGen from "./complementaryPalGen";
 export default function ComplementaryOptions() {
   const {
     setPalette,
+    setDuplicatePalette,
     oklch,
     compPalType,
     setCompPalType,
@@ -25,6 +26,7 @@ export default function ComplementaryOptions() {
             setCompPalType(e.target.value);
             const pal = complementaryPalGen(oklch, e.target.value);
             setPalette(pal);
+            setDuplicatePalette(pal);
           }}
         />
         <label htmlFor="classicComp">Classic Comp</label>
@@ -41,6 +43,7 @@ export default function ComplementaryOptions() {
             setCompPalType(e.target.value);
             const pal = complementaryPalGen(oklch, e.target.value, null);
             setPalette(pal);
+            setDuplicatePalette(pal);
           }}
         />
         <label htmlFor="OpalComp">Opalescent Comp</label>
@@ -57,6 +60,7 @@ export default function ComplementaryOptions() {
             setCompPalType(e.target.value);
             const pal = complementaryPalGen(oklch, e.target.value, null);
             setPalette(pal);
+            setDuplicatePalette(pal);
           }}
         />
         <label htmlFor="BioLumComp">Bioluminescent Comp</label>
@@ -73,6 +77,7 @@ export default function ComplementaryOptions() {
             setCompPalType(e.target.value);
             const pal = complementaryPalGen(oklch, e.target.value, null);
             setPalette(pal);
+            setDuplicatePalette(pal);
           }}
         />
         <label htmlFor="TemporalComp">Temporal Comp</label>
@@ -89,6 +94,7 @@ export default function ComplementaryOptions() {
             setCompPalType(e.target.value);
             const pal = complementaryPalGen(oklch, e.target.value, null);
             setPalette(pal);
+            setDuplicatePalette(pal);
           }}
         />
         <label htmlFor="AtmosphericComp">Atmospheric Comp</label>
@@ -105,11 +111,12 @@ export default function ComplementaryOptions() {
             setCompPalType(e.target.value);
             const pal = complementaryPalGen(oklch, e.target.value, null);
             setPalette(pal);
+            setDuplicatePalette(pal);
           }}
         />
         <label htmlFor="EtherealComp">Ethereal Comp</label>
       </div>
-      
+
       <div className="flex gap-4">
         <input
           type="radio"
@@ -121,6 +128,7 @@ export default function ComplementaryOptions() {
             setCompPalType(e.target.value);
             const pal = complementaryPalGen(oklch, e.target.value, null);
             setPalette(pal);
+            setDuplicatePalette(pal);
           }}
         />
         <label htmlFor="vintageComp">Vintage Comp</label>
@@ -137,6 +145,7 @@ export default function ComplementaryOptions() {
             setCompPalType(e.target.value);
             const pal = complementaryPalGen(oklch, e.target.value, null);
             setPalette(pal);
+            setDuplicatePalette(pal);
           }}
         />
         <label htmlFor="80sNeonComp">80sNeon Comp</label>
@@ -153,6 +162,7 @@ export default function ComplementaryOptions() {
             setCompPalType(e.target.value);
             const pal = complementaryPalGen(oklch, e.target.value, null);
             setPalette(pal);
+            setDuplicatePalette(pal);
           }}
         />
         <label htmlFor="MCMComp">Mid-Century Modern</label>
@@ -169,6 +179,7 @@ export default function ComplementaryOptions() {
             setCompPalType(e.target.value);
             const pal = complementaryPalGen(oklch, e.target.value);
             setPalette(pal);
+            setDuplicatePalette(pal);
           }}
         />
         <label htmlFor="retroComp">Retro Comp</label>
@@ -185,6 +196,7 @@ export default function ComplementaryOptions() {
             setCompPalType(e.target.value);
             const pal = complementaryPalGen(oklch, e.target.value);
             setPalette(pal);
+            setDuplicatePalette(pal);
           }}
         />
         <label htmlFor="moodyComp">Moody Comp</label>
@@ -201,6 +213,7 @@ export default function ComplementaryOptions() {
             setCompPalType(e.target.value);
             const pal = complementaryPalGen(oklch, e.target.value);
             setPalette(pal);
+            setDuplicatePalette(pal);
           }}
         />
         <label htmlFor="earthyComp">Earthy/Muted Comp</label>
@@ -217,6 +230,7 @@ export default function ComplementaryOptions() {
             setCompPalType(e.target.value);
             const pal = complementaryPalGen(oklch, e.target.value);
             setPalette(pal);
+            setDuplicatePalette(pal);
           }}
         />
         <label htmlFor="neutralComp">Neutral Comp</label>
@@ -233,6 +247,7 @@ export default function ComplementaryOptions() {
             setCompPalType(e.target.value);
             const pal = complementaryPalGen(oklch, e.target.value);
             setPalette(pal);
+            setDuplicatePalette(pal);
           }}
         />
         <label htmlFor="kidsComp">Kids Comp</label>
@@ -248,6 +263,7 @@ export default function ComplementaryOptions() {
             setCompPalType(e.target.value);
             const pal = complementaryPalGen(oklch, e.target.value);
             setPalette(pal);
+            setDuplicatePalette(pal);
           }}
         />
         <label htmlFor="pastelComp">Pastel Comp</label>
@@ -264,6 +280,7 @@ export default function ComplementaryOptions() {
             setCompPalType(e.target.value);
             const pal = complementaryPalGen(oklch, e.target.value);
             setPalette(pal);
+            setDuplicatePalette(pal);
           }}
         />
         <label htmlFor="neonComp">Neon Comp</label>
@@ -280,10 +297,11 @@ export default function ComplementaryOptions() {
             setCompPalType(e.target.value);
             const pal = complementaryPalGen(oklch, e.target.value);
             setPalette(pal);
+            setDuplicatePalette(pal);
           }}
         />
         <label htmlFor="luxuriousComp">Luxurious Comp</label>
       </div>
     </div>
-  )
+  );
 }

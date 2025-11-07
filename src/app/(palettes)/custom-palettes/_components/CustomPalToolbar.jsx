@@ -36,45 +36,19 @@ export default function CustomPalToolbar() {
   } = useColorPaletteContext();
 
   const goBackPalHistory = () => {
-    if (paletteHistoryCounter <= 0) return;
-    if (paletteHistoryCounter === paletteHistory.length) {
-      setPaletteHistory((prevHistory) => {
-        if (palette.length > 0) {
-          const lastEntry = prevHistory[prevHistory.length - 1];
-
-          if (JSON.stringify(lastEntry) !== JSON.stringify(palette)) {
-            const updatedHistory = [...prevHistory, palette];
-            return updatedHistory;
-          }
-        }
-        return prevHistory;
-      });
-      setPaletteHistory((prevHistory) => {
-        if (palette.length > 0) {
-          const lastEntry = prevHistory[prevHistory.length - 1];
-
-          if (JSON.stringify(lastEntry) !== JSON.stringify(palette)) {
-            const updatedHistory = [...prevHistory, palette];
-            return updatedHistory;
-          }
-        }
-        return prevHistory;
-      });
-    }
-    setPalette(paletteHistory[paletteHistoryCounter - 1]);
-
-    setPaletteHistoryCounter((prevCounter) => {
-      const newCounter = prevCounter - 1;
+    setPaletteHistoryCounter((prev) => {
+      if (prev <= 1) return prev; // already at oldest
+      const newCounter = prev - 1;
+      setPalette(paletteHistory[newCounter]);
       return newCounter;
     });
   };
 
   const goForwardPalHistory = () => {
-    if (paletteHistoryCounter >= paletteHistory.length) return;
-    setPalette(paletteHistory[paletteHistoryCounter + 1]);
-
-    setPaletteHistoryCounter((prevCounter) => {
-      const newCounter = prevCounter + 1;
+    setPaletteHistoryCounter((prev) => {
+      if (prev >= paletteHistory.length) return prev; // already at newest
+      const newCounter = prev + 1;
+      setPalette(paletteHistory[newCounter]);
       return newCounter;
     });
   };
@@ -133,7 +107,7 @@ export default function CustomPalToolbar() {
         className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]"
         onClick={goBackPalHistory}
       />
-      <FaPlay className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]" />
+      {/* <FaPlay className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]" /> */}
 
       <FaAnglesRight
         className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]"
