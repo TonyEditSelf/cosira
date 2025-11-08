@@ -12,8 +12,6 @@ export default function AnalogousOptions() {
   } = useColorPaletteContext();
   let angle1 = analogOptions.analogousAngle1;
   let angle2 = analogOptions.analogousAngle2;
-  console.log(angle1);
-  console.log(angle2);
 
   return (
     <div className="flex flex-col gap-5">
@@ -379,6 +377,8 @@ export default function AnalogousOptions() {
                   parseFloat(e.target.value),
                   e.target.id
                 );
+                const pal = analogousPalGen(oklch, analogOptions);
+                setPalette(pal);
               }}
             />
           </div>
@@ -399,6 +399,8 @@ export default function AnalogousOptions() {
                   parseFloat(e.target.value),
                   e.target.id
                 );
+                const pal = analogousPalGen(oklch, analogOptions);
+                setPalette(pal);
               }}
             />
           </div>

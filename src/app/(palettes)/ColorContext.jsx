@@ -222,10 +222,19 @@ export function ColorPaletteContextProvider({ children }) {
       analogPalType
     );
     setPalette(pal);
-    setDuplicatePalette(pal);
+
+    if (
+      selectedPaletteType === "analogous" &&
+      (analogOptions.analogousAngle2 !== 40 ||
+        analogOptions.analogousAngle1 !== -40)
+    ) {
+      setDuplicatePalette(null);
+    } else {
+      setDuplicatePalette(pal);
+    }
   }, [
     oklch,
-    analogOptions,
+    // analogOptions,
     splitCompOptions,
     tetradicAngle,
     selectedPaletteType,
