@@ -36,16 +36,10 @@ export const paletteTypes = [
       "Pure grayscale variation — no hue, only value contrast; ideal for neutral or UI tones.",
   },
   {
-    label: "UI Palette",
-    value: "uipalette",
-    description: "Multiple distinct hues",
-  },
-  {
     label: "Brand Palette",
     value: "brandPalette",
     description: "Multiple distinct hues",
   },
-
   {
     label: "Gradient / Transitional",
     value: "gradient",

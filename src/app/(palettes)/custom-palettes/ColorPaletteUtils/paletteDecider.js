@@ -64,6 +64,5 @@ export default function paletteDecider(
   } else if (selectedPaletteType === "seasonal") {
     return seasonalPalGen(oklch);
   }
-
   return null;
 }
