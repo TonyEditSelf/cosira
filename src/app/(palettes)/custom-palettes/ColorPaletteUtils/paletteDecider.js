@@ -16,6 +16,7 @@ import achromaticPalGen from "./achromaticPalGen";
 import brandPalGen from "./brandPalGen";
 import gradientPalGen from "./gradientPalGen";
 import seasonalPalGen from "./seasonalPalGen";
+import uipalettePalGen from "./uipalettePalGen";
 
 export default function paletteDecider(
   oklch,
@@ -63,6 +64,9 @@ export default function paletteDecider(
     return gradientPalGen(oklch);
   } else if (selectedPaletteType === "seasonal") {
     return seasonalPalGen(oklch);
+  } else if (selectedPaletteType === "uipalette") {
+    return uipalettePalGen(oklch);
   }
+
   return null;
 }
