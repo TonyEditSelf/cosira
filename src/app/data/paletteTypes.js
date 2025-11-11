@@ -20,12 +20,6 @@ export const paletteTypes = [
     description: "A base color plus two adjacent to its complement",
   },
   {
-    label: "Near-Complementary",
-    value: "nearComplementary",
-    description:
-      "Base hue and one slightly off its direct complement (~150°–170°) — softer contrast.",
-  },
-  {
     label: "Triadic",
     value: "triadic",
     description: "Three colors evenly spaced on the color wheel (triangle)",
@@ -70,5 +64,59 @@ export const paletteTypes = [
     value: "seasonal",
     description:
       "Palette based on seasonal color theory (Spring, Summer, Autumn, Winter), each with distinct lightness and chroma balance.",
+  },
+  {
+    label: "Square",
+    value: "square",
+    description:
+      "Four colors evenly spaced (90° apart) — balanced energy with multiple harmonies",
+  },
+  {
+    label: "Accented Analogous",
+    value: "accentedAnalogous",
+    description:
+      "Harmonious analogous colors plus one complementary accent for visual pop",
+  },
+  {
+    label: "Tonal",
+    value: "tonal",
+    description:
+      "Same hue and lightness, varying only saturation — subtle depth without hue shifts",
+  },
+  {
+    label: "Compound (Complex)",
+    value: "compound",
+    description:
+      "Base + analogous neighbors + complement — rich, sophisticated multi-harmony palette",
+  },
+  {
+    label: "Warm-Cool Contrast",
+    value: "warmCool",
+    description:
+      "Split between warm (red-yellow) and cool (blue-green) sides — strong temperature contrast",
+  },
+  {
+    label: "Chromatic Neutral",
+    value: "chromaticNeutral",
+    description:
+      "Subtle colored grays (very low chroma) — sophisticated neutrals with color undertones",
+  },
+  {
+    label: "Double Split-Complementary",
+    value: "doubleSplitComp",
+    description:
+      "Two split-complementary triads sharing complementary axis — complex, balanced harmony",
+  },
+  {
+    label: "Near-Complementary",
+    value: "nearComplementary",
+    description:
+      "Base + colors ~150-165° away instead of 180° — softer contrast than true complements",
+  },
+  {
+    label: "Clash (Discordant)",
+    value: "clash",
+    description:
+      "Intentionally jarring combinations (30-60° off harmonies) — bold, attention-grabbing tension",
   },
 ];

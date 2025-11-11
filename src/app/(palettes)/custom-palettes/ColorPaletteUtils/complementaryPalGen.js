@@ -80,7 +80,7 @@ export default function complementaryPalGen(
       { name: "Comp-D", value: darkComp },
       { name: "Comp-DD", value: darkestComp },
     ];
-  }  else if (compPalType === "vintageComp") {
+  } else if (compPalType === "vintageComp") {
     const LMAX = 0.68; // softer highlights (vintage = faded)
     const LMIN = 0.38; // deeper but not crushed shadows
     const CMAX = 0.14; // lower saturation ceiling for authentic vintage
@@ -171,7 +171,6 @@ export default function complementaryPalGen(
       h: (compHue + 5) % 360,
     };
 
-
     return [
       { name: "Base-DD", value: darkestBase },
       { name: "Base-D", value: darkBase },
@@ -184,17 +183,16 @@ export default function complementaryPalGen(
       { name: "Comp-D", value: darkComp },
       { name: "Comp-DD", value: darkestComp },
     ];
-  } else if (compPalType === '80sNeonComp') {
-
+  } else if (compPalType === "80sNeonComp") {
     const LMAX = 0.85; // Blinding, electric highlights
-    const LMIN = 0.30; // Crushed, deep shadows
-    const CMAX = 0.40; // Extreme, artificial saturation
+    const LMIN = 0.3; // Crushed, deep shadows
+    const CMAX = 0.4; // Extreme, artificial saturation
     const CMIN = 0.18; // Vibrant even in dark tones
 
     // --- Base Color (Neon glow foundation) ---
     const baseColor = {
       ...oklch,
-      l: Math.min(LMAX, Math.max(LMIN, 0.60 + sliderLightValue)), // slightly higher midtone for neon glow
+      l: Math.min(LMAX, Math.max(LMIN, 0.6 + sliderLightValue)), // slightly higher midtone for neon glow
       c: Math.min(CMAX, Math.max(CMIN, 0.32 + sliderChromaValue)), // bold baseline chroma
     };
 
@@ -215,14 +213,20 @@ export default function complementaryPalGen(
 
     const lightBase = {
       ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l + (LMAX - baseColor.l) * 0.4)),
+      l: Math.min(
+        LMAX,
+        Math.max(LMIN, baseColor.l + (LMAX - baseColor.l) * 0.4)
+      ),
       c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.95)), // retain color vibrancy
       h: (baseColor.h + 2) % 360, // slightly cooler highlights (glow tint)
     };
 
     const lightestBase = {
       ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l + (LMAX - baseColor.l) * 0.7)),
+      l: Math.min(
+        LMAX,
+        Math.max(LMIN, baseColor.l + (LMAX - baseColor.l) * 0.7)
+      ),
       c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.85)), // slight desat in glow for realism
       h: (baseColor.h + 5) % 360,
     };
@@ -253,14 +257,20 @@ export default function complementaryPalGen(
 
     const lightComp = {
       ...compColor,
-      l: Math.min(LMAX, Math.max(LMIN, compColor.l + (LMAX - compColor.l) * 0.45)),
+      l: Math.min(
+        LMAX,
+        Math.max(LMIN, compColor.l + (LMAX - compColor.l) * 0.45)
+      ),
       c: Math.min(CMAX, Math.max(CMIN, compColor.c * 0.88)), // keep glow intensity but not oversaturated
       h: (compHue + 3) % 360, // cooler cyan highlight bias
     };
 
     const lightestComp = {
       ...compColor,
-      l: Math.min(LMAX, Math.max(LMIN, compColor.l + (LMAX - compColor.l) * 0.7)),
+      l: Math.min(
+        LMAX,
+        Math.max(LMIN, compColor.l + (LMAX - compColor.l) * 0.7)
+      ),
       c: Math.min(CMAX, Math.max(CMIN, compColor.c * 0.75)), // faded highlight glow
       h: (compHue + 5) % 360,
     };
@@ -279,8 +289,7 @@ export default function complementaryPalGen(
       { name: "Comp-DD", value: darkestComp },
     ];
   } else if (compPalType === "MCMComp") {
-
-    const LMAX = 0.70; // Soft, earthen highlights
+    const LMAX = 0.7; // Soft, earthen highlights
     const LMIN = 0.35; // Deep, strong shadows
     const CMAX = 0.28; // Moderate to high saturation for accents
     const CMIN = 0.06; // Slightly desaturated foundation
@@ -296,7 +305,7 @@ export default function complementaryPalGen(
     const darkestBase = {
       ...baseColor,
       l: Math.min(LMAX, Math.max(LMIN, baseColor.l * 0.78)), // natural deepening (not crushed)
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.10)), // subtle richness in shadows
+      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.1)), // subtle richness in shadows
       h: (baseColor.h - 2 + 360) % 360, // warm shadow bias (wood-like warmth)
     };
 
@@ -309,14 +318,20 @@ export default function complementaryPalGen(
 
     const lightBase = {
       ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l + (LMAX - baseColor.l) * 0.35)),
+      l: Math.min(
+        LMAX,
+        Math.max(LMIN, baseColor.l + (LMAX - baseColor.l) * 0.35)
+      ),
       c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.92)), // gently desaturated highlights
       h: (baseColor.h + 1.5) % 360, // slightly cooler for linen/light wood glow
     };
 
     const lightestBase = {
       ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l + (LMAX - baseColor.l) * 0.6)),
+      l: Math.min(
+        LMAX,
+        Math.max(LMIN, baseColor.l + (LMAX - baseColor.l) * 0.6)
+      ),
       c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.8)), // soft, muted highlight
       h: (baseColor.h + 3) % 360,
     };
@@ -347,14 +362,20 @@ export default function complementaryPalGen(
 
     const lightComp = {
       ...compColor,
-      l: Math.min(LMAX, Math.max(LMIN, compColor.l + (LMAX - compColor.l) * 0.4)),
+      l: Math.min(
+        LMAX,
+        Math.max(LMIN, compColor.l + (LMAX - compColor.l) * 0.4)
+      ),
       c: Math.min(CMAX, Math.max(CMIN, compColor.c * 0.88)), // smoother highlight desat
       h: (compHue + 2) % 360, // warm neutral lift
     };
 
     const lightestComp = {
       ...compColor,
-      l: Math.min(LMAX, Math.max(LMIN, compColor.l + (LMAX - compColor.l) * 0.65)),
+      l: Math.min(
+        LMAX,
+        Math.max(LMIN, compColor.l + (LMAX - compColor.l) * 0.65)
+      ),
       c: Math.min(CMAX, Math.max(CMIN, compColor.c * 0.75)),
       h: (compHue + 3.5) % 360,
     };
@@ -372,8 +393,6 @@ export default function complementaryPalGen(
       { name: "Comp-D", value: darkComp },
       { name: "Comp-DD", value: darkestComp },
     ];
-
-
   } else if (compPalType === "neutralComp") {
     // --- Hue-dominant neutral constraints ---
     const LMAX = 0.96; // near-white highlights
@@ -1162,8 +1181,8 @@ export default function complementaryPalGen(
     // --- Strong Opalescent Complement Palette (Clamped OKLCH) ---
     // Luminous, holographic, and balanced with safety clamps
 
-    const LMAX = 0.80; // Glossy but not pure white
-    const LMIN = 0.30; // Deep shadow base
+    const LMAX = 0.8; // Glossy but not pure white
+    const LMIN = 0.3; // Deep shadow base
     const CMAX = 0.35; // Bold iridescence
     const CMIN = 0.08; // Gentle muted base
 
@@ -1180,7 +1199,7 @@ export default function complementaryPalGen(
     const darkBase = {
       ...baseColor,
       l: Math.min(LMAX, Math.max(LMIN, baseColor.l - 0.12)),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.10)),
+      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.1)),
       h: (baseColor.h - 3 + 360) % 360,
     };
 
@@ -1217,8 +1236,8 @@ export default function complementaryPalGen(
     const darkComp = {
       ...compColor,
       h: (baseColor.h + 150) % 360,
-      l: Math.min(LMAX, Math.max(LMIN, compColor.l - 0.10)),
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 1.10)),
+      l: Math.min(LMAX, Math.max(LMIN, compColor.l - 0.1)),
+      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 1.1)),
     };
 
     const lightComp = {
@@ -1253,7 +1272,7 @@ export default function complementaryPalGen(
     // Electric hues with deep-sea contrast — eerie luminous balance
 
     const LMAX = 0.88; // glows but not white
-    const LMIN = 0.20; // dark abyss base
+    const LMIN = 0.2; // dark abyss base
     const CMAX = 0.38; // intense phosphorescent saturation
     const CMIN = 0.08; // faint background glow
 
@@ -1262,15 +1281,15 @@ export default function complementaryPalGen(
     // --- BASE FAMILY (primary glow origin) ---
     const darkestBase = {
       ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l - 0.30)),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.20)),
+      l: Math.min(LMAX, Math.max(LMIN, baseColor.l - 0.3)),
+      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.2)),
       h: (baseColor.h - 10 + 360) % 360, // drifts slightly cooler, deep glow
     };
 
     const darkBase = {
       ...baseColor,
       l: Math.min(LMAX, Math.max(LMIN, baseColor.l - 0.15)),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.10)),
+      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.1)),
       h: (baseColor.h - 5 + 360) % 360,
     };
 
@@ -1293,7 +1312,7 @@ export default function complementaryPalGen(
       ...baseColor,
       h: (baseColor.h + 180) % 360, // core complement
       l: Math.min(LMAX, Math.max(LMIN, baseColor.l * 1.02)),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.00)),
+      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.0)),
     };
 
     // glowing, violet-tinged complement variants
@@ -1314,14 +1333,14 @@ export default function complementaryPalGen(
     const lightComp = {
       ...compColor,
       l: Math.min(LMAX, Math.max(LMIN, compColor.l + 0.13)),
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 1.10)),
+      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 1.1)),
       h: (compColor.h + 20) % 360, // turquoise glow
     };
 
     const lightestComp = {
       ...compColor,
       l: Math.min(LMAX, Math.max(LMIN, compColor.l + 0.27)),
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 1.20)),
+      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 1.2)),
       h: (compColor.h + 30) % 360, // radiant cyan edge
     };
 
@@ -1338,7 +1357,6 @@ export default function complementaryPalGen(
       { name: "Comp-D", value: darkComp },
       { name: "Comp-DD", value: darkestComp },
     ];
-
   } else if (compPalType === "TemporalComp") {
     // --- Temporal Complement (Dynamic Time-of-Day Color Theory) ---
     // Concept: complement hue oscillates through the day.
@@ -1363,8 +1381,7 @@ export default function complementaryPalGen(
     }
 
     // dynamic hue complement
-    const compHue =
-      (baseColor.h + 160 + 20 * timeWave(timeFactor)) % 360;
+    const compHue = (baseColor.h + 160 + 20 * timeWave(timeFactor)) % 360;
 
     // chroma modulation (breathing effect)
     function modulatedChroma(c, t) {
@@ -1374,42 +1391,72 @@ export default function complementaryPalGen(
 
     // lightness modulation (soft day–night cycle)
     function modulatedLightness(l, t) {
-      const wave = 1 + 0.10 * Math.sin(t * Math.PI * 2 - Math.PI / 4);
+      const wave = 1 + 0.1 * Math.sin(t * Math.PI * 2 - Math.PI / 4);
       return l * wave;
     }
 
     // --- Base Family (time-responsive lighting) ---
     const darkestBase = {
       ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, modulatedLightness(baseColor.l - 0.25, timeFactor))),
-      c: Math.min(CMAX, Math.max(CMIN, modulatedChroma(baseColor.c * 1.1, timeFactor))),
+      l: Math.min(
+        LMAX,
+        Math.max(LMIN, modulatedLightness(baseColor.l - 0.25, timeFactor))
+      ),
+      c: Math.min(
+        CMAX,
+        Math.max(CMIN, modulatedChroma(baseColor.c * 1.1, timeFactor))
+      ),
       h: (baseColor.h - 3 + 360) % 360,
     };
 
     const darkBase = {
       ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, modulatedLightness(baseColor.l - 0.13, timeFactor))),
-      c: Math.min(CMAX, Math.max(CMIN, modulatedChroma(baseColor.c * 1.05, timeFactor))),
+      l: Math.min(
+        LMAX,
+        Math.max(LMIN, modulatedLightness(baseColor.l - 0.13, timeFactor))
+      ),
+      c: Math.min(
+        CMAX,
+        Math.max(CMIN, modulatedChroma(baseColor.c * 1.05, timeFactor))
+      ),
     };
 
     const lightBase = {
       ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, modulatedLightness(baseColor.l + 0.12, timeFactor))),
-      c: Math.min(CMAX, Math.max(CMIN, modulatedChroma(baseColor.c * 0.9, timeFactor))),
+      l: Math.min(
+        LMAX,
+        Math.max(LMIN, modulatedLightness(baseColor.l + 0.12, timeFactor))
+      ),
+      c: Math.min(
+        CMAX,
+        Math.max(CMIN, modulatedChroma(baseColor.c * 0.9, timeFactor))
+      ),
     };
 
     const lightestBase = {
       ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, modulatedLightness(baseColor.l + 0.27, timeFactor))),
-      c: Math.min(CMAX, Math.max(CMIN, modulatedChroma(baseColor.c * 0.8, timeFactor))),
+      l: Math.min(
+        LMAX,
+        Math.max(LMIN, modulatedLightness(baseColor.l + 0.27, timeFactor))
+      ),
+      c: Math.min(
+        CMAX,
+        Math.max(CMIN, modulatedChroma(baseColor.c * 0.8, timeFactor))
+      ),
     };
 
     // --- Complement Family (temporal hue oscillation) ---
     const compColor = {
       ...baseColor,
       h: compHue,
-      l: Math.min(LMAX, Math.max(LMIN, modulatedLightness(baseColor.l, timeFactor))),
-      c: Math.min(CMAX, Math.max(CMIN, modulatedChroma(baseColor.c, timeFactor))),
+      l: Math.min(
+        LMAX,
+        Math.max(LMIN, modulatedLightness(baseColor.l, timeFactor))
+      ),
+      c: Math.min(
+        CMAX,
+        Math.max(CMIN, modulatedChroma(baseColor.c, timeFactor))
+      ),
     };
 
     const darkestComp = {
@@ -1450,10 +1497,7 @@ export default function complementaryPalGen(
       { name: "Comp-D", value: darkComp },
       { name: "Comp-DD", value: darkestComp },
     ];
-
-
   } else if (compPalType === "AtmosphericComp") {
-
     // --- Atmospheric Complement (Scattering Logic) ---
     // Simulates Rayleigh/Mie scattering principles:
     // Shadows = warm opposites (180° shift), Highlights = sky-biased cool reflections (~60° shift)
@@ -1491,7 +1535,7 @@ export default function complementaryPalGen(
     const lightestBase = {
       ...baseColor,
       l: Math.min(LMAX, Math.max(LMIN, baseColor.l + 0.28)),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.70)), // thin-air fade
+      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.7)), // thin-air fade
       h: (baseColor.h + 6) % 360,
     };
 
@@ -1518,35 +1562,50 @@ export default function complementaryPalGen(
       ...baseColor,
       h: (baseColor.h + scatteringHueShift(baseColor.l)) % 360,
       l: Math.min(LMAX, Math.max(LMIN, baseColor.l * 0.98)),
-      c: Math.min(CMAX, Math.max(CMIN, scatteringChroma(baseColor.c, baseColor.l))),
+      c: Math.min(
+        CMAX,
+        Math.max(CMIN, scatteringChroma(baseColor.c, baseColor.l))
+      ),
     };
 
     // Complement tonal family (reflective atmospheric band)
     const darkestComp = {
       ...compColor,
       l: Math.min(LMAX, Math.max(LMIN, compColor.l - 0.25)),
-      c: Math.min(CMAX, Math.max(CMIN, scatteringChroma(compColor.c * 1.1, compColor.l))),
+      c: Math.min(
+        CMAX,
+        Math.max(CMIN, scatteringChroma(compColor.c * 1.1, compColor.l))
+      ),
       h: (compColor.h - 6 + 360) % 360,
     };
 
     const darkComp = {
       ...compColor,
       l: Math.min(LMAX, Math.max(LMIN, compColor.l - 0.13)),
-      c: Math.min(CMAX, Math.max(CMIN, scatteringChroma(compColor.c * 1.05, compColor.l))),
+      c: Math.min(
+        CMAX,
+        Math.max(CMIN, scatteringChroma(compColor.c * 1.05, compColor.l))
+      ),
       h: (compColor.h - 3 + 360) % 360,
     };
 
     const lightComp = {
       ...compColor,
       l: Math.min(LMAX, Math.max(LMIN, compColor.l + 0.13)),
-      c: Math.min(CMAX, Math.max(CMIN, scatteringChroma(compColor.c * 0.85, compColor.l))),
+      c: Math.min(
+        CMAX,
+        Math.max(CMIN, scatteringChroma(compColor.c * 0.85, compColor.l))
+      ),
       h: (compColor.h + 3) % 360,
     };
 
     const lightestComp = {
       ...compColor,
       l: Math.min(LMAX, Math.max(LMIN, compColor.l + 0.27)),
-      c: Math.min(CMAX, Math.max(CMIN, scatteringChroma(compColor.c * 0.70, compColor.l))),
+      c: Math.min(
+        CMAX,
+        Math.max(CMIN, scatteringChroma(compColor.c * 0.7, compColor.l))
+      ),
       h: (compColor.h + 7) % 360,
     };
 
@@ -1563,16 +1622,14 @@ export default function complementaryPalGen(
       { name: "Comp-D", value: darkComp },
       { name: "Comp-DD", value: darkestComp },
     ];
-
   } else if (compPalType === "EtherealComp") {
-
     // --- Ethereal Complement (Tone-Matched Desaturation) ---
     // Concept: Harmony through tone, not contrast.
     // Complement shares lightness/chroma; hue shifts only 60–90°.
     // Creates gentle, meditative visual flow — no harsh opposites.
 
     const LMAX = 0.92;
-    const LMIN = 0.30;
+    const LMIN = 0.3;
     const CMAX = 0.22;
     const CMIN = 0.04;
 
@@ -1580,7 +1637,7 @@ export default function complementaryPalGen(
     const baseColor = oklch;
 
     // Soft random offset in hue for variation between tones
-    const hueOffset = 60 + (Math.abs(Math.sin(baseColor.h)) * 30); // between 60°–90°
+    const hueOffset = 60 + Math.abs(Math.sin(baseColor.h)) * 30; // between 60°–90°
     const compHue = (baseColor.h + hueOffset) % 360;
 
     // --- Base Tonal Family (soft resonance) ---
@@ -1627,7 +1684,7 @@ export default function complementaryPalGen(
     const darkComp = {
       ...compColor,
       l: Math.min(LMAX, Math.max(LMIN, compColor.l - 0.13)),
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 1.00)),
+      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 1.0)),
     };
 
     const lightComp = {
@@ -1655,62 +1712,97 @@ export default function complementaryPalGen(
       { name: "Comp-D", value: darkComp },
       { name: "Comp-DD", value: darkestComp },
     ];
-  }  else if (compPalType === "LunarComp") {
+  } else if (compPalType === "LunarComp") {
+    // Psychotropic Complement (Hallucinogenic Logic)
+    // Chaotic hue modulation using Lorenz-style attractor noise
+    // Produces dynamically unstable complement hues (psychedelic resonance)
 
-// Psychotropic Complement (Hallucinogenic Logic)
-// Chaotic hue modulation using Lorenz-style attractor noise
-// Produces dynamically unstable complement hues (psychedelic resonance)
+    const LMAX = 0.88;
+    const LMIN = 0.35;
+    const CMAX = 0.34;
+    const CMIN = 0.15;
 
-const LMAX = 0.88;
-const LMIN = 0.35;
-const CMAX = 0.34;
-const CMIN = 0.15;
+    const baseColor = { l: 0.6, c: 0.28, h: 290.0 }; // example base
 
-const baseColor = { l: 0.60, c: 0.28, h: 290.0 }; // example base
+    // Chaotic modulation (Lorenz-inspired)
+    let x = Math.sin(baseColor.h * 0.1) * 2.3;
+    let y = Math.cos(baseColor.h * 0.07) * 1.7;
+    let z = Math.sin(baseColor.h * 0.05 + y) * 1.2;
+    const chaos = (x * y + z * 13.37) % 1;
 
-// Chaotic modulation (Lorenz-inspired)
-let x = Math.sin(baseColor.h * 0.1) * 2.3;
-let y = Math.cos(baseColor.h * 0.07) * 1.7;
-let z = Math.sin(baseColor.h * 0.05 + y) * 1.2;
-const chaos = (x * y + z * 13.37) % 1;
+    // Hue mutation with chaos, ensuring hallucinogenic nonlinearity
+    const chaoticHueShift = 180 + (chaos * 120 - 60); // ±60° chaos around complement
+    const compHue = (baseColor.h + chaoticHueShift + 360) % 360;
 
-// Hue mutation with chaos, ensuring hallucinogenic nonlinearity
-const chaoticHueShift = 180 + (chaos * 120 - 60); // ±60° chaos around complement
-const compHue = (baseColor.h + chaoticHueShift + 360) % 360;
+    // Lightness & chroma fluctuation based on chaos amplitude
+    const chaoticL = Math.min(
+      LMAX,
+      Math.max(LMIN, baseColor.l + (chaos - 0.5) * 0.25)
+    );
+    const chaoticC = Math.min(
+      CMAX,
+      Math.max(CMIN, baseColor.c + Math.sin(chaos * Math.PI * 2) * 0.1)
+    );
 
-// Lightness & chroma fluctuation based on chaos amplitude
-const chaoticL = Math.min(LMAX, Math.max(LMIN, baseColor.l + (chaos - 0.5) * 0.25));
-const chaoticC = Math.min(CMAX, Math.max(CMIN, baseColor.c + (Math.sin(chaos * Math.PI * 2) * 0.1)));
+    // Core complement color (chaotic)
+    const compColor = { l: chaoticL, c: chaoticC, h: compHue };
 
-// Core complement color (chaotic)
-const compColor = { l: chaoticL, c: chaoticC, h: compHue };
+    // Generate tones (self-similar psychedelic gradient)
+    const lightestBase = {
+      l: Math.min(LMAX, baseColor.l + 0.28),
+      c: Math.max(CMIN, baseColor.c - 0.13),
+      h: baseColor.h,
+    };
+    const lightBase = {
+      l: Math.min(LMAX, baseColor.l + 0.14),
+      c: Math.max(CMIN, baseColor.c - 0.06),
+      h: baseColor.h,
+    };
+    const darkBase = {
+      l: Math.max(LMIN, baseColor.l - 0.14),
+      c: Math.min(CMAX, baseColor.c + 0.05),
+      h: baseColor.h,
+    };
+    const darkestBase = {
+      l: Math.max(LMIN, baseColor.l - 0.28),
+      c: Math.min(CMAX, baseColor.c + 0.08),
+      h: baseColor.h,
+    };
 
-// Generate tones (self-similar psychedelic gradient)
-const lightestBase = { l: Math.min(LMAX, baseColor.l + 0.28), c: Math.max(CMIN, baseColor.c - 0.13), h: baseColor.h };
-const lightBase = { l: Math.min(LMAX, baseColor.l + 0.14), c: Math.max(CMIN, baseColor.c - 0.06), h: baseColor.h };
-const darkBase = { l: Math.max(LMIN, baseColor.l - 0.14), c: Math.min(CMAX, baseColor.c + 0.05), h: baseColor.h };
-const darkestBase = { l: Math.max(LMIN, baseColor.l - 0.28), c: Math.min(CMAX, baseColor.c + 0.08), h: baseColor.h };
+    // Complement tones (chaotic reflection)
+    const lightestComp = {
+      l: Math.min(LMAX, compColor.l + 0.28),
+      c: Math.max(CMIN, compColor.c - 0.13),
+      h: (compColor.h + chaos * 10) % 360,
+    };
+    const lightComp = {
+      l: Math.min(LMAX, compColor.l + 0.14),
+      c: Math.max(CMIN, compColor.c - 0.06),
+      h: (compColor.h + chaos * 5) % 360,
+    };
+    const darkComp = {
+      l: Math.max(LMIN, compColor.l - 0.14),
+      c: Math.min(CMAX, compColor.c + 0.05),
+      h: (compColor.h - chaos * 5 + 360) % 360,
+    };
+    const darkestComp = {
+      l: Math.max(LMIN, compColor.l - 0.28),
+      c: Math.min(CMAX, compColor.c + 0.08),
+      h: (compColor.h - chaos * 10 + 360) % 360,
+    };
 
-// Complement tones (chaotic reflection)
-const lightestComp = { l: Math.min(LMAX, compColor.l + 0.28), c: Math.max(CMIN, compColor.c - 0.13), h: (compColor.h + chaos * 10) % 360 };
-const lightComp = { l: Math.min(LMAX, compColor.l + 0.14), c: Math.max(CMIN, compColor.c - 0.06), h: (compColor.h + chaos * 5) % 360 };
-const darkComp = { l: Math.max(LMIN, compColor.l - 0.14), c: Math.min(CMAX, compColor.c + 0.05), h: (compColor.h - chaos * 5 + 360) % 360 };
-const darkestComp = { l: Math.max(LMIN, compColor.l - 0.28), c: Math.min(CMAX, compColor.c + 0.08), h: (compColor.h - chaos * 10 + 360) % 360 };
-
-// Return structure
-return [
-  { name: "Base-DD", value: darkestBase },
-  { name: "Base-D", value: darkBase },
-  { name: "Base", value: baseColor },
-  { name: "Base-L", value: lightBase },
-  { name: "Base-LL", value: lightestBase },
-  { name: "Comp-LL", value: lightestComp },
-  { name: "Comp-L", value: lightComp },
-  { name: "Comp", value: compColor },
-  { name: "Comp-D", value: darkComp },
-  { name: "Comp-DD", value: darkestComp },
-];
-
-
+    // Return structure
+    return [
+      { name: "Base-DD", value: darkestBase },
+      { name: "Base-D", value: darkBase },
+      { name: "Base", value: baseColor },
+      { name: "Base-L", value: lightBase },
+      { name: "Base-LL", value: lightestBase },
+      { name: "Comp-LL", value: lightestComp },
+      { name: "Comp-L", value: lightComp },
+      { name: "Comp", value: compColor },
+      { name: "Comp-D", value: darkComp },
+      { name: "Comp-DD", value: darkestComp },
+    ];
   }
 }
