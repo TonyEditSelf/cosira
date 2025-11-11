@@ -25,13 +25,6 @@ export const paletteTypes = [
     description: "Three colors evenly spaced on the color wheel (triangle)",
   },
   {
-    label: "Split-Triadic",
-    value: "splitTriadic",
-    description:
-      "Variation of the triadic scheme using two adjacent hues from one triad side and one opposite hue, offering lively contrast with better harmony control.",
-  },
-
-  {
     label: "Tetradic",
     value: "tetradic",
     description: "Four colors in a rectangle (two complementary pairs)",
@@ -78,12 +71,6 @@ export const paletteTypes = [
       "Harmonious analogous colors plus one complementary accent for visual pop",
   },
   {
-    label: "Tonal",
-    value: "tonal",
-    description:
-      "Same hue and lightness, varying only saturation — subtle depth without hue shifts",
-  },
-  {
     label: "Compound (Complex)",
     value: "compound",
     description:
@@ -118,5 +105,23 @@ export const paletteTypes = [
     value: "clash",
     description:
       "Intentionally jarring combinations (30-60° off harmonies) — bold, attention-grabbing tension",
+  },
+  {
+    label: "UI Palette",
+    name: "uipalette",
+    description:
+      "A balanced set of multiple distinct hues designed for user interfaces. Optimized for clarity, accessibility, and role differentiation across buttons, alerts, and interactive elements.",
+  },
+  {
+    label: "Data Visualization Palette",
+    name: "datavizpalette",
+    description:
+      "A palette of distinct hues optimized for categorical data visualization. Ensures clear differentiation between multiple data series in charts and graphs.",
+  },
+  {
+    label: "Design System Palette",
+    name: "designsystempalette",
+    description:
+      "A scalable palette with core hues defined across tonal ranges. Ideal for building consistent, themeable design systems and maintaining visual hierarchy.",
   },
 ];
