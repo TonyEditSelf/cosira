@@ -83,7 +83,7 @@ export default function CustomPalettes() {
             className="relative flex-1 ml-3 mr-2 mb-0 border rounded-md border-[var(--navBorder)] flex-col p-2"
           >
             <div role="palette viewer" className="flex h-full">
-              {palette.map((colorObj, index) => {
+              {palette?.map((colorObj, index) => {
                 const { l, c, h, a } = colorObj.value;
                 let textColor;
                 const hex = oklchToHex(l, c, h, a);

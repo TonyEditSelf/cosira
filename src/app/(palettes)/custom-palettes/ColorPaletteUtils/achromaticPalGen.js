@@ -1,82 +1,45 @@
-export default function achromaticPalGen(oklch) {
+export default function achromaticPalGen(baseOklch) {
   const LMAX = 0.98;
   const LMIN = 0.12;
-  const CMAX = 0.02; // Near-zero for pure grayscale
-  const CMIN = 0.0;
+  const CMAX = 0.01; // upper limit for chroma
+  const CMIN = 0.0; // lower limit for chroma
 
-  const baseColor = oklch;
+  // Clamp utility
+  const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
 
-  // Pure grayscale progression (chroma ≈ 0)
-  const black = {
-    ...baseColor,
-    c: 0,
-    l: Math.min(LMAX, Math.max(LMIN, 0.15)),
-  };
+  // Normalize base lightness and chroma
+  const baseL = clamp(baseOklch.l, LMIN, LMAX);
+  const baseC = clamp(baseOklch.c, CMIN, CMAX); // chroma scales to grayscale range
 
-  const darkest = {
-    ...baseColor,
-    c: 0,
-    l: Math.min(LMAX, Math.max(LMIN, 0.25)),
-  };
+  // Relative lightness offsets centered around base
+  const offsets = [-0.4, -0.3, -0.2, -0.1, -0.05, 0, 0.08, 0.16, 0.26, 0.35];
 
-  const darker = {
-    ...baseColor,
-    c: 0,
-    l: Math.min(LMAX, Math.max(LMIN, 0.35)),
-  };
-
-  const dark = {
-    ...baseColor,
-    c: 0,
-    l: Math.min(LMAX, Math.max(LMIN, 0.45)),
-  };
-
-  const mediumDark = {
-    ...baseColor,
-    c: 0,
-    l: Math.min(LMAX, Math.max(LMIN, 0.55)),
-  };
-
-  const medium = {
-    ...baseColor,
-    c: 0,
-    l: Math.min(LMAX, Math.max(LMIN, 0.65)),
-  };
-
-  const mediumLight = {
-    ...baseColor,
-    c: 0,
-    l: Math.min(LMAX, Math.max(LMIN, 0.75)),
-  };
-
-  const light = {
-    ...baseColor,
-    c: 0,
-    l: Math.min(LMAX, Math.max(LMIN, 0.83)),
-  };
-
-  const lighter = {
-    ...baseColor,
-    c: 0,
-    l: Math.min(LMAX, Math.max(LMIN, 0.91)),
-  };
-
-  const white = {
-    ...baseColor,
-    c: 0,
-    l: Math.min(LMAX, Math.max(LMIN, 0.97)),
-  };
-
-  return [
-    { name: "Black", value: black },
-    { name: "Darkest", value: darkest },
-    { name: "Darker", value: darker },
-    { name: "Dark", value: dark },
-    { name: "Medium-Dark", value: mediumDark },
-    { name: "Medium", value: medium },
-    { name: "Medium-Light", value: mediumLight },
-    { name: "Light", value: light },
-    { name: "Lighter", value: lighter },
-    { name: "White", value: white },
+  const names = [
+    "Black",
+    "Darkest",
+    "Darker",
+    "Dark",
+    "Medium-Dark",
+    "Medium",
+    "Medium-Light",
+    "Light",
+    "Lighter",
+    "White",
   ];
+
+  // Generate grayscale variants
+  const palette = offsets.map((offset, i) => {
+    const newL = clamp(baseL + offset, LMIN, LMAX);
+    const newC = clamp(baseC * 0.8, CMIN, CMAX); // small proportional variation, not hardcoded
+    return {
+      name: names[i],
+      value: {
+        ...baseOklch,
+        c: newC,
+        l: newL,
+      },
+    };
+  });
+
+  return palette;
 }

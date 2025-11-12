@@ -180,7 +180,7 @@ export function ColorPaletteContextProvider({ children }) {
   const [palette, setPalette] = useState([]);
   const [duplicatePalette, setDuplicatePalette] = useState([]);
   const [paletteHistory, setPaletteHistory] = useState([]);
-  const [paletteHistoryCounter, setPaletteHistoryCounter] = useState(-1);
+  const [paletteHistoryCounter, setPaletteHistoryCounter] = useState(-2);
 
   useEffect(() => {
     setPaletteHistory((prevHistory) => {
@@ -188,8 +188,7 @@ export function ColorPaletteContextProvider({ children }) {
         const lastEntry = prevHistory[prevHistory.length - 1];
 
         if (JSON.stringify(lastEntry) !== JSON.stringify(palette)) {
-          const updatedHistory = [...prevHistory, palette];
-          return updatedHistory;
+          return [...prevHistory, palette];
         }
       }
       return prevHistory;

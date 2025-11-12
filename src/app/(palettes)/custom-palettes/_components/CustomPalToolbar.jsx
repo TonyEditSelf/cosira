@@ -37,7 +37,7 @@ export default function CustomPalToolbar() {
 
   const goBackPalHistory = () => {
     setPaletteHistoryCounter((prev) => {
-      if (prev <= 1) return prev; // already at oldest
+      if (prev <= 0) return prev; // already at oldest
       const newCounter = prev - 1;
       setPalette(paletteHistory[newCounter]);
       return newCounter;
@@ -46,7 +46,7 @@ export default function CustomPalToolbar() {
 
   const goForwardPalHistory = () => {
     setPaletteHistoryCounter((prev) => {
-      if (prev >= paletteHistory.length) return prev; // already at newest
+      if (prev >= paletteHistory.length - 1) return prev; // already at newest
       const newCounter = prev + 1;
       setPalette(paletteHistory[newCounter]);
       return newCounter;
