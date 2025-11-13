@@ -25,12 +25,16 @@ export default function CustomPalToolbar() {
     setPaletteHistory,
     paletteHistoryCounter,
     setPaletteHistoryCounter,
+    historyNavigation,
+    setHistoryNavigation,
     setLeftPaletteAdjusterOpen,
     setMyColorPickerOpen,
     leftPaletteAdjusterOpen,
     cssColor,
     selectedPaletteType,
     setSelectedPaletteType,
+    duplicatePaletteType,
+    setDuplicatePaletteType,
     showHidePanelOpen,
     setShowHidePanelOpen,
   } = useColorPaletteContext();
@@ -38,8 +42,10 @@ export default function CustomPalToolbar() {
   const goBackPalHistory = () => {
     setPaletteHistoryCounter((prev) => {
       if (prev <= 0) return prev; // already at oldest
+      setHistoryNavigation(true);
       const newCounter = prev - 1;
-      setPalette(paletteHistory[newCounter]);
+      setPalette(paletteHistory[newCounter].palette);
+      setDuplicatePaletteType(paletteHistory[newCounter].type);
       return newCounter;
     });
   };
@@ -47,8 +53,10 @@ export default function CustomPalToolbar() {
   const goForwardPalHistory = () => {
     setPaletteHistoryCounter((prev) => {
       if (prev >= paletteHistory.length - 1) return prev; // already at newest
+      setHistoryNavigation(true);
       const newCounter = prev + 1;
-      setPalette(paletteHistory[newCounter]);
+      setPalette(paletteHistory[newCounter].palette);
+      setDuplicatePaletteType(paletteHistory[newCounter].type);
       return newCounter;
     });
   };
@@ -85,8 +93,14 @@ export default function CustomPalToolbar() {
 
       <SelectComp
         items={paletteTypes}
-        value={selectedPaletteType}
-        onChange={setSelectedPaletteType}
+        value={historyNavigation ? duplicatePaletteType : selectedPaletteType}
+        onChange={(val) => {
+          if (selectedPaletteType !== undefined && setSelectedPaletteType) {
+            setSelectedPaletteType(val);
+          } else if (setDuplicatePaletteType) {
+            setDuplicatePaletteType(val);
+          }
+        }}
       />
       <FaAnglesUp className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]" />
       <FaAnglesDown className="size-9 cursor-pointer border border-[var(--navBorder)] hover:border-[var(--muted-foreground)] p-2 rounded-md" />

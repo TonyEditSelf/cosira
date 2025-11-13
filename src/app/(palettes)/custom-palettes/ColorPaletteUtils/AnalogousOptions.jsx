@@ -4,6 +4,9 @@ import analogousPalGen from "./analogousPalGen";
 export default function AnalogousOptions() {
   const {
     setPalette,
+    setDuplicatePaletteType,
+    setDuplicatePalette,
+    selectedPaletteType,
     oklch,
     analogPalType,
     setAnalogPalType,
@@ -25,7 +28,7 @@ export default function AnalogousOptions() {
             checked={analogPalType === "classicCenteredAnalog"}
             onChange={(e) => {
               setAnalogPalType(e.target.value);
-              const pal = analogousPalGen(oklch, e.target.value);
+              const pal = analogousPalGen(oklch, analogOptions, e.target.value);
               setPalette(pal);
               setDuplicatePalette(pal);
             }}
@@ -42,7 +45,7 @@ export default function AnalogousOptions() {
             checked={analogPalType === "classicLeftAnalog"}
             onChange={(e) => {
               setAnalogPalType(e.target.value);
-              const pal = analogousPalGen(oklch, e.target.value);
+              const pal = analogousPalGen(oklch, analogOptions, e.target.value);
               setPalette(pal);
               setDuplicatePalette(pal);
             }}
@@ -59,53 +62,12 @@ export default function AnalogousOptions() {
             checked={analogPalType === "classicRightAnalog"}
             onChange={(e) => {
               setAnalogPalType(e.target.value);
-              const pal = analogousPalGen(oklch, e.target.value);
+              const pal = analogousPalGen(oklch, analogOptions, e.target.value);
               setPalette(pal);
               setDuplicatePalette(pal);
             }}
           />
           <label htmlFor="classicRightAnalog">Right-Leaning Classic</label>
-        </div>
-        <div className="flex gap-4">
-          <input
-            type="radio"
-            name="analogPal"
-            id="vibrantCenteredAnalog"
-            value={"vibrantCenteredAnalog"}
-            checked={analogPalType === "vibrantCenteredAnalog"}
-            onChange={(e) => {
-              setCompPalType(e.target.value);
-            }}
-          />
-          <label htmlFor="vibrantCenteredAnalog">Vibrant Centered Analog</label>
-        </div>
-
-        <div className="flex gap-4">
-          <input
-            type="radio"
-            name="analogPal"
-            id="vibrantLeftAnalog"
-            value={"vibrantLeftAnalog"}
-            checked={analogPalType === "vibrantLeftAnalog"}
-            onChange={(e) => {
-              setAnalogPalType(e.target.value);
-            }}
-          />
-          <label htmlFor="vibrantLeftAnalog">Vibrant Left Analog</label>
-        </div>
-
-        <div className="flex gap-4">
-          <input
-            type="radio"
-            name="analogPal"
-            id="vibrantRightAnalog"
-            value={"vibrantRightAnalog"}
-            checked={analogPalType === "vibrantRightAnalog"}
-            onChange={(e) => {
-              setCompPalType(e.target.value);
-            }}
-          />
-          <label htmlFor="vibrantRightAnalog">Vibrant Right Analog</label>
         </div>
 
         <div className="flex gap-4">
@@ -117,7 +79,7 @@ export default function AnalogousOptions() {
             checked={analogPalType === "vintageCenteredAnalog"}
             onChange={(e) => {
               setAnalogPalType(e.target.value);
-              const pal = analogousPalGen(oklch, e.target.value);
+              const pal = analogousPalGen(oklch, analogOptions, e.target.value);
               setPalette(pal);
               setDuplicatePalette(pal);
             }}
@@ -133,7 +95,7 @@ export default function AnalogousOptions() {
             checked={analogPalType === "vintageLeftAnalog"}
             onChange={(e) => {
               setAnalogPalType(e.target.value);
-              const pal = analogousPalGen(oklch, e.target.value);
+              const pal = analogousPalGen(oklch, analogOptions, e.target.value);
               setPalette(pal);
               setDuplicatePalette(pal);
             }}
@@ -150,7 +112,7 @@ export default function AnalogousOptions() {
             checked={analogPalType === "vintageRightAnalog"}
             onChange={(e) => {
               setAnalogPalType(e.target.value);
-              const pal = analogousPalGen(oklch, e.target.value);
+              const pal = analogousPalGen(oklch, analogOptions, e.target.value);
               setPalette(pal);
               setDuplicatePalette(pal);
             }}
@@ -167,7 +129,7 @@ export default function AnalogousOptions() {
             checked={analogPalType === "neutralCenteredAnalog"}
             onChange={(e) => {
               setAnalogPalType(e.target.value);
-              const pal = analogousPalGen(oklch, e.target.value);
+              const pal = analogousPalGen(oklch, analogOptions, e.target.value);
               setPalette(pal);
               setDuplicatePalette(pal);
             }}
@@ -184,7 +146,7 @@ export default function AnalogousOptions() {
             checked={analogPalType === "neutralLeftAnalog"}
             onChange={(e) => {
               setAnalogPalType(e.target.value);
-              const pal = analogousPalGen(oklch, e.target.value);
+              const pal = analogousPalGen(oklch, analogOptions, e.target.value);
               setPalette(pal);
               setDuplicatePalette(pal);
             }}
@@ -201,7 +163,7 @@ export default function AnalogousOptions() {
             checked={analogPalType === "neutralRightAnalog"}
             onChange={(e) => {
               setAnalogPalType(e.target.value);
-              const pal = analogousPalGen(oklch, e.target.value);
+              const pal = analogousPalGen(oklch, analogOptions, e.target.value);
               setPalette(pal);
               setDuplicatePalette(pal);
             }}
@@ -218,7 +180,7 @@ export default function AnalogousOptions() {
             checked={analogPalType === "kidsCenteredAnalog"}
             onChange={(e) => {
               setAnalogPalType(e.target.value);
-              const pal = analogousPalGen(oklch, e.target.value);
+              const pal = analogousPalGen(oklch, analogOptions, e.target.value);
               setPalette(pal);
               setDuplicatePalette(pal);
             }}
@@ -235,7 +197,7 @@ export default function AnalogousOptions() {
             checked={analogPalType === "kidsLeftAnalog"}
             onChange={(e) => {
               setAnalogPalType(e.target.value);
-              const pal = analogousPalGen(oklch, e.target.value);
+              const pal = analogousPalGen(oklch, analogOptions, e.target.value);
               setPalette(pal);
               setDuplicatePalette(pal);
             }}
@@ -252,7 +214,7 @@ export default function AnalogousOptions() {
             checked={analogPalType === "kidsRightAnalog"}
             onChange={(e) => {
               setAnalogPalType(e.target.value);
-              const pal = analogousPalGen(oklch, e.target.value);
+              const pal = analogousPalGen(oklch, analogOptions, e.target.value);
               setPalette(pal);
               setDuplicatePalette(pal);
             }}

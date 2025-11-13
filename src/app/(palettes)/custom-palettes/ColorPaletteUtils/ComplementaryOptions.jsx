@@ -6,6 +6,7 @@ export default function ComplementaryOptions() {
   const {
     setPalette,
     setDuplicatePalette,
+    setDuplicatePaletteType,
     oklch,
     compPalType,
     setCompPalType,

@@ -171,16 +171,17 @@ export function ColorPaletteContextProvider({ children }) {
   const [sliderLightValue, setSliderLightValue] = useState(0);
   const [sliderChromaValue, setSliderChromaValue] = useState(0);
 
-  const [selectedPaletteType, setSelectedPaletteType] =
-    useState("monochromatic");
+  const [selectedPaletteType, setSelectedPaletteType] = useState("analogous");
 
   const [compPalType, setCompPalType] = useState("classicComp");
   const [monoPalType, setMonoPalType] = useState("classicMono");
-  const [analogPalType, setAnalogPalType] = useState("classicAnalog");
+  const [analogPalType, setAnalogPalType] = useState("classicCenteredAnalog");
   const [palette, setPalette] = useState([]);
   const [duplicatePalette, setDuplicatePalette] = useState([]);
+  const [duplicatePaletteType, setDuplicatePaletteType] = useState("");
   const [paletteHistory, setPaletteHistory] = useState([]);
   const [paletteHistoryCounter, setPaletteHistoryCounter] = useState(-2);
+  const [historyNavigation, setHistoryNavigation] = useState(false);
 
   useEffect(() => {
     setPaletteHistory((prevHistory) => {
@@ -188,7 +189,12 @@ export function ColorPaletteContextProvider({ children }) {
         const lastEntry = prevHistory[prevHistory.length - 1];
 
         if (JSON.stringify(lastEntry) !== JSON.stringify(palette)) {
-          return [...prevHistory, palette];
+          const historyObject = {
+            palette: palette,
+            type: selectedPaletteType,
+          };
+
+          return [...prevHistory, historyObject];
         }
       }
       return prevHistory;
@@ -196,11 +202,11 @@ export function ColorPaletteContextProvider({ children }) {
     setPaletteHistoryCounter((prev) => prev + 1);
   }, [duplicatePalette]);
 
-  useEffect(() => {
-    console.log("PaletteHistory: ", paletteHistory);
-    console.log("PaletteHistoryCounter: ", paletteHistoryCounter);
-    console.log("historyLength", paletteHistory.length);
-  }, [paletteHistoryCounter, paletteHistory]);
+  // useEffect(() => {
+  //   console.log("PaletteHistory: ", paletteHistory);
+  //   console.log("PaletteHistoryCounter: ", paletteHistoryCounter);
+  //   console.log("historyLength", paletteHistory.length);
+  // }, [paletteHistoryCounter, paletteHistory]);
 
   useEffect(() => {
     setSliderChromaValue(0);
@@ -209,6 +215,7 @@ export function ColorPaletteContextProvider({ children }) {
 
   useEffect(() => {
     setShadesTintsTonesIndex(null);
+    setHistoryNavigation(false);
 
     const pal = paletteDecider(
       oklch,
@@ -252,6 +259,10 @@ export function ColorPaletteContextProvider({ children }) {
     setPaletteHistory,
     paletteHistoryCounter,
     setPaletteHistoryCounter,
+    duplicatePaletteType,
+    setDuplicatePaletteType,
+    historyNavigation,
+    setHistoryNavigation,
     oklch,
     setOklch,
     cssColor,
