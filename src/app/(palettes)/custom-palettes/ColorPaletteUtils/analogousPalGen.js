@@ -4,11 +4,11 @@ export default function analogousPalGen(oklch, analogOptions, analogPalType) {
 
     const darkBase = {
       ...baseColor,
-      l: Math.min(1, Math.max(0, baseColor.l * 0.85)),
+      l: Math.min(1, Math.max(0, baseColor.l * 0.67)),
     };
     const lightBase = {
       ...baseColor,
-      l: Math.min(1, Math.max(0, baseColor.l * 1.15)),
+      l: Math.min(1, Math.max(0, baseColor.l * 1.34)),
     };
 
     const analogousOne = {
@@ -18,12 +18,12 @@ export default function analogousPalGen(oklch, analogOptions, analogPalType) {
 
     const analogousOneDark = {
       ...analogousOne,
-      l: Math.min(1, Math.max(0, analogousOne.l * 0.85)), // 15% darker, clamped between 0–1
+      l: Math.min(1, Math.max(0, analogousOne.l * 0.67)), // 15% darker, clamped between 0–1
     };
 
     const analogousOneLight = {
       ...analogousOne,
-      l: Math.min(1, Math.max(0, analogousOne.l * 1.15)), // 15% lighter, clamped between 0–1
+      l: Math.min(1, Math.max(0, analogousOne.l * 1.34)), // 15% lighter, clamped between 0–1
     };
 
     const analogousTwo = {
@@ -33,12 +33,12 @@ export default function analogousPalGen(oklch, analogOptions, analogPalType) {
 
     const analogousTwoDark = {
       ...analogousTwo,
-      l: Math.min(1, Math.max(0, analogousTwo.l * 0.85)), // 15% darker, clamped between 0–1
+      l: Math.min(1, Math.max(0, analogousTwo.l * 0.67)), // 15% darker, clamped between 0–1
     };
 
     const analogousTwoLight = {
       ...analogousTwo,
-      l: Math.min(1, Math.max(0, analogousTwo.l * 1.15)), // 15% lighter,
+      l: Math.min(1, Math.max(0, analogousTwo.l * 1.34)), // 15% lighter,
     };
 
     return [
@@ -57,11 +57,11 @@ export default function analogousPalGen(oklch, analogOptions, analogPalType) {
 
     const darkBase = {
       ...baseColor,
-      l: Math.min(1, Math.max(0, baseColor.l * 0.85)),
+      l: Math.min(1, Math.max(0, baseColor.l * 0.67)),
     };
     const lightBase = {
       ...baseColor,
-      l: Math.min(1, Math.max(0, baseColor.l * 1.15)),
+      l: Math.min(1, Math.max(0, baseColor.l * 1.34)),
     };
 
     const analogousOne = {
@@ -71,12 +71,12 @@ export default function analogousPalGen(oklch, analogOptions, analogPalType) {
 
     const analogousOneDark = {
       ...analogousOne,
-      l: Math.min(1, Math.max(0, analogousOne.l * 0.85)), // 15% darker, clamped between 0–1
+      l: Math.min(1, Math.max(0, analogousOne.l * 0.67)), // 15% darker, clamped between 0–1
     };
 
     const analogousOneLight = {
       ...analogousOne,
-      l: Math.min(1, Math.max(0, analogousOne.l * 1.15)), // 15% lighter, clamped between 0–1
+      l: Math.min(1, Math.max(0, analogousOne.l * 1.34)), // 15% lighter, clamped between 0–1
     };
 
     const analogousTwo = {
@@ -86,12 +86,12 @@ export default function analogousPalGen(oklch, analogOptions, analogPalType) {
 
     const analogousTwoDark = {
       ...analogousTwo,
-      l: Math.min(1, Math.max(0, analogousTwo.l * 0.85)), // 15% darker, clamped between 0–1
+      l: Math.min(1, Math.max(0, analogousTwo.l * 0.67)), // 15% darker, clamped between 0–1
     };
 
     const analogousTwoLight = {
       ...analogousTwo,
-      l: Math.min(1, Math.max(0, analogousTwo.l * 1.15)), // 15% lighter,
+      l: Math.min(1, Math.max(0, analogousTwo.l * 1.34)), // 15% lighter,
     };
 
     return [
@@ -110,11 +110,11 @@ export default function analogousPalGen(oklch, analogOptions, analogPalType) {
 
     const darkBase = {
       ...baseColor,
-      l: Math.min(1, Math.max(0, baseColor.l * 0.85)),
+      l: Math.min(1, Math.max(0, baseColor.l * 0.67)),
     };
     const lightBase = {
       ...baseColor,
-      l: Math.min(1, Math.max(0, baseColor.l * 1.15)),
+      l: Math.min(1, Math.max(0, baseColor.l * 1.34)),
     };
 
     const analogousOne = {
@@ -124,12 +124,12 @@ export default function analogousPalGen(oklch, analogOptions, analogPalType) {
 
     const analogousOneDark = {
       ...analogousOne,
-      l: Math.min(1, Math.max(0, analogousOne.l * 0.85)), // 15% darker, clamped between 0–1
+      l: Math.min(1, Math.max(0, analogousOne.l * 0.67)), // 15% darker, clamped between 0–1
     };
 
     const analogousOneLight = {
       ...analogousOne,
-      l: Math.min(1, Math.max(0, analogousOne.l * 1.15)), // 15% lighter, clamped between 0–1
+      l: Math.min(1, Math.max(0, analogousOne.l * 1.34)), // 15% lighter, clamped between 0–1
     };
 
     const analogousTwo = {
@@ -139,12 +139,12 @@ export default function analogousPalGen(oklch, analogOptions, analogPalType) {
 
     const analogousTwoDark = {
       ...analogousTwo,
-      l: Math.min(1, Math.max(0, analogousTwo.l * 0.85)), // 15% darker, clamped between 0–1
+      l: Math.min(1, Math.max(0, analogousTwo.l * 0.67)), // 15% darker, clamped between 0–1
     };
 
     const analogousTwoLight = {
       ...analogousTwo,
-      l: Math.min(1, Math.max(0, analogousTwo.l * 1.15)), // 15% lighter,
+      l: Math.min(1, Math.max(0, analogousTwo.l * 1.34)), // 15% lighter,
     };
 
     return [
@@ -158,7 +158,7 @@ export default function analogousPalGen(oklch, analogOptions, analogPalType) {
       { name: "A2", value: analogousTwo },
       { name: "A2-L", value: analogousTwoLight },
     ];
-  } else if (analogPalType === "vibrantCenteredAnalog") {
+  } else if (analogPalType === "vintageCenteredAnalog") {
     const VINTAGE_HUE_SHIFT = 15; // Warm yellow-red bias (Hues shift toward warmer tones)
     const VINTAGE_CHROMA_FACTOR = 0.5; // Overall desaturation factor (50% of original Chroma)
     const VINTAGE_CHROMA_MAX = 0.2; // Max Chroma for the whole palette (keeps colors muted)
@@ -248,7 +248,7 @@ export default function analogousPalGen(oklch, analogOptions, analogPalType) {
       { name: "A2", value: analogousTwo },
       { name: "A2-L", value: analogousTwoLight },
     ];
-  } else if (analogPalType === "vibrantLeftAnalog") {
+  } else if (analogPalType === "vintageLeftAnalog") {
     const VINTAGE_HUE_SHIFT = 15; // Warm yellow-red bias (Hues shift toward warmer tones)
     const VINTAGE_CHROMA_FACTOR = 0.5; // Overall desaturation factor (50% of original Chroma)
     const VINTAGE_CHROMA_MAX = 0.2; // Max Chroma for the whole palette (keeps colors muted)
@@ -338,7 +338,7 @@ export default function analogousPalGen(oklch, analogOptions, analogPalType) {
       { name: "Base", value: baseColor },
       { name: "Base-L", value: lightBase },
     ];
-  } else if (analogPalType === "vibrantRightAnalog") {
+  } else if (analogPalType === "vintageRightAnalog") {
     const VINTAGE_HUE_SHIFT = 15; // Warm yellow-red bias (Hues shift toward warmer tones)
     const VINTAGE_CHROMA_FACTOR = 0.5; // Overall desaturation factor (50% of original Chroma)
     const VINTAGE_CHROMA_MAX = 0.2; // Max Chroma for the whole palette (keeps colors muted)
@@ -428,7 +428,7 @@ export default function analogousPalGen(oklch, analogOptions, analogPalType) {
       { name: "A2", value: analogousTwo },
       { name: "A2-L", value: analogousTwoLight },
     ];
-  } else if (analogPalType === "neutralAnalog") {
+  } else if (analogPalType === "neutralCenteredAnalog") {
     const NEUTRAL_CHROMA_MAX = 0.08; // Strict max chroma limit for near-gray/beige tones
     const CHROMA_DEGRADATION = 0.4; // Factor to push input chroma to neutral range (e.g., 40% of original C)
     const L_MIN = 0.3; // Min Lightness for soft shadow (Atmospheric Neutral range)
