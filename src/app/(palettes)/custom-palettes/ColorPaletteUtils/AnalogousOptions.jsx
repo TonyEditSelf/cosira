@@ -175,9 +175,9 @@ export default function AnalogousOptions() {
           <input
             type="radio"
             name="analogPal"
-            id="kidsCenteredAnalog"
-            value={"kidsCenteredAnalog"}
-            checked={analogPalType === "kidsCenteredAnalog"}
+            id="kidsBrightCentered"
+            value={"kidsBrightCentered"}
+            checked={analogPalType === "kidsBrightCentered"}
             onChange={(e) => {
               setAnalogPalType(e.target.value);
               const pal = analogousPalGen(oklch, analogOptions, e.target.value);
@@ -185,16 +185,16 @@ export default function AnalogousOptions() {
               setDuplicatePalette(pal);
             }}
           />
-          <label htmlFor="kidsCenteredAnalog">Kids Centered Analog</label>
+          <label htmlFor="kidsBrightCentered">Centered Kids Bright</label>
         </div>
 
         <div className="flex gap-4">
           <input
             type="radio"
             name="analogPal"
-            id="kidsLeftAnalog"
-            value={"kidsLeftAnalog"}
-            checked={analogPalType === "kidsLeftAnalog"}
+            id="kidsBrightLeft"
+            value={"kidsBrightLeft"}
+            checked={analogPalType === "kidsBrightLeft"}
             onChange={(e) => {
               setAnalogPalType(e.target.value);
               const pal = analogousPalGen(oklch, analogOptions, e.target.value);
@@ -202,16 +202,16 @@ export default function AnalogousOptions() {
               setDuplicatePalette(pal);
             }}
           />
-          <label htmlFor="kidsLeftAnalog">Left Kids-Friendly</label>
+          <label htmlFor="kidsBrightLeft">Left-Leaning Kids Bright</label>
         </div>
 
         <div className="flex gap-4">
           <input
             type="radio"
             name="analogPal"
-            id="kidsRightAnalog"
-            value={"kidsRightAnalog"}
-            checked={analogPalType === "kidsRightAnalog"}
+            id="kidsBrightRight"
+            value={"kidsBrightRight"}
+            checked={analogPalType === "kidsBrightRight"}
             onChange={(e) => {
               setAnalogPalType(e.target.value);
               const pal = analogousPalGen(oklch, analogOptions, e.target.value);
@@ -219,8 +219,162 @@ export default function AnalogousOptions() {
               setDuplicatePalette(pal);
             }}
           />
-          <label htmlFor="kidsRightAnalog">Kids Right Analog</label>
+          <label htmlFor="kidsBrightRight">Right-Leaning Kids Bright</label>
         </div>
+
+        <div className="flex gap-4">
+          <input
+            type="radio"
+            name="analogPal"
+            id="toyLikeCentered"
+            value={"toyLikeCentered"}
+            checked={analogPalType === "toyLikeCentered"}
+            onChange={(e) => {
+              setAnalogPalType(e.target.value);
+              const pal = analogousPalGen(oklch, analogOptions, e.target.value);
+              setPalette(pal);
+              setDuplicatePalette(pal);
+            }}
+          />
+          <label htmlFor="toyLikeCentered">Toy-Like Centered</label>
+        </div>
+
+        <div className="flex gap-4">
+          <input
+            type="radio"
+            name="analogPal"
+            id="toyLikeLeft"
+            value={"toyLikeLeft"}
+            checked={analogPalType === "toyLikeLeft"}
+            onChange={(e) => {
+              setAnalogPalType(e.target.value);
+              const pal = analogousPalGen(oklch, analogOptions, e.target.value);
+              setPalette(pal);
+              setDuplicatePalette(pal);
+            }}
+          />
+          <label htmlFor="toyLikeLeft">Toy-Like Left</label>
+        </div>
+
+        <div className="flex gap-4">
+          <input
+            type="radio"
+            name="analogPal"
+            id="toyLikeRight"
+            value={"toyLikeRight"}
+            checked={analogPalType === "toyLikeRight"}
+            onChange={(e) => {
+              setAnalogPalType(e.target.value);
+              const pal = analogousPalGen(oklch, analogOptions, e.target.value);
+              setPalette(pal);
+              setDuplicatePalette(pal);
+            }}
+          />
+          <label htmlFor="toyLikeRight">Toy-Like Right</label>
+        </div>
+
+        <div className="flex gap-4">
+          <input
+            type="radio"
+            name="analogPal"
+            id="pastelKidCentered"
+            value={"pastelKidCentered"}
+            checked={analogPalType === "pastelKidCentered"}
+            onChange={(e) => {
+              setAnalogPalType(e.target.value);
+              const pal = analogousPalGen(oklch, analogOptions, e.target.value);
+              setPalette(pal);
+              setDuplicatePalette(pal);
+            }}
+          />
+          <label htmlFor="pastelKidCentered">Pastel-Kid Centered</label>
+        </div>
+
+        <div className="flex gap-4">
+          <input
+            type="radio"
+            name="analogPal"
+            id="pastelKidLeft"
+            value={"pastelKidLeft"}
+            checked={analogPalType === "pastelKidLeft"}
+            onChange={(e) => {
+              setAnalogPalType(e.target.value);
+              const pal = analogousPalGen(oklch, analogOptions, e.target.value);
+              setPalette(pal);
+              setDuplicatePalette(pal);
+            }}
+          />
+          <label htmlFor="pastelKidLeft">Pastel-Kid Left</label>
+        </div>
+
+        <div className="flex gap-4">
+          <input
+            type="radio"
+            name="analogPal"
+            id="pastelKidRight"
+            value={"pastelKidRight"}
+            checked={analogPalType === "pastelKidRight"}
+            onChange={(e) => {
+              setAnalogPalType(e.target.value);
+              const pal = analogousPalGen(oklch, analogOptions, e.target.value);
+              setPalette(pal);
+              setDuplicatePalette(pal);
+            }}
+          />
+          <label htmlFor="pastelKidRight">Pastel-Kid Right</label>
+        </div>
+
+        <div className="flex gap-4">
+          <input
+            type="radio"
+            name="analogPal"
+            id="neoKidCentered"
+            value={"neoKidCentered"}
+            checked={analogPalType === "neoKidCentered"}
+            onChange={(e) => {
+              setAnalogPalType(e.target.value);
+              const pal = analogousPalGen(oklch, analogOptions, e.target.value);
+              setPalette(pal);
+              setDuplicatePalette(pal);
+            }}
+          />
+          <label htmlFor="neoKidCentered">Neo-Kid Centered</label>
+        </div>
+
+        <div className="flex gap-4">
+          <input
+            type="radio"
+            name="analogPal"
+            id="neoKidLeft"
+            value={"neoKidLeft"}
+            checked={analogPalType === "neoKidLeft"}
+            onChange={(e) => {
+              setAnalogPalType(e.target.value);
+              const pal = analogousPalGen(oklch, analogOptions, e.target.value);
+              setPalette(pal);
+              setDuplicatePalette(pal);
+            }}
+          />
+          <label htmlFor="neoKidLeft">Neo-Kid Left</label>
+        </div>
+
+        <div className="flex gap-4">
+          <input
+            type="radio"
+            name="analogPal"
+            id="neoKidRight"
+            value={"neoKidRight"}
+            checked={analogPalType === "neoKidRight"}
+            onChange={(e) => {
+              setAnalogPalType(e.target.value);
+              const pal = analogousPalGen(oklch, analogOptions, e.target.value);
+              setPalette(pal);
+              setDuplicatePalette(pal);
+            }}
+          />
+          <label htmlFor="neoKidRight">Neo-Kid Right</label>
+        </div>
+
         {/* <div className="flex gap-4">
         <input
           type="radio"

@@ -29,8 +29,8 @@ export function ColorPaletteContextProvider({ children }) {
   });
 
   const [analogOptions, setAnalogOptions] = useState({
-    analogousAngle1: -40,
-    analogousAngle2: 40,
+    analogousAngle1: -35,
+    analogousAngle2: 35,
   });
 
   const [splitCompOptions, setSplitCompOptions] = useState({
@@ -176,6 +176,9 @@ export function ColorPaletteContextProvider({ children }) {
   const [compPalType, setCompPalType] = useState("classicComp");
   const [monoPalType, setMonoPalType] = useState("classicMono");
   const [analogPalType, setAnalogPalType] = useState("classicCenteredAnalog");
+  const [doubleSplitCompPalType, setDoubleSplitCompPalType] = useState(
+    "leftDoubleSplitComp"
+  );
   const [palette, setPalette] = useState([]);
   const [duplicatePalette, setDuplicatePalette] = useState([]);
   const [duplicatePaletteType, setDuplicatePaletteType] = useState("");
@@ -304,6 +307,8 @@ export function ColorPaletteContextProvider({ children }) {
     setMonoPalType,
     analogPalType,
     setAnalogPalType,
+    doubleSplitCompPalType,
+    setDoubleSplitCompPalType,
     sliderLightValue,
     setSliderLightValue,
     sliderChromaValue,
