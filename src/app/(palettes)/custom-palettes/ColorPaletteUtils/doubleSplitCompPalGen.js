@@ -5,7 +5,7 @@ export default function doubleSplitCompPalGen(oklch, doubleSplitCompPalType) {
     const CMAX = 0.25;
     const CMIN = 0.05;
 
-    const baseColor = oklch;
+    const baseColor = { ...oklch };
 
     // --- Hues for the Double Split Complementary ("X") Scheme ---
     // The four main Hues: H, H-30, H+180, H+150
@@ -75,22 +75,17 @@ export default function doubleSplitCompPalGen(oklch, doubleSplitCompPalType) {
       h: oppositeAdjacent.h,
     };
 
-    // --- Return 10 Colors: 4 Mains + 4 Dark + 2 Light ---
-
     return [
-      // 4 Dark Variants (Shades)
       { name: "Base-D", value: baseDark },
       { name: "AdjacentNeg-D", value: adjacentNegDark },
       { name: "Opposite-D", value: oppositeDark },
       { name: "OppositeAdjacent-D", value: oppositeAdjacentDark },
 
-      // 4 Main Hues (Mid-lightness)
       { name: "Base", value: baseColor },
       { name: "AdjacentNeg", value: adjacentNeg },
       { name: "Opposite", value: opposite },
       { name: "OppositeAdjacent", value: oppositeAdjacent },
 
-      // 2 Light Variants (Tints)
       { name: "Base-L", value: baseLight },
       { name: "Opposite-L", value: oppositeLight },
     ];
@@ -100,7 +95,7 @@ export default function doubleSplitCompPalGen(oklch, doubleSplitCompPalType) {
     const CMAX = 0.25;
     const CMIN = 0.05;
 
-    const baseColor = oklch;
+    const baseColor = { ...oklch };
 
     // --- Hues for the Double Split Complementary ("X") Scheme ---
     // The four main Hues: H, H+30, H+180, H+210
@@ -178,14 +173,11 @@ export default function doubleSplitCompPalGen(oklch, doubleSplitCompPalType) {
       { name: "Base-D", value: baseDark },
       { name: "Adjacent", value: adjacentBase },
       { name: "Adjacent-D", value: adjacentDark },
-
       { name: "Opposite-L", value: oppositeLight },
       { name: "Opposite", value: opposite },
       { name: "Opposite-D", value: oppositeDark },
       { name: "OppositeAdjacent", value: oppositeAdjacent },
       { name: "OppositeAdjacent-D", value: oppositeAdjacentDark },
-
-      // 2 Light Variants (Tints)
     ];
   }
 }

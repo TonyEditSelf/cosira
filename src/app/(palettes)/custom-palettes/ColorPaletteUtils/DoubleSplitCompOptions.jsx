@@ -4,9 +4,7 @@ import doubleSplitCompPalGen from "./doubleSplitCompPalGen";
 export default function DoubleSplitCompOptions() {
   const {
     setPalette,
-    setDuplicatePaletteType,
     setDuplicatePalette,
-    selectedPaletteType,
     oklch,
     doubleSplitCompPalType,
     setDoubleSplitCompPalType,

@@ -28,7 +28,8 @@ export default function paletteDecider(
   selectedPaletteType,
   compPalType,
   monoPalType,
-  analogPalType
+  analogPalType,
+  doubleSplitCompPalType
 ) {
   if (selectedPaletteType === "complementary") {
     return complementaryPalGen(oklch, compPalType);
@@ -53,7 +54,7 @@ export default function paletteDecider(
   } else if (selectedPaletteType === "chromaticNeutral") {
     return chromaticNeutralPalGen(oklch);
   } else if (selectedPaletteType === "doubleSplitComp") {
-    return doubleSplitCompPalGen(oklch, false);
+    return doubleSplitCompPalGen(oklch, doubleSplitCompPalType);
   } else if (selectedPaletteType === "nearComplementary") {
     return nearCompPalGen(oklch);
   } else if (selectedPaletteType === "clash") {
