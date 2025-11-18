@@ -171,7 +171,7 @@ export function ColorPaletteContextProvider({ children }) {
   const [sliderLightValue, setSliderLightValue] = useState(0);
   const [sliderChromaValue, setSliderChromaValue] = useState(0);
 
-  const [selectedPaletteType, setSelectedPaletteType] = useState("analogous");
+  const [selectedPaletteType, setSelectedPaletteType] = useState("gradient");
 
   const [compPalType, setCompPalType] = useState("classicComp");
   const [monoPalType, setMonoPalType] = useState("classicMono");
@@ -179,6 +179,8 @@ export function ColorPaletteContextProvider({ children }) {
   const [doubleSplitCompPalType, setDoubleSplitCompPalType] = useState(
     "leftDoubleSplitComp"
   );
+  const [gradientPalType, setGradientPalType] = useState("leftGradient");
+
   const [palette, setPalette] = useState([]);
   const [duplicatePalette, setDuplicatePalette] = useState([]);
   const [duplicatePaletteType, setDuplicatePaletteType] = useState("");
@@ -228,7 +230,9 @@ export function ColorPaletteContextProvider({ children }) {
       selectedPaletteType,
       compPalType,
       monoPalType,
-      analogPalType
+      analogPalType,
+      doubleSplitCompPalType,
+      gradientPalType
     );
     setPalette(pal);
 
@@ -309,6 +313,8 @@ export function ColorPaletteContextProvider({ children }) {
     setAnalogPalType,
     doubleSplitCompPalType,
     setDoubleSplitCompPalType,
+    gradientPalType,
+    setGradientPalType,
     sliderLightValue,
     setSliderLightValue,
     sliderChromaValue,

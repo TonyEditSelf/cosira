@@ -10,7 +10,7 @@ import TetradicOptions from "../ColorPaletteUtils/TetradicOptions";
 import ComplementaryOptions from "../ColorPaletteUtils/ComplementaryOptions";
 import MonochromaticOptions from "../ColorPaletteUtils/MonochromaticOptions";
 import DoubleSplitCompOptions from "../ColorPaletteUtils/DoubleSplitCompOptions";
-import complementaryPalGen from "../ColorPaletteUtils/complementaryPalGen";
+import GradientOptions from "../ColorPaletteUtils/GradientOptions";
 import LandCStepper from "./Pickers/components/LandCStepper";
 
 export default function PalettteProperties() {
@@ -120,6 +120,8 @@ export default function PalettteProperties() {
       {selectedPaletteType === "tetradic" && <TetradicOptions />}
 
       {selectedPaletteType === "doubleSplitComp" && <DoubleSplitCompOptions />}
+
+      {selectedPaletteType === "gradient" && <GradientOptions />}
 
       <div className="flex flex-col gap-2">
         <div>

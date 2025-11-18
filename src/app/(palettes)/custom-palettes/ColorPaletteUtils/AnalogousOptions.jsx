@@ -4,9 +4,7 @@ import analogousPalGen from "./analogousPalGen";
 export default function AnalogousOptions() {
   const {
     setPalette,
-    setDuplicatePaletteType,
     setDuplicatePalette,
-    selectedPaletteType,
     oklch,
     analogPalType,
     setAnalogPalType,
