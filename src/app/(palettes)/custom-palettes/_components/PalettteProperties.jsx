@@ -12,6 +12,7 @@ import MonochromaticOptions from "../ColorPaletteUtils/MonochromaticOptions";
 import DoubleSplitCompOptions from "../ColorPaletteUtils/DoubleSplitCompOptions";
 import GradientOptions from "../ColorPaletteUtils/GradientOptions";
 import LandCStepper from "./Pickers/components/LandCStepper";
+import SeasonalOptions from "../ColorPaletteUtils/SeasonalOptions";
 
 export default function PalettteProperties() {
   const {
@@ -122,6 +123,8 @@ export default function PalettteProperties() {
       {selectedPaletteType === "doubleSplitComp" && <DoubleSplitCompOptions />}
 
       {selectedPaletteType === "gradient" && <GradientOptions />}
+
+      {selectedPaletteType === "seasonal" && <SeasonalOptions />}
 
       <div className="flex flex-col gap-2">
         <div>
