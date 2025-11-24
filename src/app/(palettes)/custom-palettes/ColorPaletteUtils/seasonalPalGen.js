@@ -673,29 +673,26 @@ export default function seasonalPalGen(
       { name: "True-C-Neutral-2", value: neutral(0.58, +22) },
       { name: "True-C-Neutral-3", value: neutral(0.45, +28) },
     ];
-  } else if (seasonalPalType === "autumnTrueVibrantSpicy") {
-    const LMAX = 0.95,
+  } else if (seasonalPalType === "summerSoftDustyMuted") {
+    const LMAX = 0.92,
       LMIN = 0.25;
-    const CMAX = 0.4,
-      CMIN = 0.06; // more chroma allowed
+    const CMAX = 0.18,
+      CMIN = 0.02;
 
     function limit(v, min, max) {
       return Math.min(max, Math.max(min, v));
     }
 
-    // Strong warm pull: saffron/orange/gold zone
-    function pullWarmHue(h) {
-      const target = 52; // spicy golden-orange
-      const blend = 0.33; // moderate pull
+    function pullCool(h) {
+      const target = 220; // soft summer cool anchor
+      const blend = 0.35;
       return (h * (1 - blend) + target * blend + 360) % 360;
     }
 
-    // Base transform (vibrant = bright, rich, lively)
-    const baseL = limit(oklch.l - 0.02, LMIN, LMAX); // slight darken only
-    const baseC = limit(oklch.c * 1.25, CMIN, CMAX); // significantly richer
-    const baseH = pullWarmHue(oklch.h);
+    const baseL = limit(oklch.l + 0.05, LMIN, LMAX); // lighten slightly
+    const baseC = limit(oklch.c * 0.7, CMIN, CMAX); // strong muting
+    const baseH = pullCool(oklch.h);
 
-    // Generate spicy variants
     function variant(offsetH, cMul, lShift) {
       return {
         h: (baseH + offsetH + 360) % 360,
@@ -704,30 +701,1313 @@ export default function seasonalPalGen(
       };
     }
 
-    // Warm neutrals with spice tint
+    function neutral(l) {
+      return { l: limit(l, LMIN, LMAX), c: CMIN * 0.6, h: baseH };
+    }
+
+    return [
+      { name: "Soft-A-1", value: variant(-10, 1.0, +0.02) },
+      { name: "Soft-A-2", value: variant(+5, 0.95, 0) },
+      { name: "Soft-A-3", value: variant(+20, 0.9, -0.02) },
+      { name: "Soft-A-4", value: variant(+35, 0.85, -0.04) },
+      { name: "Soft-A-5", value: variant(+50, 0.8, -0.06) },
+      { name: "Soft-A-6", value: variant(+70, 0.75, -0.08) },
+      { name: "Soft-A-7", value: variant(+90, 0.7, -0.1) },
+
+      { name: "Soft-A-Neutral-1", value: neutral(0.65) },
+      { name: "Soft-A-Neutral-2", value: neutral(0.55) },
+      { name: "Soft-A-Neutral-3", value: neutral(0.42) },
+    ];
+  } else if (seasonalPalType === "summerSoftSmokyNeutral") {
+    const LMAX = 0.9,
+      LMIN = 0.22;
+    const CMAX = 0.15,
+      CMIN = 0.02;
+
+    function limit(v, min, max) {
+      return Math.min(max, Math.max(min, v));
+    }
+
+    function pullCool(h) {
+      return (h * 0.7 + 220 * 0.3 + 360) % 360;
+    }
+
+    const baseL = limit(oklch.l + 0.02, LMIN, LMAX);
+    const baseC = limit(oklch.c * 0.6, CMIN, CMAX);
+    const baseH = pullCool(oklch.h);
+
+    function v(offsetH, cMul, lShift) {
+      return {
+        h: (baseH + offsetH + 360) % 360,
+        c: limit(baseC * cMul, CMIN, CMAX),
+        l: limit(baseL + lShift, LMIN, LMAX),
+      };
+    }
+
+    function n(l) {
+      return { l: limit(l, LMIN, LMAX), c: CMIN * 0.5, h: baseH };
+    }
+
+    return [
+      { name: "Soft-B-1", value: v(-15, 1.0, +0.04) },
+      { name: "Soft-B-2", value: v(+5, 0.95, +0.02) },
+      { name: "Soft-B-3", value: v(+25, 0.9, 0) },
+      { name: "Soft-B-4", value: v(+45, 0.85, -0.03) },
+      { name: "Soft-B-5", value: v(+65, 0.8, -0.05) },
+      { name: "Soft-B-6", value: v(+85, 0.75, -0.08) },
+      { name: "Soft-B-7", value: v(+105, 0.7, -0.1) },
+
+      { name: "Soft-B-Neutral-1", value: n(0.62) },
+      { name: "Soft-B-Neutral-2", value: n(0.5) },
+      { name: "Soft-B-Neutral-3", value: n(0.38) },
+    ];
+  } else if (seasonalPalType === "summerSoftCoolEarthySmoky") {
+    const LMAX = 0.88,
+      LMIN = 0.22;
+    const CMAX = 0.14,
+      CMIN = 0.02;
+
+    function limit(v, min, max) {
+      return Math.min(max, Math.max(min, v));
+    }
+
+    function pullCool(h) {
+      return (h * 0.65 + 225 * 0.35 + 360) % 360;
+    }
+
+    const baseL = limit(oklch.l - 0.02, LMIN, LMAX);
+    const baseC = limit(oklch.c * 0.55, CMIN, CMAX);
+    const baseH = pullCool(oklch.h);
+
+    function v(offsetH, cMul, lShift) {
+      return {
+        h: (baseH + offsetH + 360) % 360,
+        c: limit(baseC * cMul, CMIN, CMAX),
+        l: limit(baseL + lShift, LMIN, LMAX),
+      };
+    }
+
+    function n(l) {
+      return { l: limit(l, LMIN, LMAX), c: CMIN * 0.4, h: baseH };
+    }
+
+    return [
+      { name: "Soft-C-1", value: v(-10, 1.0, +0.03) },
+      { name: "Soft-C-2", value: v(+8, 0.95, +0.01) },
+      { name: "Soft-C-3", value: v(+25, 0.9, -0.01) },
+      { name: "Soft-C-4", value: v(+42, 0.85, -0.03) },
+      { name: "Soft-C-5", value: v(+60, 0.8, -0.05) },
+      { name: "Soft-C-6", value: v(+80, 0.75, -0.07) },
+      { name: "Soft-C-7", value: v(+100, 0.72, -0.09) },
+
+      { name: "Soft-C-Neutral-1", value: n(0.6) },
+      { name: "Soft-C-Neutral-2", value: n(0.48) },
+      { name: "Soft-C-Neutral-3", value: n(0.36) },
+    ];
+  } else if (seasonalPalType === "summerTrueCoolBalanced") {
+    const LMAX = 0.92,
+      LMIN = 0.3;
+    const CMAX = 0.22,
+      CMIN = 0.03;
+
+    function limit(v, min, max) {
+      return Math.min(max, Math.max(min, v));
+    }
+
+    function pullCool(h) {
+      const target = 220;
+      const blend = 0.4;
+      return (h * (1 - blend) + target * blend + 360) % 360;
+    }
+
+    const baseL = limit(oklch.l + 0.04, LMIN, LMAX);
+    const baseC = limit(oklch.c * 0.8, CMIN, CMAX);
+    const baseH = pullCool(oklch.h);
+
+    function v(o, c, l) {
+      return {
+        h: (baseH + o + 360) % 360,
+        c: limit(baseC * c, CMIN, CMAX),
+        l: limit(baseL + l, LMIN, LMAX),
+      };
+    }
+
+    function n(l) {
+      return { l: limit(l, LMIN, LMAX), c: CMIN * 0.6, h: baseH };
+    }
+
+    return [
+      { name: "TS-A-1", value: v(-5, 1.05, +0.02) },
+      { name: "TS-A-2", value: v(+10, 1.0, 0) },
+      { name: "TS-A-3", value: v(+25, 0.95, -0.02) },
+      { name: "TS-A-4", value: v(+45, 0.9, -0.04) },
+      { name: "TS-A-5", value: v(+65, 0.88, -0.06) },
+      { name: "TS-A-6", value: v(+85, 0.86, -0.08) },
+      { name: "TS-A-7", value: v(+105, 0.84, -0.1) },
+
+      { name: "TS-A-N1", value: n(0.7) },
+      { name: "TS-A-N2", value: n(0.56) },
+      { name: "TS-A-N3", value: n(0.44) },
+    ];
+  } else if (seasonalPalType === "summerTrueCoolBright") {
+    const LMAX = 0.94,
+      LMIN = 0.33;
+    const CMAX = 0.26,
+      CMIN = 0.04;
+
+    function limit(v, min, max) {
+      return Math.min(max, Math.max(min, v));
+    }
+
+    function pullCool(h) {
+      return (h * 0.55 + 220 * 0.45 + 360) % 360;
+    }
+
+    const baseL = limit(oklch.l + 0.06, LMIN, LMAX);
+    const baseC = limit(oklch.c * 0.95, CMIN, CMAX);
+    const baseH = pullCool(oklch.h);
+
+    function v(o, c, l) {
+      return {
+        h: (baseH + o + 360) % 360,
+        c: limit(baseC * c, CMIN, CMAX),
+        l: limit(baseL + l, LMIN, LMAX),
+      };
+    }
+
+    function n(l) {
+      return { l: limit(l, LMIN, LMAX), c: CMIN * 0.6, h: baseH };
+    }
+
+    return [
+      { name: "TS-B-1", value: v(-5, 1.1, +0.03) },
+      { name: "TS-B-2", value: v(+12, 1.05, +0.01) },
+      { name: "TS-B-3", value: v(+28, 1.0, -0.01) },
+      { name: "TS-B-4", value: v(+48, 0.98, -0.03) },
+      { name: "TS-B-5", value: v(+68, 0.95, -0.05) },
+      { name: "TS-B-6", value: v(+88, 0.93, -0.07) },
+      { name: "TS-B-7", value: v(+110, 0.9, -0.1) },
+
+      { name: "TS-B-N1", value: n(0.74) },
+      { name: "TS-B-N2", value: n(0.6) },
+      { name: "TS-B-N3", value: n(0.46) },
+    ];
+  } else if (seasonalPalType === "summerTrueCoolRosy") {
+    const LMAX = 0.93,
+      LMIN = 0.32;
+    const CMAX = 0.2,
+      CMIN = 0.03;
+
+    function limit(v, min, max) {
+      return Math.min(max, Math.max(min, v));
+    }
+
+    function pullRosy(h) {
+      const target = 240; // violet-rose direction
+      const blend = 0.4;
+      return (h * (1 - blend) + target * blend + 360) % 360;
+    }
+
+    const baseL = limit(oklch.l + 0.05, LMIN, LMAX);
+    const baseC = limit(oklch.c * 0.75, CMIN, CMAX);
+    const baseH = pullRosy(oklch.h);
+
+    function v(o, c, l) {
+      return {
+        h: (baseH + o + 360) % 360,
+        c: limit(baseC * c, CMIN, CMAX),
+        l: limit(baseL + l, LMIN, LMAX),
+      };
+    }
+
+    function n(l) {
+      return { l: limit(l, LMIN, LMAX), c: CMIN * 0.7, h: baseH };
+    }
+
+    return [
+      { name: "TS-C-1", value: v(-10, 1.05, +0.03) },
+      { name: "TS-C-2", value: v(+5, 1.0, +0.01) },
+      { name: "TS-C-3", value: v(+20, 0.95, -0.01) },
+      { name: "TS-C-4", value: v(+38, 0.9, -0.03) },
+      { name: "TS-C-5", value: v(+58, 0.88, -0.04) },
+      { name: "TS-C-6", value: v(+78, 0.85, -0.06) },
+      { name: "TS-C-7", value: v(+100, 0.83, -0.08) },
+
+      { name: "TS-C-N1", value: n(0.72) },
+      { name: "TS-C-N2", value: n(0.6) },
+      { name: "TS-C-N3", value: n(0.48) },
+    ];
+  } else if (seasonalPalType === "summerTrueDeepRainforest") {
+    const LMAX = 0.88,
+      LMIN = 0.2;
+    const CMAX = 0.24,
+      CMIN = 0.03;
+
+    function limit(v, min, max) {
+      return Math.min(max, Math.max(min, v));
+    }
+
+    function pullDeepCool(h) {
+      const target = 210;
+      const blend = 0.45;
+      return (h * (1 - blend) + target * blend + 360) % 360;
+    }
+
+    const baseL = limit(oklch.l - 0.08, LMIN, LMAX); // darken deep
+    const baseC = limit(oklch.c * 0.85, CMIN, CMAX);
+    const baseH = pullDeepCool(oklch.h);
+
+    function v(o, c, l) {
+      return {
+        h: (baseH + o + 360) % 360,
+        c: limit(baseC * c, CMIN, CMAX),
+        l: limit(baseL + l, LMIN, LMAX),
+      };
+    }
+
+    function n(l) {
+      return { l: limit(l, LMIN, LMAX), c: CMIN * 0.6, h: baseH };
+    }
+
+    return [
+      { name: "TS-D-1", value: v(-5, 1.05, +0.02) },
+      { name: "TS-D-2", value: v(+12, 1.0, -0.01) },
+      { name: "TS-D-3", value: v(+30, 0.95, -0.03) },
+      { name: "TS-D-4", value: v(+50, 0.92, -0.05) },
+      { name: "TS-D-5", value: v(+70, 0.9, -0.07) },
+      { name: "TS-D-6", value: v(+92, 0.88, -0.1) },
+      { name: "TS-D-7", value: v(+115, 0.85, -0.13) },
+
+      { name: "TS-D-N1", value: n(0.52) },
+      { name: "TS-D-N2", value: n(0.4) },
+      { name: "TS-D-N3", value: n(0.3) },
+    ];
+  } else if (seasonalPalType === "summerSmooth") {
+    const LMAX = 0.94;
+    const LMIN = 0.28;
+    const CMAX = 0.24;
+    const CMIN = 0.03;
+
+    function limit(v, min, max) {
+      return Math.min(max, Math.max(min, v));
+    }
+
+    // --------------------------------------------
+    // SUMMER HUE GRAVITY — pulls toward 220° cool
+    // --------------------------------------------
+    function pullCoolHue(h) {
+      const target = 220; // blue-violet summer center
+      const blend = 0.4; // strong pull for smoothness
+      return (h * (1 - blend) + target * blend + 360) % 360;
+    }
+
+    // --------------------------------------------
+    // BASE SUMMER TRANSFORM
+    // Pre-soften, slightly lighten, cool-shift
+    // --------------------------------------------
+    const baseL = limit(oklch.l + 0.03, LMIN, LMAX); // soft lift
+    const baseC = limit(oklch.c * 0.85, CMIN, CMAX); // soft-muted
+    const baseH = pullCoolHue(oklch.h); // hue cooled
+
+    // --------------------------------------------
+    // SMOOTH FUNCTIONS
+    // --------------------------------------------
+    function smoothL(i) {
+      // Soft descending L curve (misty → deep cool)
+      // Slight S-curve ensures no banding
+      const t = i / 9;
+      const ease = t * t * (3 - 2 * t); // smoothstep
+      return limit(baseL - ease * 0.2, LMIN, LMAX);
+    }
+
+    function smoothC(i) {
+      // Gentle muting: almost flat but enough depth
+      const t = i / 9;
+      return limit(baseC - t * 0.1, CMIN, CMAX);
+    }
+
+    function smoothH(i) {
+      // Hue drift: cool blue-violet → soft blueberry → dusty slate
+      const start = baseH;
+      const end = (baseH + 70) % 360;
+      const t = i / 9;
+      return (start * (1 - t) + end * t + 360) % 360;
+    }
+
+    // --------------------------------------------
+    // FINAL PALETTE (10 smooth summer steps)
+    // --------------------------------------------
+    const out = [];
+    for (let i = 0; i < 10; i++) {
+      out.push({
+        name: `Summer-Smooth-${i + 1}`,
+        value: {
+          l: smoothL(i),
+          c: smoothC(i),
+          h: smoothH(i),
+        },
+      });
+    }
+
+    return out;
+  } else if (seasonalPalType === "winterIcyCrystal") {
+    const LMAX = 0.95,
+      LMIN = 0.12,
+      CMAX = 0.32,
+      CMIN = 0.04;
+
+    function limit(v, min, max) {
+      return Math.min(max, Math.max(min, v));
+    }
+    function pullCoolHue(h) {
+      const target = 260;
+      const blend = 0.4;
+      return (h * (1 - blend) + target * blend + 360) % 360;
+    }
+
+    // Pre-normalize
+    const baseL = limit(oklch.l + 0.02, LMIN, LMAX); // slight lift
+    const baseC = limit(oklch.c * 1.1, CMIN, CMAX); // boost clarity
+    const baseH = pullCoolHue(oklch.h);
+
+    function variant(offsetH, cMul, lShift) {
+      const h = (baseH + offsetH + 360) % 360;
+      const c = limit(baseC * cMul, CMIN, CMAX);
+      const l = limit(baseL + lShift, LMIN, LMAX);
+      return { l, c, h };
+    }
     function neutral(l, hueShift = 10) {
       return {
         l: limit(l, LMIN, LMAX),
-        c: CMIN * 0.65,
+        c: CMIN * 0.6,
         h: (baseH + hueShift + 360) % 360,
       };
     }
 
-    // Final 10-color Vibrant/Spicy palette
     return [
-      // FIERY + SPICY RANGE
-      { name: "True-D-1", value: variant(+8, 1.25, -0.02) }, // saffron
-      { name: "True-D-2", value: variant(+20, 1.3, -0.05) }, // turmeric
-      { name: "True-D-3", value: variant(+38, 1.2, -0.03) }, // paprika
-      { name: "True-D-4", value: variant(+55, 1.1, -0.06) }, // cinnamon
-      { name: "True-D-5", value: variant(+80, 1.0, -0.04) }, // cayenne/rust
-      { name: "True-D-6", value: variant(+105, 0.92, -0.08) }, // warm rust-brown
-      { name: "True-D-7", value: variant(+130, 0.85, -0.1) }, // spicy olive-brown
+      { name: "TW-A-1", value: variant(+0, 1.15, +0.04) },
+      { name: "TW-A-2", value: variant(+12, 1.12, +0.02) },
+      { name: "TW-A-3", value: variant(+28, 1.08, +0.0) },
+      { name: "TW-A-4", value: variant(+44, 1.02, -0.02) },
+      { name: "TW-A-5", value: variant(+64, 0.98, -0.04) },
+      { name: "TW-A-6", value: variant(+86, 0.94, -0.06) },
+      { name: "TW-A-7", value: variant(+110, 0.9, -0.08) },
 
-      // SPICED NEUTRALS
-      { name: "True-D-Neutral-1", value: neutral(0.72, +12) }, // warm almond
-      { name: "True-D-Neutral-2", value: neutral(0.6, +18) }, // golden beige
-      { name: "True-D-Neutral-3", value: neutral(0.47, +25) }, // warm caramel taupe
+      { name: "TW-A-Neutral-1", value: neutral(0.78, +8) },
+      { name: "TW-A-Neutral-2", value: neutral(0.62, +18) },
+      { name: "TW-A-Neutral-3", value: neutral(0.44, +28) },
+    ];
+  } else if (seasonalPalType === "winterStarkMonochrome") {
+    const LMAX = 0.95,
+      LMIN = 0.12,
+      CMAX = 0.32,
+      CMIN = 0.04;
+
+    function limit(v, min, max) {
+      return Math.min(max, Math.max(min, v));
+    }
+    function pullCoolHue(h) {
+      const target = 260;
+      const blend = 0.4;
+      return (h * (1 - blend) + target * blend + 360) % 360;
+    }
+
+    const baseL = limit(oklch.l - 0.1, LMIN, LMAX); // darker base for contrast
+    const baseC = limit(oklch.c * 0.65, CMIN, CMAX); // more muted chroma for graphic blacks/blues
+    const baseH = pullCoolHue(oklch.h);
+
+    function variant(offsetH, lShift) {
+      const h = (baseH + offsetH + 360) % 360;
+      const c = baseC; // keep chroma stable for monochrome feel
+      const l = limit(baseL + lShift, LMIN, LMAX);
+      return { l, c, h };
+    }
+    function neutral(l, hueShift = 0) {
+      return {
+        l: limit(l, LMIN, LMAX),
+        c: CMIN * 0.3,
+        h: (baseH + hueShift + 360) % 360,
+      };
+    }
+
+    return [
+      { name: "TW-C-1", value: variant(+0, +0.22) },
+      { name: "TW-C-2", value: variant(+12, +0.18) },
+      { name: "TW-C-3", value: variant(+28, +0.14) },
+      { name: "TW-C-4", value: variant(+44, +0.08) },
+      { name: "TW-C-5", value: variant(+64, +0.02) },
+      { name: "TW-C-6", value: variant(+86, -0.04) },
+      { name: "TW-C-7", value: variant(+110, -0.09) },
+
+      { name: "TW-C-Neutral-1", value: neutral(0.92, +0) },
+      { name: "TW-C-Neutral-2", value: neutral(0.6, +0) },
+      { name: "TW-C-Neutral-3", value: neutral(0.3, +0) },
+    ];
+  } else if (seasonalPalType === "winterFrostedBerry") {
+    const LMAX = 0.95,
+      LMIN = 0.12,
+      CMAX = 0.32,
+      CMIN = 0.04;
+
+    function limit(v, min, max) {
+      return Math.min(max, Math.max(min, v));
+    }
+    function pullCoolHue(h) {
+      const target = 260;
+      const blend = 0.4;
+      return (h * (1 - blend) + target * blend + 360) % 360;
+    }
+
+    const baseL = limit(oklch.l + 0.0, LMIN, LMAX);
+    const baseC = limit(oklch.c * 1.2, CMIN, CMAX);
+    const baseH = pullCoolHue(oklch.h);
+
+    function variant(offsetH, cMul, lShift) {
+      const h = (baseH + offsetH + 360) % 360;
+      const c = limit(baseC * cMul, CMIN, CMAX);
+      const l = limit(baseL + lShift, LMIN, LMAX);
+      return { l, c, h };
+    }
+    function neutral(l, hueShift = 12) {
+      return {
+        l: limit(l, LMIN, LMAX),
+        c: CMIN * 0.7,
+        h: (baseH + hueShift + 360) % 360,
+      };
+    }
+
+    return [
+      { name: "TW-D-1", value: variant(-18, 1.1, +0.04) },
+      { name: "TW-D-2", value: variant(+0, 1.15, +0.02) },
+      { name: "TW-D-3", value: variant(+22, 1.2, +0.0) },
+      { name: "TW-D-4", value: variant(+44, 1.1, -0.02) },
+      { name: "TW-D-5", value: variant(+66, 1.05, -0.04) },
+      { name: "TW-D-6", value: variant(+88, 1.0, -0.06) },
+      { name: "TW-D-7", value: variant(+110, 0.95, -0.08) },
+
+      { name: "TW-D-Neutral-1", value: neutral(0.72, +10) },
+      { name: "TW-D-Neutral-2", value: neutral(0.56, +18) },
+      { name: "TW-D-Neutral-3", value: neutral(0.4, +26) },
+    ];
+  } else if (seasonalPalType === "winterVividCandy") {
+    const LMAX = 0.95,
+      LMIN = 0.12,
+      CMAX = 0.32,
+      CMIN = 0.04;
+
+    function limit(v, min, max) {
+      return Math.min(max, Math.max(min, v));
+    }
+    function pullCoolHue(h) {
+      const target = 260;
+      const blend = 0.4;
+      return (h * (1 - blend) + target * blend + 360) % 360;
+    }
+
+    const baseL = limit(oklch.l + 0.06, LMIN, LMAX); // brighten
+    const baseC = limit(oklch.c * 1.25, CMIN, CMAX); // brighter but bounded
+    const baseH = pullCoolHue(oklch.h);
+
+    function variant(offsetH, cMul, lShift) {
+      const h = (baseH + offsetH + 360) % 360;
+      const c = limit(baseC * cMul, CMIN, CMAX);
+      const l = limit(baseL + lShift, LMIN, LMAX);
+      return { l, c, h };
+    }
+    function neutral(l, hueShift = 8) {
+      return {
+        l: limit(l, LMIN, LMAX),
+        c: CMIN * 0.6,
+        h: (baseH + hueShift + 360) % 360,
+      };
+    }
+
+    return [
+      { name: "BW-A-1", value: variant(+0, 1.2, +0.04) },
+      { name: "BW-A-2", value: variant(+20, 1.15, +0.02) },
+      { name: "BW-A-3", value: variant(+40, 1.1, +0.0) },
+      { name: "BW-A-4", value: variant(+60, 1.05, -0.02) },
+      { name: "BW-A-5", value: variant(+80, 1.0, -0.04) },
+      { name: "BW-A-6", value: variant(+100, 0.95, -0.06) },
+      { name: "BW-A-7", value: variant(+120, 0.9, -0.08) },
+
+      { name: "BW-A-Neutral-1", value: neutral(0.76, +10) },
+      { name: "BW-A-Neutral-2", value: neutral(0.6, +18) },
+      { name: "BW-A-Neutral-3", value: neutral(0.44, +26) },
+    ];
+  } else if (seasonalPalType === "winterCrispTechnicolor") {
+    const LMAX = 0.95,
+      LMIN = 0.12,
+      CMAX = 0.32,
+      CMIN = 0.04;
+
+    function limit(v, min, max) {
+      return Math.min(max, Math.max(min, v));
+    }
+    function pullCoolHue(h) {
+      const target = 260;
+      const blend = 0.4;
+      return (h * (1 - blend) + target * blend + 360) % 360;
+    }
+
+    const baseL = limit(oklch.l + 0.02, LMIN, LMAX);
+    const baseC = limit(oklch.c * 1.35, CMIN, CMAX);
+    const baseH = pullCoolHue(oklch.h);
+
+    function variant(offsetH, cMul, lShift) {
+      const h = (baseH + offsetH + 360) % 360;
+      const c = limit(baseC * cMul, CMIN, CMAX);
+      const l = limit(baseL + lShift, LMIN, LMAX);
+      return { l, c, h };
+    }
+    function neutral(l, hueShift = 12) {
+      return {
+        l: limit(l, LMIN, LMAX),
+        c: CMIN * 0.7,
+        h: (baseH + hueShift + 360) % 360,
+      };
+    }
+
+    return [
+      { name: "BW-B-1", value: variant(+0, 1.3, +0.02) },
+      { name: "BW-B-2", value: variant(+25, 1.25, +0.01) },
+      { name: "BW-B-3", value: variant(+50, 1.2, -0.01) },
+      { name: "BW-B-4", value: variant(+75, 1.1, -0.03) },
+      { name: "BW-B-5", value: variant(+100, 1.0, -0.05) },
+      { name: "BW-B-6", value: variant(+125, 0.95, -0.07) },
+      { name: "BW-B-7", value: variant(+150, 0.9, -0.09) },
+
+      { name: "BW-B-Neutral-1", value: neutral(0.7, +12) },
+      { name: "BW-B-Neutral-2", value: neutral(0.56, +20) },
+      { name: "BW-B-Neutral-3", value: neutral(0.42, +28) },
+    ];
+  } else if (seasonalPalType === "winterSnowlightPastels") {
+    const LMAX = 0.95,
+      LMIN = 0.12,
+      CMAX = 0.32,
+      CMIN = 0.04;
+
+    function limit(v, min, max) {
+      return Math.min(max, Math.max(min, v));
+    }
+    function pullCoolHue(h) {
+      const target = 260;
+      const blend = 0.4;
+      return (h * (1 - blend) + target * blend + 360) % 360;
+    }
+
+    const baseL = limit(oklch.l + 0.08, LMIN, LMAX); // very light base
+    const baseC = limit(oklch.c * 0.9, CMIN, CMAX); // moderate chroma to keep pastels cool
+    const baseH = pullCoolHue(oklch.h);
+
+    function variant(offsetH, lShift) {
+      const h = (baseH + offsetH + 360) % 360;
+      const c = baseC;
+      const l = limit(baseL + lShift, LMIN, LMAX);
+      return { l, c, h };
+    }
+    function neutral(l, hueShift = 6) {
+      return {
+        l: limit(l, LMIN, LMAX),
+        c: CMIN * 0.5,
+        h: (baseH + hueShift + 360) % 360,
+      };
+    }
+
+    return [
+      { name: "BW-C-1", value: variant(+0, +0.06) },
+      { name: "BW-C-2", value: variant(+15, +0.04) },
+      { name: "BW-C-3", value: variant(+35, +0.02) },
+      { name: "BW-C-4", value: variant(+50, +0.0) },
+      { name: "BW-C-5", value: variant(+70, -0.02) },
+      { name: "BW-C-6", value: variant(+90, -0.04) },
+      { name: "BW-C-7", value: variant(+110, -0.06) },
+
+      { name: "BW-C-Neutral-1", value: neutral(0.88, +8) },
+      { name: "BW-C-Neutral-2", value: neutral(0.7, +16) },
+      { name: "BW-C-Neutral-3", value: neutral(0.52, +24) },
+    ];
+  } else if (seasonalPalType === "winterNightJewel") {
+    const LMAX = 0.95,
+      LMIN = 0.12,
+      CMAX = 0.32,
+      CMIN = 0.04;
+
+    function limit(v, min, max) {
+      return Math.min(max, Math.max(min, v));
+    }
+    function pullCoolHue(h) {
+      const target = 260;
+      const blend = 0.4;
+      return (h * (1 - blend) + target * blend + 360) % 360;
+    }
+
+    const baseL = limit(oklch.l - 0.1, LMIN, LMAX); // deepen
+    const baseC = limit(oklch.c * 1.2, CMIN, CMAX); // richer without exceeding CMAX
+    const baseH = pullCoolHue(oklch.h);
+
+    function variant(offsetH, cMul, lShift) {
+      const h = (baseH + offsetH + 360) % 360;
+      const c = limit(baseC * cMul, CMIN, CMAX);
+      const l = limit(baseL + lShift, LMIN, LMAX);
+      return { l, c, h };
+    }
+    function neutral(l, hueShift = 16) {
+      return {
+        l: limit(l, LMIN, LMAX),
+        c: CMIN * 0.7,
+        h: (baseH + hueShift + 360) % 360,
+      };
+    }
+
+    return [
+      { name: "DW-A-1", value: variant(+0, 1.2, -0.02) },
+      { name: "DW-A-2", value: variant(+18, 1.15, -0.06) },
+      { name: "DW-A-3", value: variant(+36, 1.1, -0.08) },
+      { name: "DW-A-4", value: variant(+58, 1.05, -0.1) },
+      { name: "DW-A-5", value: variant(+82, 1.0, -0.12) },
+      { name: "DW-A-6", value: variant(+108, 0.95, -0.14) },
+      { name: "DW-A-7", value: variant(+136, 0.9, -0.16) },
+
+      { name: "DW-A-Neutral-1", value: neutral(0.5, +12) },
+      { name: "DW-A-Neutral-2", value: neutral(0.38, +20) },
+      { name: "DW-A-Neutral-3", value: neutral(0.26, +28) },
+    ];
+  } else if (seasonalPalType === "winterUrbanNoir") {
+    const LMAX = 0.95,
+      LMIN = 0.12,
+      CMAX = 0.32,
+      CMIN = 0.04;
+
+    function limit(v, min, max) {
+      return Math.min(max, Math.max(min, v));
+    }
+    function pullCoolHue(h) {
+      const target = 260;
+      const blend = 0.4;
+      return (h * (1 - blend) + target * blend + 360) % 360;
+    }
+
+    const baseL = limit(oklch.l - 0.14, LMIN, LMAX); // strong deepen
+    const baseC = limit(oklch.c * 0.8, CMIN, CMAX); // more muted chroma for noir
+    const baseH = pullCoolHue(oklch.h);
+
+    function variant(offsetH, lShift) {
+      const h = (baseH + offsetH + 360) % 360;
+      const c = baseC;
+      const l = limit(baseL + lShift, LMIN, LMAX);
+      return { l, c, h };
+    }
+    function neutral(l, hueShift = 12) {
+      return {
+        l: limit(l, LMIN, LMAX),
+        c: CMIN * 0.35,
+        h: (baseH + hueShift + 360) % 360,
+      };
+    }
+
+    return [
+      { name: "DW-B-1", value: variant(+0, +0.18) },
+      { name: "DW-B-2", value: variant(+20, +0.14) },
+      { name: "DW-B-3", value: variant(+40, +0.1) },
+      { name: "DW-B-4", value: variant(+65, +0.06) },
+      { name: "DW-B-5", value: variant(+90, +0.0) },
+      { name: "DW-B-6", value: variant(+120, -0.04) },
+      { name: "DW-B-7", value: variant(+150, -0.08) },
+
+      { name: "DW-B-Neutral-1", value: neutral(0.56, +10) },
+      { name: "DW-B-Neutral-2", value: neutral(0.4, +18) },
+      { name: "DW-B-Neutral-3", value: neutral(0.26, +26) },
+    ];
+  } else if (seasonalPalType === "winterSmooth") {
+    const LMAX = 0.97;
+    const LMIN = 0.1;
+    const CMAX = 0.4;
+    const CMIN = 0.08;
+
+    // ----------------------------
+    // UTIL: clamp
+    // ----------------------------
+    function limit(v, min, max) {
+      return Math.min(max, Math.max(min, v));
+    }
+
+    // ----------------------------
+    // HUE GRAVITY — pulls *any* hue toward Winter cool anchor (~260°)
+    // ----------------------------
+    function pullCoolHue(h) {
+      const target = 260; // icy blue-violet
+      const blend = 0.4;
+      return (h * (1 - blend) + target * blend + 360) % 360;
+    }
+
+    // ----------------------------
+    // PRE-NORMALIZE BASE COLOR
+    // Winter needs deeper + clearer
+    // ----------------------------
+    const baseL = limit(oklch.l - 0.04, LMIN, LMAX); // slight darken
+    const baseC = limit(oklch.c * 1.1, CMIN, CMAX); // small increase in clarity
+    const baseH = pullCoolHue(oklch.h); // shift to winter coolness
+
+    // ----------------------------
+    // SMOOTH CURVES
+    // ----------------------------
+
+    // L: smoothly descends (dark → deeper → night shades)
+    function smoothL(i) {
+      return limit(baseL - i * 0.065, LMIN, LMAX);
+    }
+
+    // C: slightly increases then decreases for shimmering clarity
+    function smoothC(i) {
+      // light bell-shaped clarity pattern
+      const up = baseC + 0.02 * Math.sin((i / 9) * Math.PI);
+      return limit(up, CMIN, CMAX);
+    }
+
+    // H: sweep cool hues — violet → indigo → blue → teal
+    function smoothH(i) {
+      const start = baseH;
+      const end = (baseH + 140) % 360; // wide cool arc
+      const t = i / 9;
+      return (start * (1 - t) + end * t + 360) % 360;
+    }
+
+    // ----------------------------
+    // BUILD 10 COLORS
+    // ----------------------------
+    const out = [];
+
+    for (let i = 0; i < 10; i++) {
+      out.push({
+        name: `Winter-Smooth-${i + 1}`,
+        value: {
+          l: smoothL(i),
+          c: smoothC(i),
+          h: smoothH(i),
+        },
+      });
+    }
+
+    return out;
+  } else if (seasonalPalType === "springWarmGentle") {
+    const LMAX = 0.95,
+      LMIN = 0.3;
+    const CMAX = 0.26,
+      CMIN = 0.04;
+
+    function limit(v, min, max) {
+      return Math.min(max, Math.max(min, v));
+    }
+
+    function pullWarmHue(h) {
+      const target = 85; // Soft Spring warm yellow
+      const blend = 0.3;
+      return (h * (1 - blend) + target * blend + 360) % 360;
+    }
+
+    const baseL = limit(oklch.l + 0.08, LMIN, LMAX);
+    const baseC = limit(oklch.c * 0.9, CMIN, CMAX);
+    const baseH = pullWarmHue(oklch.h);
+
+    function variant(offsetH, cMul, lShift) {
+      return {
+        h: (baseH + offsetH + 360) % 360,
+        c: limit(baseC * cMul, CMIN, CMAX),
+        l: limit(baseL + lShift, LMIN, LMAX),
+      };
+    }
+
+    function neutral(l, hueShift = 15) {
+      return {
+        l: limit(l, LMIN, LMAX),
+        c: CMIN * 0.4,
+        h: (baseH + hueShift + 360) % 360,
+      };
+    }
+
+    return [
+      { name: "Soft-Spring-A-1", value: variant(+5, 1.05, +0.02) },
+      { name: "Soft-Spring-A-2", value: variant(+15, 1.1, +0.01) },
+      { name: "Soft-Spring-A-3", value: variant(+30, 1.0, +0.0) },
+      { name: "Soft-Spring-A-4", value: variant(+50, 0.95, -0.02) },
+      { name: "Soft-Spring-A-5", value: variant(+70, 0.9, -0.03) },
+      { name: "Soft-Spring-A-6", value: variant(+90, 0.85, -0.05) },
+      { name: "Soft-Spring-A-7", value: variant(+110, 0.8, -0.07) },
+
+      { name: "Soft-Spring-A-Neutral-1", value: neutral(0.72) },
+      { name: "Soft-Spring-A-Neutral-2", value: neutral(0.6, +20) },
+      { name: "Soft-Spring-A-Neutral-3", value: neutral(0.48, +25) },
+    ];
+  } else if (seasonalPalType === "springWarmMuted") {
+    const LMAX = 0.92,
+      LMIN = 0.28;
+    const CMAX = 0.22,
+      CMIN = 0.03;
+
+    function limit(v, min, max) {
+      return Math.min(max, Math.max(min, v));
+    }
+
+    function pullWarmHue(h) {
+      const target = 85;
+      const blend = 0.25;
+      return (h * (1 - blend) + target * blend + 360) % 360;
+    }
+
+    const baseL = limit(oklch.l + 0.06, LMIN, LMAX);
+    const baseC = limit(oklch.c * 0.8, CMIN, CMAX);
+    const baseH = pullWarmHue(oklch.h);
+
+    function variant(oH, cMul, lShift) {
+      return {
+        h: (baseH + oH + 360) % 360,
+        c: limit(baseC * cMul, CMIN, CMAX),
+        l: limit(baseL + lShift, LMIN, LMAX),
+      };
+    }
+
+    function neutral(l, hS = 15) {
+      return {
+        l: limit(l, LMIN, LMAX),
+        c: CMIN * 0.4,
+        h: (baseH + hS + 360) % 360,
+      };
+    }
+
+    return [
+      { name: "Soft-Spring-B-1", value: variant(+10, 1.0, +0.02) },
+      { name: "Soft-Spring-B-2", value: variant(+25, 0.95, +0.01) },
+      { name: "Soft-Spring-B-3", value: variant(+40, 0.9, 0.0) },
+      { name: "Soft-Spring-B-4", value: variant(+60, 0.85, -0.02) },
+      { name: "Soft-Spring-B-5", value: variant(+80, 0.8, -0.03) },
+      { name: "Soft-Spring-B-6", value: variant(+95, 0.75, -0.05) },
+      { name: "Soft-Spring-B-7", value: variant(+115, 0.7, -0.06) },
+
+      { name: "Soft-Spring-B-Neutral-1", value: neutral(0.7) },
+      { name: "Soft-Spring-B-Neutral-2", value: neutral(0.58, +20) },
+      { name: "Soft-Spring-B-Neutral-3", value: neutral(0.46, +25) },
+    ];
+  } else if (seasonalPalType === "springWarmEarthy") {
+    const LMAX = 0.92,
+      LMIN = 0.25;
+    const CMAX = 0.24,
+      CMIN = 0.03;
+
+    function limit(v, min, max) {
+      return Math.min(max, Math.max(min, v));
+    }
+
+    function pullWarmHue(h) {
+      const target = 90; // more botanical spring
+      const blend = 0.3;
+      return (h * (1 - blend) + target * blend + 360) % 360;
+    }
+
+    const baseL = limit(oklch.l + 0.04, LMIN, LMAX);
+    const baseC = limit(oklch.c * 0.85, CMIN, CMAX);
+    const baseH = pullWarmHue(oklch.h);
+
+    function variant(oH, cMul, lShift) {
+      return {
+        h: (baseH + oH + 360) % 360,
+        c: limit(baseC * cMul, CMIN, CMAX),
+        l: limit(baseL + lShift, LMIN, LMAX),
+      };
+    }
+
+    function neutral(l, hS = 20) {
+      return {
+        l: limit(l, LMIN, LMAX),
+        c: CMIN * 0.45,
+        h: (baseH + hS + 360) % 360,
+      };
+    }
+
+    return [
+      { name: "Soft-Spring-C-1", value: variant(+8, 1.0, +0.01) },
+      { name: "Soft-Spring-C-2", value: variant(+25, 0.95, 0.0) },
+      { name: "Soft-Spring-C-3", value: variant(+40, 0.9, -0.01) },
+      { name: "Soft-Spring-C-4", value: variant(+60, 0.88, -0.03) },
+      { name: "Soft-Spring-C-5", value: variant(+82, 0.85, -0.04) },
+      { name: "Soft-Spring-C-6", value: variant(+105, 0.8, -0.06) },
+      { name: "Soft-Spring-C-7", value: variant(+125, 0.75, -0.07) },
+
+      { name: "Soft-Spring-C-Neutral-1", value: neutral(0.68) },
+      { name: "Soft-Spring-C-Neutral-2", value: neutral(0.55, +25) },
+      { name: "Soft-Spring-C-Neutral-3", value: neutral(0.43, +28) },
+    ];
+  } else if (seasonalPalType === "springWarmFresh") {
+    const LMAX = 0.96,
+      LMIN = 0.32;
+    const CMAX = 0.34,
+      CMIN = 0.06;
+
+    function limit(v, min, max) {
+      return Math.min(max, Math.max(min, v));
+    }
+
+    function pullWarmHue(h) {
+      const target = 90;
+      const blend = 0.35;
+      return (h * (1 - blend) + target * blend + 360) % 360;
+    }
+
+    const baseL = limit(oklch.l + 0.1, LMIN, LMAX);
+    const baseC = limit(oklch.c * 1.05, CMIN, CMAX);
+    const baseH = pullWarmHue(oklch.h);
+
+    function variant(oH, cMul, lShift) {
+      return {
+        h: (baseH + oH + 360) % 360,
+        c: limit(baseC * cMul, CMIN, CMAX),
+        l: limit(baseL + lShift, LMIN, LMAX),
+      };
+    }
+
+    function neutral(l, hS = 20) {
+      return {
+        l: limit(l, LMIN, LMAX),
+        c: CMIN * 0.5,
+        h: (baseH + hS + 360) % 360,
+      };
+    }
+
+    return [
+      { name: "True-Spring-A-1", value: variant(+5, 1.1, +0.02) },
+      { name: "True-Spring-A-2", value: variant(+20, 1.15, +0.01) },
+      { name: "True-Spring-A-3", value: variant(+40, 1.2, 0.0) },
+      { name: "True-Spring-A-4", value: variant(+65, 1.1, -0.02) },
+      { name: "True-Spring-A-5", value: variant(+90, 1.0, -0.03) },
+      { name: "True-Spring-A-6", value: variant(+115, 0.95, -0.05) },
+      { name: "True-Spring-A-7", value: variant(+135, 0.9, -0.06) },
+
+      { name: "True-Spring-A-Neutral-1", value: neutral(0.75) },
+      { name: "True-Spring-A-Neutral-2", value: neutral(0.62, +25) },
+      { name: "True-Spring-A-Neutral-3", value: neutral(0.48, +30) },
+    ];
+  } else if (seasonalPalType === "springMutedEarthy") {
+    const LMAX = 0.92;
+    const LMIN = 0.35;
+    const CMAX = 0.22;
+    const CMIN = 0.03;
+
+    // --------------------------------------------
+    // UTIL: Clamp
+    // --------------------------------------------
+    function limit(v, min, max) {
+      return Math.min(max, Math.max(min, v));
+    }
+
+    // --------------------------------------------
+    // Warm hue gravity (~85° = warm golden/leafy spring)
+    // --------------------------------------------
+    function pullWarmHue(h) {
+      const target = 85; // soft warm spring anchor (yellow-green)
+      const blend = 0.3; // gentle warm pull
+      return (h * (1 - blend) + target * blend + 360) % 360;
+    }
+
+    // --------------------------------------------
+    // PRE-NORMALIZE Spring base
+    // --------------------------------------------
+    const baseL = limit(oklch.l + 0.05, LMIN, LMAX); // Slight brighten
+    const baseC = limit(oklch.c * 0.85, CMIN, CMAX); // More muted than typical spring
+    const baseH = pullWarmHue(oklch.h); // Warm shift
+
+    // --------------------------------------------
+    // Variant builder
+    // --------------------------------------------
+    function variant(offsetH, cMul, lShift) {
+      const h = (baseH + offsetH + 360) % 360;
+      const c = limit(baseC * cMul, CMIN, CMAX);
+      const l = limit(baseL + lShift, LMIN, LMAX);
+      return { l, c, h };
+    }
+
+    // --------------------------------------------
+    // Earthy Neutrals
+    // --------------------------------------------
+    function neutral(l, hueShift = 25) {
+      return {
+        l: limit(l, LMIN, LMAX),
+        c: CMIN * 0.6, // very muted
+        h: (baseH + hueShift + 360) % 360,
+      };
+    }
+
+    // --------------------------------------------
+    // FINAL Soft Spring C Palette
+    // --------------------------------------------
+    return [
+      { name: "SoftSpringC-1", value: variant(+5, 1.1, -0.02) },
+      { name: "SoftSpringC-2", value: variant(+20, 1.0, -0.05) },
+      { name: "SoftSpringC-3", value: variant(+40, 0.95, -0.08) },
+      { name: "SoftSpringC-4", value: variant(+65, 0.9, -0.1) },
+      { name: "SoftSpringC-5", value: variant(+90, 0.85, -0.04) },
+      { name: "SoftSpringC-6", value: variant(+120, 0.88, -0.12) },
+      { name: "SoftSpringC-7", value: variant(+150, 0.82, -0.15) },
+
+      { name: "SoftSpringC-Neutral-1", value: neutral(0.7, +20) },
+      { name: "SoftSpringC-Neutral-2", value: neutral(0.55, +28) },
+      { name: "SoftSpringC-Neutral-3", value: neutral(0.42, +35) },
+    ];
+  } else if (seasonalPalType === "springWarmBright") {
+    const LMAX = 0.96,
+      LMIN = 0.32;
+    const CMAX = 0.34,
+      CMIN = 0.06;
+
+    // safe clamp
+    function limit(v, min, max) {
+      return Math.min(max, Math.max(min, v));
+    }
+
+    // hue gravity: pull toward warm spring (~90°)
+    function pullWarmHue(h) {
+      const target = 90; // warm yellow/leaf pivot
+      const blend = 0.35; // gentle pull
+      return (h * (1 - blend) + target * blend + 360) % 360;
+    }
+
+    // Pre-normalize base color (lighten slightly, small chroma boost, warm shift)
+    const baseL = limit(oklch.l + 0.03, LMIN, LMAX);
+    const baseC = limit(oklch.c * 1.05, CMIN, CMAX);
+    const baseH = pullWarmHue(oklch.h);
+
+    // variant builder: offset hue, multiply chroma, shift lightness
+    function variant(offsetH, cMul, lShift) {
+      const h = (baseH + offsetH + 360) % 360;
+      const c = limit(baseC * cMul, CMIN, CMAX);
+      const l = limit(baseL + lShift, LMIN, LMAX);
+      return { l, c, h };
+    }
+
+    // neutral builder: near-grays with warm bias
+    function neutral(l, hueShift = 18) {
+      return {
+        l: limit(l, LMIN, LMAX),
+        c: CMIN * 0.5,
+        h: (baseH + hueShift + 360) % 360,
+      };
+    }
+
+    return [
+      { name: "TrueSpringA-1", value: variant(+5, 1.1, +0.02) },
+      { name: "TrueSpringA-2", value: variant(+18, 1.15, +0.03) },
+      { name: "TrueSpringA-3", value: variant(+35, 1.2, +0.04) },
+      { name: "TrueSpringA-4", value: variant(+52, 1.1, +0.02) },
+      { name: "TrueSpringA-5", value: variant(+72, 1.0, +0.0) },
+      { name: "TrueSpringA-6", value: variant(+92, 0.95, -0.03) },
+      { name: "TrueSpringA-7", value: variant(+112, 0.9, -0.06) },
+
+      { name: "TrueSpringA-Neutral-1", value: neutral(0.78, +12) },
+      { name: "TrueSpringA-Neutral-2", value: neutral(0.62, +20) },
+      { name: "TrueSpringA-Neutral-3", value: neutral(0.48, +28) },
+    ];
+  } else if (seasonalPalType === "springWarmRich") {
+    const LMAX = 0.95,
+      LMIN = 0.3;
+    const CMAX = 0.38,
+      CMIN = 0.06;
+
+    // --------------------------------------------
+    // UTIL: clamp
+    // --------------------------------------------
+    function limit(v, min, max) {
+      return Math.min(max, Math.max(min, v));
+    }
+
+    // --------------------------------------------
+    // HUE GRAVITY: pulls hues to warm Spring center (~95°)
+    // --------------------------------------------
+    function pullWarmHue(h) {
+      const target = 95; // warm yellow-green / golden-light center
+      const blend = 0.38; // slightly stronger pull than True Spring A
+      return (h * (1 - blend) + target * blend + 360) % 360;
+    }
+
+    // --------------------------------------------
+    // BASE COLOR PRE-NORMALIZATION
+    // - slightly lighter (Spring brightness)
+    // - chroma boosted (rich tones)
+    // - hue warmed
+    // --------------------------------------------
+    const baseL = limit(oklch.l + 0.05, LMIN, LMAX);
+    const baseC = limit(oklch.c * 1.12, CMIN, CMAX);
+    const baseH = pullWarmHue(oklch.h);
+
+    // --------------------------------------------
+    // Variant generator
+    // --------------------------------------------
+    function variant(offsetH, cMul, lShift) {
+      const h = (baseH + offsetH + 360) % 360;
+      const c = limit(baseC * cMul, CMIN, CMAX);
+      const l = limit(baseL + lShift, LMIN, LMAX);
+      return { l, c, h };
+    }
+
+    // --------------------------------------------
+    // Warm Neutrals (soft but warm-biased)
+    // --------------------------------------------
+    function neutral(l, hueShift = 20) {
+      return {
+        l: limit(l, LMIN, LMAX),
+        c: CMIN * 0.55,
+        h: (baseH + hueShift + 360) % 360,
+      };
+    }
+
+    // --------------------------------------------
+    // FINAL 10-COLOR PALETTE
+    // --------------------------------------------
+    return [
+      { name: "TrueSpringB-1", value: variant(+5, 1.2, +0.03) },
+      { name: "TrueSpringB-2", value: variant(+22, 1.25, +0.04) },
+      { name: "TrueSpringB-3", value: variant(+38, 1.18, +0.02) },
+      { name: "TrueSpringB-4", value: variant(+58, 1.12, +0.0) },
+      { name: "TrueSpringB-5", value: variant(+80, 1.05, -0.02) },
+      { name: "TrueSpringB-6", value: variant(+102, 1.0, -0.03) },
+      { name: "TrueSpringB-7", value: variant(+128, 0.92, -0.06) },
+
+      { name: "TrueSpringB-Neutral-1", value: neutral(0.76, +10) },
+      { name: "TrueSpringB-Neutral-2", value: neutral(0.6, +20) },
+      { name: "TrueSpringB-Neutral-3", value: neutral(0.46, +28) },
+    ];
+  } else if (seasonalPalType === "springWarmRadiant") {
+    const LMAX = 0.98,
+      LMIN = 0.4;
+    const CMAX = 0.4,
+      CMIN = 0.06;
+
+    // --------------------------------------------
+    // UTIL — clamp
+    // --------------------------------------------
+    function limit(v, min, max) {
+      return Math.min(max, Math.max(min, v));
+    }
+
+    // --------------------------------------------
+    // HUE GRAVITY — strongest warm upward pull
+    // Radiant = more golden
+    // --------------------------------------------
+    function pullWarmHue(h) {
+      const target = 90; // radiant golden hue
+      const blend = 0.4; // strong gravity, but not overpowering
+      return (h * (1 - blend) + target * blend + 360) % 360;
+    }
+
+    // --------------------------------------------
+    // BASE NORMALIZATION — Radiant Spring = warm + bright + clear
+    // --------------------------------------------
+    const baseL = limit(oklch.l + 0.12, LMIN, LMAX); // strong brightness
+    const baseC = limit(oklch.c * 1.18, CMIN, CMAX); // clear, glowy chroma
+    const baseH = pullWarmHue(oklch.h);
+
+    // --------------------------------------------
+    // VARIANTS — high clarity + warm radiance
+    // --------------------------------------------
+    function variant(offsetH, cMul, lShift) {
+      return {
+        h: (baseH + offsetH + 360) % 360,
+        c: limit(baseC * cMul, CMIN, CMAX),
+        l: limit(baseL + lShift, LMIN, LMAX),
+      };
+    }
+
+    // --------------------------------------------
+    // Warm, radiant neutrals — golden creams + warm sand
+    // --------------------------------------------
+    function neutral(l, hueShift = 12) {
+      return {
+        l: limit(l, LMIN, LMAX),
+        c: CMIN * 0.55,
+        h: (baseH + hueShift + 360) % 360,
+      };
+    }
+
+    // --------------------------------------------
+    // FINAL 10-COLOR PALETTE
+    // --------------------------------------------
+    return [
+      { name: "TrueSpringD-1", value: variant(+4, 1.22, +0.06) },
+      { name: "TrueSpringD-2", value: variant(+18, 1.25, +0.05) },
+      { name: "TrueSpringD-3", value: variant(+36, 1.18, +0.04) },
+      { name: "TrueSpringD-4", value: variant(+55, 1.12, +0.02) },
+      { name: "TrueSpringD-5", value: variant(+78, 1.08, +0.01) },
+      { name: "TrueSpringD-6", value: variant(+100, 1.02, -0.02) },
+      { name: "TrueSpringD-7", value: variant(+125, 0.95, -0.04) },
+
+      { name: "TrueSpringD-Neutral-1", value: neutral(0.82, +10) },
+      { name: "TrueSpringD-Neutral-2", value: neutral(0.7, +16) },
+      { name: "TrueSpringD-Neutral-3", value: neutral(0.56, +22) },
+    ];
+  } else if (seasonalPalType === "springSmooth") {
+    const LMAX = 0.94,
+      LMIN = 0.38;
+    const CMAX = 0.26,
+      CMIN = 0.05;
+
+    // --------------------------------------------
+    // UTIL — clamp
+    // --------------------------------------------
+    function limit(v, min, max) {
+      return Math.min(max, Math.max(min, v));
+    }
+
+    // --------------------------------------------
+    // HUE GRAVITY — warm, gentle spring anchor
+    // --------------------------------------------
+    function pullWarmHue(h) {
+      const target = 85; // warm peachy spring anchor
+      const blend = 0.32; // soft, gentle, not intense
+      return (h * (1 - blend) + target * blend + 360) % 360;
+    }
+
+    // --------------------------------------------
+    // BASE NORMALIZATION — soften, warm, smooth
+    // --------------------------------------------
+    const baseL = limit(oklch.l + 0.04, LMIN, LMAX); // slight brightness
+    const baseC = limit(oklch.c * 0.82, CMIN, CMAX); // softened chroma
+    const baseH = pullWarmHue(oklch.h); // warm blending
+
+    // --------------------------------------------
+    // VARIANT — smooth hue glide + soft chroma shifts
+    // --------------------------------------------
+    function variant(offsetH, cMul, lShift) {
+      return {
+        h: (baseH + offsetH + 360) % 360,
+        c: limit(baseC * cMul, CMIN, CMAX),
+        l: limit(baseL + lShift, LMIN, LMAX),
+      };
+    }
+
+    // --------------------------------------------
+    // NEUTRALS — buttery creams + soft warm sands
+    // --------------------------------------------
+    function neutral(l, hueShift = 10) {
+      return {
+        l: limit(l, LMIN, LMAX),
+        c: CMIN * 0.55,
+        h: (baseH + hueShift + 360) % 360,
+      };
+    }
+
+    // --------------------------------------------
+    // FINAL 10-COLOR PALETTE
+    // --------------------------------------------
+    return [
+      { name: "SmoothSpring-1", value: variant(+6, 1.05, +0.05) },
+      { name: "SmoothSpring-2", value: variant(+20, 1.08, +0.04) },
+      { name: "SmoothSpring-3", value: variant(+38, 1.1, +0.03) },
+      { name: "SmoothSpring-4", value: variant(+60, 1.04, +0.01) },
+      { name: "SmoothSpring-5", value: variant(+82, 0.98, 0.0) },
+      { name: "SmoothSpring-6", value: variant(+100, 0.92, -0.02) },
+      { name: "SmoothSpring-7", value: variant(+125, 0.88, -0.03) },
+
+      { name: "SmoothSpring-Neutral-1", value: neutral(0.78, +8) },
+      { name: "SmoothSpring-Neutral-2", value: neutral(0.66, +12) },
+      { name: "SmoothSpring-Neutral-3", value: neutral(0.52, +16) },
     ];
   }
 }
