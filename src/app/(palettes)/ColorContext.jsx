@@ -171,7 +171,8 @@ export function ColorPaletteContextProvider({ children }) {
   const [sliderLightValue, setSliderLightValue] = useState(0);
   const [sliderChromaValue, setSliderChromaValue] = useState(0);
 
-  const [selectedPaletteType, setSelectedPaletteType] = useState("seasonal");
+  const [selectedPaletteType, setSelectedPaletteType] =
+    useState("dataVizPalette");
 
   const [compPalType, setCompPalType] = useState("classicComp");
   const [monoPalType, setMonoPalType] = useState("classicMono");
