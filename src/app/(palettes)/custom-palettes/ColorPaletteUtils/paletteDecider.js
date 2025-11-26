@@ -31,7 +31,8 @@ export default function paletteDecider(
   analogPalType,
   doubleSplitCompPalType,
   gradientPalType,
-  seasonalPalType
+  seasonalPalType,
+  dataVizPalType
 ) {
   if (selectedPaletteType === "complementary") {
     return complementaryPalGen(oklch, compPalType);
@@ -72,7 +73,7 @@ export default function paletteDecider(
   } else if (selectedPaletteType === "uiPalette") {
     return uiPalettePalGen(oklch);
   } else if (selectedPaletteType === "dataVizPalette") {
-    return dataVizPalettePalGen(oklch);
+    return dataVizPalettePalGen(oklch, dataVizPalType);
   } else if (selectedPaletteType === "designSystemPalette") {
     return designsystemPalGen(oklch);
   }

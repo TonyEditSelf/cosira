@@ -1,61 +1,69 @@
-export default function designsystemPalGen(baseOklch) {
-  // Define general boundaries
+export default function designsystemPalGen(oklch) {
   const CMAX = 0.25;
   const CMIN = 0.04;
 
-  // Use the base hue for the Primary color
-  const primaryHue = baseOklch.h % 360;
-  // Use a complementary hue (180 deg offset) for the Accent color
-  const accentHue = (baseOklch.h + 180) % 360;
-
-  // --- Tonal Steps Definition ---
-  // Define 5 Lightness (L) steps from dark to light.
-  // We'll use names 500 (Base) up to 900 (Darkest) and 100 (Lightest).
-  // Note: These L values are chosen for good perceptual distribution in OKLCH.
-  const tonalSteps = [
-    { name: "900", l: 0.25, cMult: 1.1 }, // Darkest
-    { name: "700", l: 0.45, cMult: 1.05 }, // Darker
-    { name: "500", l: 0.65, cMult: 1.0 }, // Base / Default
-    { name: "300", l: 0.85, cMult: 0.8 }, // Lighter
-    { name: "100", l: 0.95, cMult: 0.4 }, // Lightest
-  ];
+  // Base hue and complementary hue
+  const primaryHue = oklch.h % 360;
+  const accentHue = (oklch.h + 180) % 360;
 
   function clamp(v, min, max) {
     return Math.min(max, Math.max(min, v));
   }
 
-  // Helper to create a single color object
-  function makeColor(hue, lValue, cMult) {
-    // Determine the base chroma using the input, but clamp it to CMAX first
-    const baseChroma = clamp(baseOklch.c, CMIN, CMAX);
+  // PRE-Clamped base chroma
+  const baseChroma = clamp(oklch.c, CMIN, CMAX);
 
-    return {
-      ...baseOklch, // Inherit other properties (like alpha)
-      h: hue,
-      // Chroma is reduced for lighter steps and increased for darker steps
-      c: clamp(baseChroma * cMult, CMIN, CMAX),
-      l: lValue,
-    };
-  }
+  // ---- PRIMARY 900 ----
+  const P900_c = clamp(baseChroma * 1.1, CMIN, CMAX);
+  const P900 = { ...oklch, h: primaryHue, l: 0.25, c: P900_c };
 
-  const palette = [];
+  // ---- PRIMARY 700 ----
+  const P700_c = clamp(baseChroma * 1.05, CMIN, CMAX);
+  const P700 = { ...oklch, h: primaryHue, l: 0.45, c: P700_c };
 
-  // 1. Generate Primary Tonal Range (5 colors)
-  tonalSteps.forEach((step) => {
-    palette.push({
-      name: `Primary-${step.name}`,
-      value: makeColor(primaryHue, step.l, step.cMult),
-    });
-  });
+  // ---- PRIMARY 500 ----
+  const P500_c = clamp(baseChroma * 1.0, CMIN, CMAX);
+  const P500 = { ...oklch, h: primaryHue, l: 0.65, c: P500_c };
 
-  // 2. Generate Accent Tonal Range (5 colors)
-  // We use the same tonal steps but apply to the Accent hue.
-  tonalSteps.forEach((step) => {
-    palette.push({
-      name: `Accent-${step.name}`,
-      value: makeColor(accentHue, step.l, step.cMult),
-    });
-  });
+  // ---- PRIMARY 300 ----
+  const P300_c = clamp(baseChroma * 0.8, CMIN, CMAX);
+  const P300 = { ...oklch, h: primaryHue, l: 0.85, c: P300_c };
 
-  return palette;
+  // ---- PRIMARY 100 ----
+  const P100_c = clamp(baseChroma * 0.4, CMIN, CMAX);
+  const P100 = { ...oklch, h: primaryHue, l: 0.95, c: P100_c };
+
+  // ---- ACCENT 900 ----
+  const A900_c = clamp(baseChroma * 1.1, CMIN, CMAX);
+  const A900 = { ...oklch, h: accentHue, l: 0.25, c: A900_c };
+
+  // ---- ACCENT 700 ----
+  const A700_c = clamp(baseChroma * 1.05, CMIN, CMAX);
+  const A700 = { ...oklch, h: accentHue, l: 0.45, c: A700_c };
+
+  // ---- ACCENT 500 ----
+  const A500_c = clamp(baseChroma * 1.0, CMIN, CMAX);
+  const A500 = { ...oklch, h: accentHue, l: 0.65, c: A500_c };
+
+  // ---- ACCENT 300 ----
+  const A300_c = clamp(baseChroma * 0.8, CMIN, CMAX);
+  const A300 = { ...oklch, h: accentHue, l: 0.85, c: A300_c };
+
+  // ---- ACCENT 100 ----
+  const A100_c = clamp(baseChroma * 0.4, CMIN, CMAX);
+  const A100 = { ...oklch, h: accentHue, l: 0.95, c: A100_c };
+
+  return [
+    { name: "Primary-900", value: P900 },
+    { name: "Primary-700", value: P700 },
+    { name: "Primary-500", value: P500 },
+    { name: "Primary-300", value: P300 },
+    { name: "Primary-100", value: P100 },
+
+    { name: "Accent-900", value: A900 },
+    { name: "Accent-700", value: A700 },
+    { name: "Accent-500", value: A500 },
+    { name: "Accent-300", value: A300 },
+    { name: "Accent-100", value: A100 },
+  ];
 }

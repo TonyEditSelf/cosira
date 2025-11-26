@@ -182,6 +182,7 @@ export function ColorPaletteContextProvider({ children }) {
   );
   const [gradientPalType, setGradientPalType] = useState("leftGradient");
   const [seasonalPalType, setSeasonalPalType] = useState("seasonalCombined");
+  const [dataVizPalType, setDataVizPalType] = useState("dataVizPalOne");
 
   const [palette, setPalette] = useState([]);
   const [duplicatePalette, setDuplicatePalette] = useState([]);
@@ -235,7 +236,8 @@ export function ColorPaletteContextProvider({ children }) {
       analogPalType,
       doubleSplitCompPalType,
       gradientPalType,
-      seasonalPalType
+      seasonalPalType,
+      dataVizPalType
     );
     setPalette(pal);
 
@@ -320,6 +322,8 @@ export function ColorPaletteContextProvider({ children }) {
     setGradientPalType,
     seasonalPalType,
     setSeasonalPalType,
+    dataVizPalType,
+    setDataVizPalType,
     sliderLightValue,
     setSliderLightValue,
     sliderChromaValue,
