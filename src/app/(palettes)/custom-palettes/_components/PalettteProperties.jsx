@@ -14,6 +14,7 @@ import GradientOptions from "../ColorPaletteUtils/GradientOptions";
 import LandCStepper from "./Pickers/components/LandCStepper";
 import SeasonalOptions from "../ColorPaletteUtils/SeasonalOptions";
 import DataVizOptions from "../ColorPaletteUtils/DataVizOptions";
+import FlowerPalOptions from "../ColorPaletteUtils/FlowerPalOptions";
 
 export default function PalettteProperties() {
   const {
@@ -128,6 +129,7 @@ export default function PalettteProperties() {
       {selectedPaletteType === "seasonal" && <SeasonalOptions />}
 
       {selectedPaletteType === "dataVizPalette" && <DataVizOptions />}
+      {selectedPaletteType === "flowerPalette" && <FlowerPalOptions />}
 
       <div className="flex flex-col gap-2">
         <div>

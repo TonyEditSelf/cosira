@@ -172,7 +172,7 @@ export function ColorPaletteContextProvider({ children }) {
   const [sliderChromaValue, setSliderChromaValue] = useState(0);
 
   const [selectedPaletteType, setSelectedPaletteType] =
-    useState("dataVizPalette");
+    useState("flowerPalette");
 
   const [compPalType, setCompPalType] = useState("classicComp");
   const [monoPalType, setMonoPalType] = useState("classicMono");
@@ -183,6 +183,7 @@ export function ColorPaletteContextProvider({ children }) {
   const [gradientPalType, setGradientPalType] = useState("leftGradient");
   const [seasonalPalType, setSeasonalPalType] = useState("seasonalCombined");
   const [dataVizPalType, setDataVizPalType] = useState("dataVizPalOne");
+  const [flowerPalType, setFlowerPalType] = useState("sunflower");
 
   const [palette, setPalette] = useState([]);
   const [duplicatePalette, setDuplicatePalette] = useState([]);
@@ -222,6 +223,12 @@ export function ColorPaletteContextProvider({ children }) {
   }, [compPalType, monoPalType]);
 
   useEffect(() => {
+    if (selectedPaletteType === "flowerPalette") {
+      setOklch({ l: 0.88, c: 0.25, h: 100, a: 1 });
+    }
+  }, [selectedPaletteType]);
+
+  useEffect(() => {
     setShadesTintsTonesIndex(null);
     setHistoryNavigation(false);
 
@@ -237,7 +244,8 @@ export function ColorPaletteContextProvider({ children }) {
       doubleSplitCompPalType,
       gradientPalType,
       seasonalPalType,
-      dataVizPalType
+      dataVizPalType,
+      flowerPalType
     );
     setPalette(pal);
 
@@ -324,6 +332,8 @@ export function ColorPaletteContextProvider({ children }) {
     setSeasonalPalType,
     dataVizPalType,
     setDataVizPalType,
+    flowerPalType,
+    setFlowerPalType,
     sliderLightValue,
     setSliderLightValue,
     sliderChromaValue,

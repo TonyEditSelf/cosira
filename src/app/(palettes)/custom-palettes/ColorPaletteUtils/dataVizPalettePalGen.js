@@ -9,6 +9,7 @@ export default function dataVizPalettePalGen(oklch, dataVizPalType) {
     const targetL = Math.min(LMAX, Math.max(LMIN, 0.65));
     const targetC = Math.min(CMAX, Math.max(CMIN, 0.16));
 
+    
     // Only hue is taken from the input color
     const baseHue = oklch.h % 360;
 

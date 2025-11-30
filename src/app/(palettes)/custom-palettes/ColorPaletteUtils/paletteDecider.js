@@ -19,6 +19,7 @@ import seasonalPalGen from "./seasonalPalGen";
 import uiPalettePalGen from "./uiPalettePalGen";
 import dataVizPalettePalGen from "./dataVizPalettePalGen";
 import designsystemPalGen from "./designsystemPalGen";
+import flowerPalGen from "./flowerPalGen";
 
 export default function paletteDecider(
   oklch,
@@ -32,7 +33,8 @@ export default function paletteDecider(
   doubleSplitCompPalType,
   gradientPalType,
   seasonalPalType,
-  dataVizPalType
+  dataVizPalType,
+  flowerPalType
 ) {
   if (selectedPaletteType === "complementary") {
     return complementaryPalGen(oklch, compPalType);
@@ -76,6 +78,8 @@ export default function paletteDecider(
     return dataVizPalettePalGen(oklch, dataVizPalType);
   } else if (selectedPaletteType === "designSystemPalette") {
     return designsystemPalGen(oklch);
+  } else if (selectedPaletteType === "flowerPalette") {
+    return flowerPalGen(oklch, flowerPalType);
   }
   return null;
 }

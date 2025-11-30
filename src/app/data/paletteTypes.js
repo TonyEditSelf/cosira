@@ -118,4 +118,10 @@ export const paletteTypes = [
     description:
       "A scalable palette with core hues defined across tonal ranges. Ideal for building consistent, themeable design systems and maintaining visual hierarchy.",
   },
+  {
+    label: "Flower Palettes",
+    value: "flowerPalette",
+    description:
+      "Palettes inspired by the natural colors of flowers, such as sunflowers, roses, and tulips, their leaves, stemps, etc. These palettes capture the essence of floral beauty through carefully selected hues and tones.",
+  },
 ];
