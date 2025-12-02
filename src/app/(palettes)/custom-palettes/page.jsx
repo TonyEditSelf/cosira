@@ -52,6 +52,8 @@ export default function CustomPalettes() {
     setShowHidePanelOpen,
     shadesTintsTonesValues,
     selectedPaletteType,
+    hoverOn,
+    setHoverOn,
   } = useColorPaletteContext();
 
   return (
@@ -125,6 +127,8 @@ export default function CustomPalettes() {
                     } `}
                     key={index}
                     style={{ backgroundColor: cssColor }}
+                    onMouseEnter={() => setHoverOn(true)}
+                    onMouseLeave={() => setHoverOn(false)}
                   >
                     {shadesTintsTonesIndex === index ? (
                       <div className="flex flex-col w-full h-full">
@@ -233,43 +237,50 @@ export default function CustomPalettes() {
                                 />
                               </span>
                             )}
-                          <span
-                            onClick={() => {
-                              shadesTintsTonesFunction(
-                                colorObj.value,
-                                "shadesTints"
-                              );
-                              setColorForShadesTintsTones(colorObj.value);
-                              setShadesTintsTonesIndex(index);
-                              setPickedShadesOrTones("shades");
-                            }}
-                            className={`p-1 rounded-md cursor-pointer border ${
-                              textColor === "white"
-                                ? "border-white "
-                                : "border-black "
-                            } `}
-                          >
-                            <BsCircleHalf
-                              className={`w-[12px] h-[12px] cursor-pointer } `}
-                            />
-                          </span>
-                          <span
-                            onClick={() => {
-                              shadesTintsTonesFunction(colorObj.value, "tones");
-                              setColorForShadesTintsTones(colorObj.value);
-                              setShadesTintsTonesIndex(index);
-                              setPickedShadesOrTones("tones");
-                            }}
-                            className={`p-1 rounded-md border ${
-                              textColor === "white"
-                                ? "border-white "
-                                : "border-black "
-                            } `}
-                          >
-                            <FaLayerGroup
-                              className={`w-[12px] h-[12px] cursor-pointer } `}
-                            />
-                          </span>
+                          {toggles.tints && (
+                            <span
+                              onClick={() => {
+                                shadesTintsTonesFunction(
+                                  colorObj.value,
+                                  "shadesTints"
+                                );
+                                setColorForShadesTintsTones(colorObj.value);
+                                setShadesTintsTonesIndex(index);
+                                setPickedShadesOrTones("shades");
+                              }}
+                              className={`p-1 rounded-md cursor-pointer border ${
+                                textColor === "white"
+                                  ? "border-white "
+                                  : "border-black "
+                              } `}
+                            >
+                              <BsCircleHalf
+                                className={`w-[12px] h-[12px] cursor-pointer } `}
+                              />
+                            </span>
+                          )}
+                          {toggles.shades && (
+                            <span
+                              onClick={() => {
+                                shadesTintsTonesFunction(
+                                  colorObj.value,
+                                  "tones"
+                                );
+                                setColorForShadesTintsTones(colorObj.value);
+                                setShadesTintsTonesIndex(index);
+                                setPickedShadesOrTones("tones");
+                              }}
+                              className={`p-1 rounded-md border ${
+                                textColor === "white"
+                                  ? "border-white "
+                                  : "border-black "
+                              } `}
+                            >
+                              <FaLayerGroup
+                                className={`w-[12px] h-[12px] cursor-pointer } `}
+                              />
+                            </span>
+                          )}
                         </div>
 
                         {toggles.colorNames && (
@@ -290,6 +301,30 @@ export default function CustomPalettes() {
                   </h1>
 
                   <div className="flex flex-col gap-1 text-[11px]">
+                    <span>Show All: </span>
+                    <OffAndOn
+                      isItOn={toggles.showAll}
+                      setItOn={() => handleToggle("showAll")}
+                    />
+
+                    <span>Show None: </span>
+                    <OffAndOn
+                      isItOn={toggles.showNone}
+                      setItOn={() => handleToggle("showNone")}
+                    />
+
+                    <span>Show Shades: </span>
+                    <OffAndOn
+                      isItOn={toggles.shades}
+                      setItOn={() => handleToggle("shades")}
+                    />
+
+                    <span>Show Tints: </span>
+                    <OffAndOn
+                      isItOn={toggles.tints}
+                      setItOn={() => handleToggle("tints")}
+                    />
+
                     <span>Show Color Names: </span>
 
                     <OffAndOn
@@ -297,12 +332,12 @@ export default function CustomPalettes() {
                       setItOn={() => handleToggle("primitiveName")}
                     />
 
-                    <span>Show UI Role: </span>
+                    {/* <span>Show UI Role: </span>
 
                     <OffAndOn
                       isItOn={toggles.role}
                       setItOn={() => handleToggle("role")}
-                    />
+                    /> */}
 
                     <span>Show Fancy Color Names: </span>
 
@@ -318,16 +353,16 @@ export default function CustomPalettes() {
                       setItOn={() => handleToggle("colorTypes")}
                     />
 
-                    {selectedPaletteType !== "kidFriendly" && (
-                      <div>
-                        <span>Show Make Base: </span>
+                    {/* {selectedPaletteType !== "kidFriendly" && ( */}
+                    <div>
+                      <span>Show Make Base: </span>
 
-                        <OffAndOn
-                          isItOn={toggles.makeBaseOn}
-                          setItOn={() => handleToggle("makeBaseOn")}
-                        />
-                      </div>
-                    )}
+                      <OffAndOn
+                        isItOn={toggles.makeBaseOn}
+                        setItOn={() => handleToggle("makeBaseOn")}
+                      />
+                    </div>
+                    {/* )} */}
                     <span>Show Hex: </span>
 
                     <OffAndOn

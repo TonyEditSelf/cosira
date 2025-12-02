@@ -44,18 +44,22 @@ export function ColorPaletteContextProvider({ children }) {
   const [csscopied, setCssCopied] = useState(false);
 
   const [toggles, setToggles] = useState({
-    colorNames: false,
-    colorTypes: true,
+    showAll: false,
+    showNone: false,
+    colorNames: true,
+    colorTypes: false,
     makeBaseOn: false,
-    role: false,
-    primitiveName: true,
+    // role: false,
+    primitiveName: false,
     hexOn: false,
-    hueOn: true,
-    lightOn: true,
-    chromaOn: true,
+    hueOn: false,
+    lightOn: false,
+    chromaOn: false,
     alphaOn: false,
     whiteContrastOn: false,
     blackContrastOn: false,
+    shades: false,
+    tints: false,
   });
 
   const handleToggle = (key) => {
@@ -172,7 +176,7 @@ export function ColorPaletteContextProvider({ children }) {
   const [sliderChromaValue, setSliderChromaValue] = useState(0);
 
   const [selectedPaletteType, setSelectedPaletteType] =
-    useState("flowerPalette");
+    useState("monochromatic");
 
   const [compPalType, setCompPalType] = useState("classicComp");
   const [monoPalType, setMonoPalType] = useState("classicMono");
@@ -191,6 +195,7 @@ export function ColorPaletteContextProvider({ children }) {
   const [paletteHistory, setPaletteHistory] = useState([]);
   const [paletteHistoryCounter, setPaletteHistoryCounter] = useState(-2);
   const [historyNavigation, setHistoryNavigation] = useState(false);
+  const [hoverOn, setHoverOn] = useState(false);
 
   useEffect(() => {
     setPaletteHistory((prevHistory) => {
@@ -338,6 +343,8 @@ export function ColorPaletteContextProvider({ children }) {
     setSliderLightValue,
     sliderChromaValue,
     setSliderChromaValue,
+    hoverOn,
+    setHoverOn,
   };
 
   return (
