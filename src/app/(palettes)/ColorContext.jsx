@@ -60,11 +60,64 @@ export function ColorPaletteContextProvider({ children }) {
     blackContrastOn: false,
     shades: false,
     tints: false,
+    addColor: true,
   });
+
+  const toggleKeys = [
+    "colorNames",
+    "colorTypes",
+    "makeBaseOn",
+    "primitiveName",
+    "hexOn",
+    "hueOn",
+    "lightOn",
+    "chromaOn",
+    "alphaOn",
+    "whiteContrastOn",
+    "blackContrastOn",
+    "shades",
+    "tints",
+    "addColor",
+  ];
 
   const handleToggle = (key) => {
     setToggles((prev) => {
-      return { ...prev, [key]: !prev[key] };
+      // ---- 1. Handle SHOW ALL ----------------------------------------
+      if (key === "showAll") {
+        const newValue = !prev.showAll;
+
+        if (newValue === true) {
+          // showAll → true = turn everything on, showNone = false
+          const newState = { ...prev, showAll: true, showNone: false };
+          toggleKeys.forEach((k) => (newState[k] = true));
+          return newState;
+        } else {
+          // toggling off showAll just disables showAll
+          return { ...prev, showAll: false };
+        }
+      }
+
+      // ---- 2. Handle SHOW NONE ---------------------------------------
+      if (key === "showNone") {
+        const newValue = !prev.showNone;
+
+        if (newValue === true) {
+          // showNone → true = turn everything off, showAll = false
+          const newState = { ...prev, showNone: true, showAll: false };
+          toggleKeys.forEach((k) => (newState[k] = false));
+          return newState;
+        } else {
+          return { ...prev, showNone: false };
+        }
+      }
+
+      // ---- 3. Any normal toggle → uncheck showAll and showNone -------
+      return {
+        ...prev,
+        [key]: !prev[key],
+        showAll: false,
+        showNone: false,
+      };
     });
   };
 
@@ -100,6 +153,9 @@ export function ColorPaletteContextProvider({ children }) {
     setTimeout(() => setCssCopied(false), 2000);
     setTimeout(() => setRgbCopied(false), 2000);
   };
+
+  const [favColors, setFavColors] = useState([]);
+  const [favPalette, setFavPalette] = useState([]);
 
   const [shadesTintsTonesOn, setShadesTintsTonesOn] = useState(false);
   const [shadesTintsTonesIndex, setShadesTintsTonesIndex] = useState(null);
@@ -171,6 +227,7 @@ export function ColorPaletteContextProvider({ children }) {
 
   const [leftPaletteAdjusterOpen, setLeftPaletteAdjusterOpen] = useState(false);
   const [showHidePanelOpen, setShowHidePanelOpen] = useState(false);
+  const [databaseOpen, setDatabaseOpen] = useState(false);
 
   const [sliderLightValue, setSliderLightValue] = useState(0);
   const [sliderChromaValue, setSliderChromaValue] = useState(0);
@@ -322,6 +379,8 @@ export function ColorPaletteContextProvider({ children }) {
     handleTetradicAngleChange,
     showHidePanelOpen,
     setShowHidePanelOpen,
+    databaseOpen,
+    setDatabaseOpen,
     shadesTintsTonesValues,
     compPalType,
     setCompPalType,
@@ -345,6 +404,10 @@ export function ColorPaletteContextProvider({ children }) {
     setSliderChromaValue,
     hoverOn,
     setHoverOn,
+    favColors,
+    setFavColors,
+    favPalette,
+    setFavPalette,
   };
 
   return (

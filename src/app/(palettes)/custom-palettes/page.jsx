@@ -1,5 +1,6 @@
 "use client";
 
+import { RiAddLargeLine } from "react-icons/ri";
 import OffAndOn from "./_components/OffAndOn";
 import nearestColor from "nearest-color";
 import chroma from "chroma-js";
@@ -50,11 +51,36 @@ export default function CustomPalettes() {
     setPickedShadesOrTones,
     showHidePanelOpen,
     setShowHidePanelOpen,
+    databaseOpen,
+    setDatabaseOpen,
     shadesTintsTonesValues,
     selectedPaletteType,
     hoverOn,
     setHoverOn,
+    favColors,
+    setFavColors,
+    favPalette,
+    setFavPalette,
   } = useColorPaletteContext();
+
+  const toggleConfig = [
+    { key: "showAll", label: "Show All" },
+    { key: "showNone", label: "Show None" },
+    { key: "shades", label: "Show Shades" },
+    { key: "tints", label: "Show Tints" },
+    { key: "primitiveName", label: "Show Color Names" },
+    { key: "colorNames", label: "Show Fancy Color Names" },
+    { key: "colorTypes", label: "Show Color Types" },
+    { key: "makeBaseOn", label: "Show Make Base" },
+    { key: "hexOn", label: "Show Hex" },
+    { key: "hueOn", label: "Show Hue" },
+    { key: "lightOn", label: "Show Lightness" },
+    { key: "chromaOn", label: "Show Chroma" },
+    { key: "alphaOn", label: "Show Alpha" },
+    { key: "whiteContrastOn", label: "Show White Contrast" },
+    { key: "blackContrastOn", label: "Show Black Contrast" },
+    { key: "addColor", label: "Show Add Color" },
+  ];
 
   return (
     <PageWrapper>
@@ -281,6 +307,25 @@ export default function CustomPalettes() {
                               />
                             </span>
                           )}
+                          {toggles.addColor && (
+                            <span
+                              onClick={() => {
+                                setFavColors((prev) => [
+                                  ...prev,
+                                  colorObj.value,
+                                ]);
+                              }}
+                              className={`p-1 rounded-md border ${
+                                textColor === "white"
+                                  ? "border-white "
+                                  : "border-black "
+                              } `}
+                            >
+                              <RiAddLargeLine
+                                className={`w-[12px] h-[12px] cursor-pointer } `}
+                              />
+                            </span>
+                          )}
                         </div>
 
                         {toggles.colorNames && (
@@ -301,106 +346,58 @@ export default function CustomPalettes() {
                   </h1>
 
                   <div className="flex flex-col gap-1 text-[11px]">
-                    <span>Show All: </span>
-                    <OffAndOn
-                      isItOn={toggles.showAll}
-                      setItOn={() => handleToggle("showAll")}
-                    />
+                    {toggleConfig.map(({ key, label }) => (
+                      <div key={key}>
+                        <span>{label}: </span>
+                        <OffAndOn
+                          isItOn={toggles[key]}
+                          setItOn={() => handleToggle(key)}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-                    <span>Show None: </span>
-                    <OffAndOn
-                      isItOn={toggles.showNone}
-                      setItOn={() => handleToggle("showNone")}
-                    />
+              {databaseOpen && (
+                <div className="absolute top-2 bottom-2 left-2 right-2 bg-[var(--background)] overflow-auto flex gap-3">
+                  <div className="border-2 w-2/12 overflow-auto">
+                    {favColors.map((color, index) => {
+                      const { l, c, h, a = 1 } = color;
 
-                    <span>Show Shades: </span>
-                    <OffAndOn
-                      isItOn={toggles.shades}
-                      setItOn={() => handleToggle("shades")}
-                    />
+                      const cssCol = oklchToCss(l, c, h, a);
 
-                    <span>Show Tints: </span>
-                    <OffAndOn
-                      isItOn={toggles.tints}
-                      setItOn={() => handleToggle("tints")}
-                    />
+                      console.log("cssCol", cssCol);
 
-                    <span>Show Color Names: </span>
+                      return (
+                        <span
+                          key={index}
+                          className="w-10 h-10 border-0 m-2  inline-block cursor-pointer"
+                          style={{ backgroundColor: cssCol }}
+                        ></span>
+                      );
+                    })}
+                  </div>
 
-                    <OffAndOn
-                      isItOn={toggles.primitiveName}
-                      setItOn={() => handleToggle("primitiveName")}
-                    />
+                  <div className="border-2 p-2 w-10/12 gap-2 flex flex-wrap overflow-auto">
+                    {favPalette.map((paletteObj, pIndex) => {
+                      return (
+                        <div key={pIndex} className="">
+                          {paletteObj.palette.map((colorObj, cIndex) => {
+                            const { l, c, h, a } = colorObj.value;
 
-                    {/* <span>Show UI Role: </span>
-
-                    <OffAndOn
-                      isItOn={toggles.role}
-                      setItOn={() => handleToggle("role")}
-                    /> */}
-
-                    <span>Show Fancy Color Names: </span>
-
-                    <OffAndOn
-                      isItOn={toggles.colorNames}
-                      setItOn={() => handleToggle("colorNames")}
-                    />
-
-                    <span>Show Color Types: </span>
-
-                    <OffAndOn
-                      isItOn={toggles.colorTypes}
-                      setItOn={() => handleToggle("colorTypes")}
-                    />
-
-                    {/* {selectedPaletteType !== "kidFriendly" && ( */}
-                    <div>
-                      <span>Show Make Base: </span>
-
-                      <OffAndOn
-                        isItOn={toggles.makeBaseOn}
-                        setItOn={() => handleToggle("makeBaseOn")}
-                      />
-                    </div>
-                    {/* )} */}
-                    <span>Show Hex: </span>
-
-                    <OffAndOn
-                      isItOn={toggles.hexOn}
-                      setItOn={() => handleToggle("hexOn")}
-                    />
-
-                    <span>Show Hue: </span>
-                    <OffAndOn
-                      isItOn={toggles.hueOn}
-                      setItOn={() => handleToggle("hueOn")}
-                    />
-                    <span>Show Lightness</span>
-                    <OffAndOn
-                      isItOn={toggles.lightOn}
-                      setItOn={() => handleToggle("lightOn")}
-                    />
-
-                    <span>Show Chroma</span>
-                    <OffAndOn
-                      isItOn={toggles.chromaOn}
-                      setItOn={() => handleToggle("chromaOn")}
-                    />
-                    <span>Show Alpha</span>
-                    <OffAndOn
-                      isItOn={toggles.alphaOn}
-                      setItOn={() => handleToggle("alphaOn")}
-                    />
-                    <span>Show White Contrast</span>
-                    <OffAndOn
-                      isItOn={toggles.whiteContrastOn}
-                      setItOn={() => handleToggle("whiteContrastOn")}
-                    />
-                    <span>Show Black Contrast</span>
-                    <OffAndOn
-                      isItOn={toggles.blackContrastOn}
-                      setItOn={() => handleToggle("blackContrastOn")}
-                    />
+                            const cssCol = oklchToCss(l, c, h, a);
+                            return (
+                              <span
+                                key={cIndex}
+                                className="w-10 h-10 border-0 inline-block cursor-pointer"
+                                style={{ backgroundColor: cssCol }}
+                              ></span>
+                            );
+                          })}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}

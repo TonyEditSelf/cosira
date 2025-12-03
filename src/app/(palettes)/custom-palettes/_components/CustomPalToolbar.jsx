@@ -3,6 +3,7 @@ import { IoContrast } from "react-icons/io5";
 import { IoMdClose } from "react-icons/io";
 import { SiShowtime } from "react-icons/si";
 import { paletteTypes } from "@/app/data/paletteTypes";
+import { FaDatabase } from "react-icons/fa";
 import SelectComp from "./SelectComp";
 import { HiMiniAdjustmentsHorizontal } from "react-icons/hi2";
 
@@ -37,6 +38,10 @@ export default function CustomPalToolbar() {
     setDuplicatePaletteType,
     showHidePanelOpen,
     setShowHidePanelOpen,
+    databaseOpen,
+    setDatabaseOpen,
+    favPalette,
+    setFavPalette,
   } = useColorPaletteContext();
 
   const goBackPalHistory = () => {
@@ -114,9 +119,9 @@ export default function CustomPalToolbar() {
           style={{ backgroundColor: `${cssColor}` }}
         ></button>
       </section>
-      <Link href={"/palette-tester"} className="size-9">
+      {/* <Link href={"/palette-tester"} className="size-9">
         <IoContrast className="size-9 cursor-pointer border border-[var(--navBorder)] hover:border-[var(--muted-foreground)] p-2 rounded-md" />
-      </Link>
+      </Link> */}
       <FaAnglesLeft
         className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]"
         onClick={goBackPalHistory}
@@ -128,8 +133,31 @@ export default function CustomPalToolbar() {
         onClick={goForwardPalHistory}
       />
 
-      <FaSave className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]" />
+      <FaSave
+        onClick={() =>
+          setFavPalette((prev) => [
+            ...prev,
+            { palette: palette, type: selectedPaletteType },
+          ])
+        }
+        className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]"
+      />
+
       <CgExport className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]" />
+
+      {/* <FaDatabase className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]" /> */}
+
+      {!databaseOpen ? (
+        <FaDatabase
+          onClick={() => setDatabaseOpen((prev) => !prev)}
+          className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]"
+        />
+      ) : (
+        <IoMdClose
+          onClick={() => setDatabaseOpen((prev) => !prev)}
+          className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]"
+        />
+      )}
     </section>
   );
 }
