@@ -154,9 +154,6 @@ export function ColorPaletteContextProvider({ children }) {
     setTimeout(() => setRgbCopied(false), 2000);
   };
 
-  const [favColors, setFavColors] = useState([]);
-  const [favPalette, setFavPalette] = useState([]);
-
   const [shadesTintsTonesOn, setShadesTintsTonesOn] = useState(false);
   const [shadesTintsTonesIndex, setShadesTintsTonesIndex] = useState(null);
   const [colorForShadesTintsTones, setColorForShadesTintsTones] = useState();
@@ -253,6 +250,42 @@ export function ColorPaletteContextProvider({ children }) {
   const [paletteHistoryCounter, setPaletteHistoryCounter] = useState(-2);
   const [historyNavigation, setHistoryNavigation] = useState(false);
   const [hoverOn, setHoverOn] = useState(false);
+
+  const [favColors, setFavColors] = useState([]);
+  const [favPalette, setFavPalette] = useState([]);
+
+  // Load once on mount (browser only)
+  useEffect(() => {
+    try {
+      const savedFavColors =
+        typeof window !== "undefined" && localStorage.getItem("favColors");
+      const savedFavPalette =
+        typeof window !== "undefined" && localStorage.getItem("favPalette");
+
+      if (savedFavColors) setFavColors(JSON.parse(savedFavColors));
+      if (savedFavPalette) setFavPalette(JSON.parse(savedFavPalette));
+    } catch (err) {
+      console.error("Failed to read from localStorage:", err);
+    }
+  }, []);
+
+  // Persist favColors
+  useEffect(() => {
+    try {
+      localStorage.setItem("favColors", JSON.stringify(favColors));
+    } catch (err) {
+      console.error("Failed to write favColors to localStorage:", err);
+    }
+  }, [favColors]);
+
+  // Persist favPalette
+  useEffect(() => {
+    try {
+      localStorage.setItem("favPalette", JSON.stringify(favPalette));
+    } catch (err) {
+      console.error("Failed to write favPalette to localStorage:", err);
+    }
+  }, [favPalette]);
 
   useEffect(() => {
     setPaletteHistory((prevHistory) => {

@@ -310,10 +310,26 @@ export default function CustomPalettes() {
                           {toggles.addColor && (
                             <span
                               onClick={() => {
-                                setFavColors((prev) => [
-                                  ...prev,
-                                  colorObj.value,
-                                ]);
+                                if (favColors.length === 0) {
+                                  setFavColors((prev) => [
+                                    ...prev,
+                                    colorObj.value,
+                                  ]);
+                                } else if (favColors.length > 0) {
+                                  favColors.map((color) => {
+                                    if (
+                                      JSON.stringify(color) !==
+                                      JSON.stringify(colorObj.value)
+                                    ) {
+                                      setFavColors((prev) => [
+                                        ...prev,
+                                        colorObj.value,
+                                      ]);
+                                    } else {
+                                      return;
+                                    }
+                                  });
+                                }
                               }}
                               className={`p-1 rounded-md border ${
                                 textColor === "white"
@@ -361,28 +377,29 @@ export default function CustomPalettes() {
 
               {databaseOpen && (
                 <div className="absolute top-2 bottom-2 left-2 right-2 bg-[var(--background)] overflow-auto flex gap-3">
-                  <div className="border-2 w-2/12 overflow-auto">
+                  <div className="border-2 py-3 w-[26%] flex gap-2 flex-wrap justify-center overflow-auto content-start">
                     {favColors.map((color, index) => {
                       const { l, c, h, a = 1 } = color;
 
                       const cssCol = oklchToCss(l, c, h, a);
 
-                      console.log("cssCol", cssCol);
-
                       return (
                         <span
                           key={index}
-                          className="w-10 h-10 border-0 m-2  inline-block cursor-pointer"
+                          className="w-10 h-10 border-0 inline-block cursor-pointer"
                           style={{ backgroundColor: cssCol }}
                         ></span>
                       );
                     })}
                   </div>
 
-                  <div className="border-2 p-2 w-10/12 gap-2 flex flex-wrap overflow-auto">
+                  <div className="border-2 py-4 px-2 w-[74%] gap-2 flex flex-wrap justify-center overflow-auto content-start">
                     {favPalette.map((paletteObj, pIndex) => {
                       return (
-                        <div key={pIndex} className="">
+                        <div
+                          key={pIndex}
+                          className="w-[415px] h-fit flex justify-center items-center"
+                        >
                           {paletteObj.palette.map((colorObj, cIndex) => {
                             const { l, c, h, a } = colorObj.value;
 
@@ -390,7 +407,7 @@ export default function CustomPalettes() {
                             return (
                               <span
                                 key={cIndex}
-                                className="w-10 h-10 border-0 inline-block cursor-pointer"
+                                className="w-[10%] h-10 border-0 inline-block cursor-pointer"
                                 style={{ backgroundColor: cssCol }}
                               ></span>
                             );

@@ -1,6 +1,8 @@
 import "./globals.css";
 import AnimatedLayount from "@/components/AnimatedLayount";
 import { ThemeProvider } from "next-themes";
+import { ColorPaletteContextProvider } from "./(palettes)/ColorContext";
+// ⬆ important: import provider from palettes folder
 
 export const metadata = {
   title: "Tofabzo - Brand Building Tools",
@@ -16,7 +18,9 @@ export default function RootLayount({ children }) {
           defaultTheme="system"
           enableSystem={true}
         >
-          <AnimatedLayount>{children}</AnimatedLayount>
+          <ColorPaletteContextProvider>
+            <AnimatedLayount>{children}</AnimatedLayount>
+          </ColorPaletteContextProvider>
         </ThemeProvider>
       </body>
     </html>

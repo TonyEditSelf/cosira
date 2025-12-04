@@ -18,6 +18,7 @@ export default function complementaryPalGen(
       c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.15)), // subtle boost in darks
       l: Math.min(LMAX, Math.max(LMIN, baseColor.l - 0.28)),
     };
+    0;
 
     const darkBase = {
       ...baseColor,
