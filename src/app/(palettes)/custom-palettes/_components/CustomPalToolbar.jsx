@@ -44,6 +44,8 @@ export default function CustomPalToolbar() {
     setFavPalette,
   } = useColorPaletteContext();
 
+  // console.log("favPalette before save: ", favPalette);
+
   const goBackPalHistory = () => {
     setPaletteHistoryCounter((prev) => {
       if (prev <= 0) return prev; // already at oldest
@@ -134,12 +136,23 @@ export default function CustomPalToolbar() {
       />
 
       <FaSave
-        onClick={() =>
-          setFavPalette((prev) => [
-            ...prev,
-            { palette: palette, type: selectedPaletteType },
-          ])
-        }
+        onClick={() => {
+          const favpalObject = {
+            palette: palette,
+            type: selectedPaletteType,
+          };
+
+          const exists = favPalette.some((element) => {
+            return JSON.stringify(element) === JSON.stringify(favpalObject);
+          });
+
+          if (!exists) {
+            setFavPalette((prev) => [
+              ...prev,
+              { palette: palette, type: selectedPaletteType },
+            ]);
+          }
+        }}
         className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]"
       />
 

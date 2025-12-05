@@ -310,25 +310,18 @@ export default function CustomPalettes() {
                           {toggles.addColor && (
                             <span
                               onClick={() => {
-                                if (favColors.length === 0) {
+                                // Only add if favColors does not already include colorObj.value
+                                const exists = favColors.some(
+                                  (color) =>
+                                    JSON.stringify(color) ===
+                                    JSON.stringify(colorObj.value)
+                                );
+
+                                if (!exists) {
                                   setFavColors((prev) => [
                                     ...prev,
                                     colorObj.value,
                                   ]);
-                                } else if (favColors.length > 0) {
-                                  favColors.map((color) => {
-                                    if (
-                                      JSON.stringify(color) !==
-                                      JSON.stringify(colorObj.value)
-                                    ) {
-                                      setFavColors((prev) => [
-                                        ...prev,
-                                        colorObj.value,
-                                      ]);
-                                    } else {
-                                      return;
-                                    }
-                                  });
                                 }
                               }}
                               className={`p-1 rounded-md border ${
