@@ -117,7 +117,7 @@ export default function ComplementaryOptions() {
         />
         <label htmlFor="EtherealComp">Ethereal Comp</label>
       </div>
-
+      {/* ==================================================== */}
       <div className="flex gap-4">
         <input
           type="radio"

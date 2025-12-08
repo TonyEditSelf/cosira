@@ -29,19 +29,6 @@ export default function MonochromaticOptions() {
         />
         <label htmlFor="classicMono">Classic Mono</label>
       </div>
-      {/* <div className="flex gap-4">
-        <input
-          type="radio"
-          name="monoPal"
-          id="vibrantComp"
-          value={"vibrantComp"}
-          checked={compPalType === "vibrantComp"}
-          onChange={(e) => {
-            setCompPalType(e.target.value);
-          }}
-        />
-        <label htmlFor="vibrantComp">Vibrant Comp</label>
-      </div> */}
 
       <div className="flex gap-4">
         <input

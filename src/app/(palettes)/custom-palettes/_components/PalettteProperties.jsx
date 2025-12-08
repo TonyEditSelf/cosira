@@ -45,42 +45,29 @@ export default function PalettteProperties() {
               onChange={handleColorChange}
             />
           </div>
-          {(compPalType === "classicComp" ||
-            compPalType === "OpalComp" ||
-            compPalType === "BioLumComp" ||
-            compPalType === "TemporalComp" ||
-            compPalType === "AtmosphericComp" ||
-            compPalType === "EtherealComp" ||
-            monoPalType === "classicMono") && (
-            <div>
-              <h4 className="text-[11px] font-semibold mb-3">Lightness</h4>
-              <LightnessSlider
-                lightness={oklch.l}
-                chroma={oklch.c}
-                hue={oklch.h}
-                alpha={oklch.a}
-                onChange={handleColorChange}
-              />
-            </div>
-          )}
-          {(compPalType === "classicComp" ||
-            compPalType === "OpalComp" ||
-            compPalType === "BioLumComp" ||
-            compPalType === "TemporalComp" ||
-            compPalType === "AtmosphericComp" ||
-            compPalType === "EtherealComp" ||
-            monoPalType === "classicMono") && (
-            <div>
-              <h4 className="text-[11px] font-semibold mb-3">Chroma</h4>
-              <ChromaSlider
-                lightness={oklch.l}
-                chroma={oklch.c}
-                hue={oklch.h}
-                alpha={oklch.a}
-                onChange={handleColorChange}
-              />
-            </div>
-          )}
+
+          <div>
+            <h4 className="text-[11px] font-semibold mb-3">Lightness</h4>
+            <LightnessSlider
+              lightness={oklch.l}
+              chroma={oklch.c}
+              hue={oklch.h}
+              alpha={oklch.a}
+              onChange={handleColorChange}
+            />
+          </div>
+
+          <div>
+            <h4 className="text-[11px] font-semibold mb-3">Chroma</h4>
+            <ChromaSlider
+              lightness={oklch.l}
+              chroma={oklch.c}
+              hue={oklch.h}
+              alpha={oklch.a}
+              onChange={handleColorChange}
+            />
+          </div>
+
           <div>
             <h4 className="text-[11px] font-semibold mb-3">Temperature</h4>
             <TemperatureSlider
@@ -91,80 +78,63 @@ export default function PalettteProperties() {
               onChange={handleColorChange}
             />
           </div>
-          {(compPalType === "classicComp" ||
-            compPalType === "OpalComp" ||
-            compPalType === "BioLumComp" ||
-            compPalType === "TemporalComp" ||
-            compPalType === "AtmosphericComp" ||
-            compPalType === "EtherealComp" ||
-            monoPalType === "classicMono") && (
-            <div>
-              <h4 className="text-[11px] font-semibold mb-3">Alpha</h4>
-              <AlphaSlider
-                lightness={oklch.l}
-                chroma={oklch.c}
-                hue={oklch.h}
-                alpha={oklch.a}
-                onChange={handleColorChange}
-              />
-            </div>
-          )}
+
+          <div>
+            <h4 className="text-[11px] font-semibold mb-3">Alpha</h4>
+            <AlphaSlider
+              lightness={oklch.l}
+              chroma={oklch.c}
+              hue={oklch.h}
+              alpha={oklch.a}
+              onChange={handleColorChange}
+            />
+          </div>
         </div>
       </div>
-
-      {selectedPaletteType === "monochromatic" && <MonochromaticOptions />}
-
-      {selectedPaletteType === "complementary" && <ComplementaryOptions />}
-
-      {selectedPaletteType === "analogous" && <AnalogousOptions />}
-
-      {selectedPaletteType === "splitComplementary" && <SplitCompOptions />}
-
-      {selectedPaletteType === "tetradic" && <TetradicOptions />}
-
-      {selectedPaletteType === "doubleSplitComp" && <DoubleSplitCompOptions />}
-
-      {selectedPaletteType === "gradient" && <GradientOptions />}
-
-      {selectedPaletteType === "seasonal" && <SeasonalOptions />}
-
-      {selectedPaletteType === "dataVizPalette" && <DataVizOptions />}
-      {selectedPaletteType === "flowerPalette" && <FlowerPalOptions />}
-
+      if(monoPalType === 'vintageMono' || monoPalType === 'neutralMono' ||
+      monoPalType === 'kidsMono' || compPalType === 'vintageComp' || compPalType
+      === '80sNeonComp' || compPalType === 'MCMComp' || compPalType ===
+      'neutralComp' || compPalType === 'kidsComp' || compPalType ===
+      'luxuriousComp' || compPalType === 'moodyComp' || compPalType ===
+      'pastelComp' || compPalType === 'neonComp' || compPalType === 'retroComp'
+      || compPalType === 'earthyComp' || analogPalType ===
+      'neutralCenteredAnalog' || analogPalType === 'neutralLeftAnalog' ||
+      analogPalType === 'neutralRightAnalog' || analogPalType ===
+      'kidsBrightCentered' || analogPalType === 'kidsBrightLeft' ||
+      analogPalType === 'kidsBrightRight' || analogPalType === 'toyLikeCentered'
+      || analogPalType === 'toyLikeLeft' || analogPalType === 'toyLikeRight' ||
+      analogPalType === 'pastelKidCentered' || analogPalType === 'pastelKidLeft'
+      || analogPalType === 'pastelKidRight' || analogPalType ===
+      'neoKidCentered' || analogPalType === 'neoKidLeft' || analogPalType ===
+      'neoKidRight') && (
       <div className="flex flex-col gap-2">
         <div>
-          {compPalType !== "classicComp" &&
-            compPalType !== "OpalComp" &&
-            compPalType !== "BioLumComp" &&
-            compPalType !== "TemporalComp" &&
-            compPalType !== "AtmosphericComp" &&
-            compPalType !== "EtherealComp" &&
-            monoPalType !== "classicMono" && (
-              <div className="flex justify-between">
-                <label htmlFor="lightInput">Lightness</label>
-                <div>
-                  <LandCStepper id="lightInput" type="light" />
-                </div>
-              </div>
-            )}
+          <div className="flex justify-between">
+            <label htmlFor="lightInput">Lightness</label>
+            <div>
+              <LandCStepper id="lightInput" type="light" />
+            </div>
+          </div>
         </div>
         <div>
-          {compPalType !== "classicComp" &&
-            compPalType !== "OpalComp" &&
-            compPalType !== "BioLumComp" &&
-            compPalType !== "TemporalComp" &&
-            compPalType !== "AtmosphericComp" &&
-            compPalType !== "EtherealComp" &&
-            monoPalType !== "classicMono" && (
-              <div className="flex justify-between">
-                <label htmlFor="chromaInput">Chroma</label>
-                <div>
-                  <LandCStepper id="chromaInput" type="chroma" />
-                </div>
-              </div>
-            )}
+          <div className="flex justify-between">
+            <label htmlFor="chromaInput">Chroma</label>
+            <div>
+              <LandCStepper id="chromaInput" type="chroma" />
+            </div>
+          </div>
         </div>
       </div>
+      ){selectedPaletteType === "monochromatic" && <MonochromaticOptions />}
+      {selectedPaletteType === "complementary" && <ComplementaryOptions />}
+      {selectedPaletteType === "analogous" && <AnalogousOptions />}
+      {selectedPaletteType === "splitComplementary" && <SplitCompOptions />}
+      {selectedPaletteType === "tetradic" && <TetradicOptions />}
+      {selectedPaletteType === "doubleSplitComp" && <DoubleSplitCompOptions />}
+      {selectedPaletteType === "gradient" && <GradientOptions />}
+      {selectedPaletteType === "seasonal" && <SeasonalOptions />}
+      {selectedPaletteType === "dataVizPalette" && <DataVizOptions />}
+      {selectedPaletteType === "flowerPalette" && <FlowerPalOptions />}
     </div>
   );
 }
