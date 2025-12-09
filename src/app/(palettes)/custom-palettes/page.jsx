@@ -63,6 +63,9 @@ export default function CustomPalettes() {
     setFavPalette,
   } = useColorPaletteContext();
 
+  console.log("CustomPalettes RENDER - palette:", palette);
+  console.log("CustomPalettes RENDER - palette length:", palette?.length);
+
   const toggleConfig = [
     { key: "showAll", label: "Show All" },
     { key: "showNone", label: "Show None" },

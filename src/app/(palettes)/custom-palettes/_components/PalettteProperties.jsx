@@ -21,6 +21,7 @@ export default function PalettteProperties() {
     oklch,
     handleColorChange,
     selectedPaletteType,
+    analogPalType,
     compPalType,
     monoPalType,
     sliderLightValue,
@@ -91,41 +92,8 @@ export default function PalettteProperties() {
           </div>
         </div>
       </div>
-      if(monoPalType === 'vintageMono' || monoPalType === 'neutralMono' ||
-      monoPalType === 'kidsMono' || compPalType === 'vintageComp' || compPalType
-      === '80sNeonComp' || compPalType === 'MCMComp' || compPalType ===
-      'neutralComp' || compPalType === 'kidsComp' || compPalType ===
-      'luxuriousComp' || compPalType === 'moodyComp' || compPalType ===
-      'pastelComp' || compPalType === 'neonComp' || compPalType === 'retroComp'
-      || compPalType === 'earthyComp' || analogPalType ===
-      'neutralCenteredAnalog' || analogPalType === 'neutralLeftAnalog' ||
-      analogPalType === 'neutralRightAnalog' || analogPalType ===
-      'kidsBrightCentered' || analogPalType === 'kidsBrightLeft' ||
-      analogPalType === 'kidsBrightRight' || analogPalType === 'toyLikeCentered'
-      || analogPalType === 'toyLikeLeft' || analogPalType === 'toyLikeRight' ||
-      analogPalType === 'pastelKidCentered' || analogPalType === 'pastelKidLeft'
-      || analogPalType === 'pastelKidRight' || analogPalType ===
-      'neoKidCentered' || analogPalType === 'neoKidLeft' || analogPalType ===
-      'neoKidRight') && (
-      <div className="flex flex-col gap-2">
-        <div>
-          <div className="flex justify-between">
-            <label htmlFor="lightInput">Lightness</label>
-            <div>
-              <LandCStepper id="lightInput" type="light" />
-            </div>
-          </div>
-        </div>
-        <div>
-          <div className="flex justify-between">
-            <label htmlFor="chromaInput">Chroma</label>
-            <div>
-              <LandCStepper id="chromaInput" type="chroma" />
-            </div>
-          </div>
-        </div>
-      </div>
-      ){selectedPaletteType === "monochromatic" && <MonochromaticOptions />}
+
+      {selectedPaletteType === "monochromatic" && <MonochromaticOptions />}
       {selectedPaletteType === "complementary" && <ComplementaryOptions />}
       {selectedPaletteType === "analogous" && <AnalogousOptions />}
       {selectedPaletteType === "splitComplementary" && <SplitCompOptions />}
@@ -135,6 +103,57 @@ export default function PalettteProperties() {
       {selectedPaletteType === "seasonal" && <SeasonalOptions />}
       {selectedPaletteType === "dataVizPalette" && <DataVizOptions />}
       {selectedPaletteType === "flowerPalette" && <FlowerPalOptions />}
+
+      <div className="flex flex-col gap-2">
+        {(monoPalType === "vintageMono" ||
+          monoPalType === "neutralMono" ||
+          monoPalType === "kidsMono" ||
+          compPalType === "vintageComp" ||
+          compPalType === "80sNeonComp" ||
+          compPalType === "MCMComp" ||
+          compPalType === "neutralComp" ||
+          compPalType === "kidsComp" ||
+          compPalType === "luxuriousComp" ||
+          compPalType === "moodyComp" ||
+          compPalType === "pastelComp" ||
+          compPalType === "neonComp" ||
+          compPalType === "retroComp" ||
+          compPalType === "earthyComp" ||
+          analogPalType === "neutralCenteredAnalog" ||
+          analogPalType === "neutralLeftAnalog" ||
+          analogPalType === "neutralRightAnalog" ||
+          analogPalType === "kidsBrightCentered" ||
+          analogPalType === "kidsBrightLeft" ||
+          analogPalType === "kidsBrightRight" ||
+          analogPalType === "toyLikeCentered" ||
+          analogPalType === "toyLikeLeft" ||
+          analogPalType === "toyLikeRight" ||
+          analogPalType === "pastelKidCentered" ||
+          analogPalType === "pastelKidLeft" ||
+          analogPalType === "pastelKidRight" ||
+          analogPalType === "neoKidCentered" ||
+          analogPalType === "neoKidLeft" ||
+          analogPalType === "neoKidRight") && (
+          <>
+            <div>
+              <div className="flex justify-between">
+                <label htmlFor="lightInput">Lightness</label>
+                <div>
+                  <LandCStepper id="lightInput" type="light" />
+                </div>
+              </div>
+            </div>
+            <div>
+              <div className="flex justify-between">
+                <label htmlFor="chromaInput">Chroma</label>
+                <div>
+                  <LandCStepper id="chromaInput" type="chroma" />
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }

@@ -9,43 +9,34 @@ export default function GradientOptions() {
     gradientPalType,
     setGradientPalType,
   } = useColorPaletteContext();
-  return (
-    <div className="flex flex-col gap-5">
-      <div>
-        <div className="flex gap-4">
-          <input
-            type="radio"
-            name="gradientPal"
-            id="leftGradient"
-            value={"leftGradient"}
-            checked={gradientPalType === "leftGradient"}
-            onChange={(e) => {
-              setGradientPalType(e.target.value);
-              const pal = gradientPalGen(oklch, e.target.value);
-              setPalette(pal);
-              setDuplicatePalette(pal);
-            }}
-          />
-          <label htmlFor="leftGradient">Left Gradient</label>
-        </div>
 
-        <div className="flex gap-4">
+  const options = [
+    { id: "leftGradient", label: "Left Gradient" },
+    { id: "rightGradient", label: "Right Gradient" },
+  ];
+
+  const handleChange = (value) => {
+    setGradientPalType(value);
+    const pal = gradientPalGen(oklch, value);
+    setPalette(pal);
+    setDuplicatePalette(pal);
+  };
+
+  return (
+    <div className="flex flex-col gap-0">
+      {options.map(({ id, label }) => (
+        <div key={id} className="flex gap-4">
           <input
             type="radio"
             name="gradientPal"
-            id="rightGradient"
-            value={"rightGradient"}
-            checked={gradientPalType === "rightGradient"}
-            onChange={(e) => {
-              setGradientPalType(e.target.value);
-              const pal = gradientPalGen(oklch, e.target.value);
-              setPalette(pal);
-              setDuplicatePalette(pal);
-            }}
+            id={id}
+            value={id}
+            checked={gradientPalType === id}
+            onChange={() => handleChange(id)}
           />
-          <label htmlFor="rightGradient">Right Gradient</label>
+          <label htmlFor={id}>{label}</label>
         </div>
-      </div>
+      ))}
     </div>
   );
 }

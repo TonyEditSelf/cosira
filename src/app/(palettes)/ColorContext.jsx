@@ -243,7 +243,19 @@ export function ColorPaletteContextProvider({ children }) {
   const [dataVizPalType, setDataVizPalType] = useState("dataVizPalOne");
   const [flowerPalType, setFlowerPalType] = useState("sunflower");
 
-  const [palette, setPalette] = useState([]);
+  const [paletteState, setPaletteState] = useState([]);
+
+  const setPalette = useCallback((newPalette) => {
+    if (newPalette !== undefined && newPalette !== null) {
+      setPaletteState(newPalette);
+    } else {
+      console.error("Attempted to set palette to undefined/null - blocked");
+      console.trace(); // This will show the call stack
+    }
+  }, []);
+
+  const palette = paletteState;
+
   const [duplicatePalette, setDuplicatePalette] = useState([]);
   const [duplicatePaletteType, setDuplicatePaletteType] = useState("");
   const [paletteHistory, setPaletteHistory] = useState([]);
@@ -289,7 +301,7 @@ export function ColorPaletteContextProvider({ children }) {
 
   useEffect(() => {
     setPaletteHistory((prevHistory) => {
-      if (palette.length > 0) {
+      if (palette && palette.length > 0) {
         const lastEntry = prevHistory[prevHistory.length - 1];
 
         if (JSON.stringify(lastEntry) !== JSON.stringify(palette)) {
@@ -306,12 +318,6 @@ export function ColorPaletteContextProvider({ children }) {
     setPaletteHistoryCounter((prev) => prev + 1);
   }, [duplicatePalette]);
 
-  // useEffect(() => {
-  //   console.log("PaletteHistory: ", paletteHistory);
-  //   console.log("PaletteHistoryCounter: ", paletteHistoryCounter);
-  //   console.log("historyLength", paletteHistory.length);
-  // }, [paletteHistoryCounter, paletteHistory]);
-
   useEffect(() => {
     setSliderChromaValue(0);
     setSliderLightValue(0);
@@ -324,6 +330,10 @@ export function ColorPaletteContextProvider({ children }) {
   }, [selectedPaletteType]);
 
   useEffect(() => {
+    console.log("=== COLOR CONTEXT USEEFFECT RUNNING ===");
+    console.log("selectedPaletteType:", selectedPaletteType);
+    console.log("analogPalType:", analogPalType);
+
     setShadesTintsTonesIndex(null);
     setHistoryNavigation(false);
 
@@ -342,7 +352,15 @@ export function ColorPaletteContextProvider({ children }) {
       dataVizPalType,
       flowerPalType
     );
-    setPalette(pal);
+
+    console.log("Palette from paletteDecider:", pal);
+
+    // CRITICAL FIX: Only set palette if pal is valid
+    if (pal && Array.isArray(pal) && pal.length > 0) {
+      setPalette(pal);
+    } else {
+      console.error("paletteDecider returned invalid palette:", pal);
+    }
 
     if (
       selectedPaletteType === "analogous" &&
@@ -355,10 +373,18 @@ export function ColorPaletteContextProvider({ children }) {
     }
   }, [
     oklch,
-    // analogOptions,
+    analogOptions, // Add this back!
     splitCompOptions,
     tetradicAngle,
     selectedPaletteType,
+    compPalType, // Add this
+    monoPalType, // Add this
+    analogPalType, // Add this - THIS IS THE KEY ONE
+    doubleSplitCompPalType, // Add this
+    gradientPalType, // Add this
+    seasonalPalType, // Add this
+    dataVizPalType, // Add this
+    flowerPalType,
   ]);
 
   const values = {

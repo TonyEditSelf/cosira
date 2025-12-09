@@ -2,7 +2,6 @@ import { useColorPaletteContext } from "@/app/(palettes)/ColorContext";
 import complementaryPalGen from "../../../ColorPaletteUtils/complementaryPalGen";
 import monochromaticPalGen from "../../../ColorPaletteUtils/monochromaticPalGen";
 import { useEffect } from "react";
-useEffect;
 
 export default function LandCStepper({ type }) {
   const {
@@ -17,22 +16,46 @@ export default function LandCStepper({ type }) {
     selectedPaletteType,
   } = useColorPaletteContext();
 
-  let chromaLightValue, setChromaLightValue;
+  const isLight = type === "light";
+  const value = isLight ? sliderLightValue : sliderChromaValue;
+  const setValue = isLight ? setSliderLightValue : setSliderChromaValue;
 
-  if (type === "light") {
-    chromaLightValue = sliderLightValue;
-    setChromaLightValue = setSliderLightValue;
-  } else if (type === "chroma") {
-    chromaLightValue = sliderChromaValue;
-    setChromaLightValue = setSliderChromaValue;
-  }
+  // Define limits for each palette type
+  const limits = {
+    light: {
+      vintageComp: { min: -0.15, max: 0.15 },
+      vintageMono: { min: -0.15, max: 0.15 },
+      neutralComp: { min: -0.39, max: 0.39 },
+      kidsComp: { min: -0.26, max: 0.26 },
+      luxuriousComp: { min: -0.25, max: 0.25 },
+      moodyComp: { min: -0.2, max: 0.2 },
+      pastelComp: { min: -0.13, max: 0.11 },
+      neonComp: { min: -0.44, max: 0.13 },
+      retroComp: { min: -0.18, max: 0.18 },
+      earthyComp: { min: -0.2, max: 0.18 },
+    },
+    chroma: {
+      vintageComp: { min: -0.05, max: 0.05 },
+      vintageMono: { min: -0.05, max: 0.05 },
+      neutralComp: { min: -0.03, max: 0.03 },
+      kidsComp: { min: -0.06, max: 0.06 },
+      luxuriousComp: { min: -0.06, max: 0.06 },
+      moodyComp: { min: -0.08, max: 0.08 },
+      pastelComp: { min: -0.05, max: 0.04 },
+      neonComp: { min: -0.1, max: 0.07 },
+      retroComp: { min: -0.06, max: 0.06 },
+      earthyComp: { min: -0.05, max: 0.06 },
+    },
+  };
+
+  const currentPalType =
+    selectedPaletteType === "complementary" ? compPalType : monoPalType;
+  const currentLimits = limits[type]?.[currentPalType];
 
   useEffect(() => {
-
     setSliderChromaValue(0);
     setSliderLightValue(0);
-
-  }, [oklch]);
+  }, [oklch, setSliderChromaValue, setSliderLightValue]);
 
   useEffect(() => {
     let pal;
@@ -51,188 +74,43 @@ export default function LandCStepper({ type }) {
         sliderChromaValue
       );
     }
-    setPalette(pal);
-  }, [sliderLightValue, sliderChromaValue]);
+    if (pal) {
+      setPalette(pal);
+    }
+  }, [
+    sliderLightValue,
+    sliderChromaValue,
+    selectedPaletteType,
+    compPalType,
+    monoPalType,
+    oklch,
+    setPalette,
+  ]);
+
+  const handleIncrement = (delta) => {
+    if (!currentLimits) return;
+
+    const newValue = value + delta;
+    const { min, max } = currentLimits;
+
+    if (delta < 0 && value >= min) {
+      setValue((prev) => prev + delta);
+    } else if (delta > 0 && value <= max) {
+      setValue((prev) => prev + delta);
+    }
+  };
 
   return (
     <div className="flex gap-2">
       <button
-        className="size-7 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)] flex justify-center items-center "
-        onClick={() => {
-          if (type === "light") {
-            if (
-              compPalType === "vintageComp" ||
-              monoPalType === "vintageMono"
-            ) {
-              if (chromaLightValue >= -0.15) {
-                setChromaLightValue((prev) => prev - 0.01);
-              }
-            } else if (compPalType === "neutralComp") {
-              if (chromaLightValue >= -0.39) {
-                setChromaLightValue((prev) => prev - 0.01);
-              }
-            } else if (compPalType === "kidsComp") {
-              if (chromaLightValue >= -0.26) {
-                setChromaLightValue((prev) => prev - 0.01);
-              }
-            } else if (compPalType === "luxuriousComp") {
-              if (chromaLightValue >= -0.25) {
-                setChromaLightValue((prev) => prev - 0.01);
-              }
-            } else if (compPalType === "moodyComp") {
-              if (chromaLightValue >= -0.2) {
-                setChromaLightValue((prev) => prev - 0.01);
-              }
-            } else if (compPalType === "pastelComp") {
-              if (chromaLightValue >= -0.13) {
-                setChromaLightValue((prev) => prev - 0.01);
-              }
-            } else if (compPalType === "neonComp") {
-              if (chromaLightValue >= -0.44) {
-                setChromaLightValue((prev) => prev - 0.01);
-              }
-            } else if (compPalType === "retroComp") {
-              if (chromaLightValue >= -0.18) {
-                setChromaLightValue((prev) => prev - 0.01);
-              }
-            } else if (compPalType === "earthyComp") {
-              if (chromaLightValue >= -0.2) {
-                setChromaLightValue((prev) => prev - 0.01);
-              }
-            }
-          } else if (type === "chroma") {
-            if (
-              compPalType === "vintageComp" ||
-              monoPalType === "vintageMono"
-            ) {
-              if (chromaLightValue >= -0.05) {
-                setChromaLightValue((prev) => prev - 0.01);
-              }
-            } else if (compPalType === "neutralComp") {
-              if (chromaLightValue >= -0.03) {
-                setChromaLightValue((prev) => prev - 0.01);
-              }
-            } else if (compPalType === "kidsComp") {
-              if (chromaLightValue >= -0.06) {
-                setChromaLightValue((prev) => prev - 0.01);
-              }
-            } else if (compPalType === "luxuriousComp") {
-              if (chromaLightValue >= -0.06) {
-                setChromaLightValue((prev) => prev - 0.01);
-              }
-            } else if (compPalType === "moodyComp") {
-              if (chromaLightValue >= -0.08) {
-                setChromaLightValue((prev) => prev - 0.01);
-              }
-            } else if (compPalType === "pastelComp") {
-              if (chromaLightValue >= -0.05) {
-                setChromaLightValue((prev) => prev - 0.01);
-              }
-            } else if (compPalType === "neonComp") {
-              if (chromaLightValue >= -0.1) {
-                setChromaLightValue((prev) => prev - 0.01);
-              }
-            } else if (compPalType === "retroComp") {
-              if (chromaLightValue >= -0.06) {
-                setChromaLightValue((prev) => prev - 0.01);
-              }
-            } else if (compPalType === "earthyComp") {
-              if (chromaLightValue >= -0.05) {
-                setChromaLightValue((prev) => prev - 0.01);
-              }
-            }
-          }
-        }}
+        className="size-7 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)] flex justify-center items-center"
+        onClick={() => handleIncrement(-0.01)}
       >
         -
       </button>
       <button
         className="size-7 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)] flex justify-center items-center"
-        onClick={() => {
-          if (type === "light") {
-            if (
-              compPalType === "vintageComp" ||
-              monoPalType === "vintageMono"
-            ) {
-              if (chromaLightValue <= 0.15) {
-                setChromaLightValue((prev) => prev + 0.01);
-              }
-            } else if (compPalType === "neutralComp") {
-              if (chromaLightValue <= 0.39) {
-                setChromaLightValue((prev) => prev + 0.01);
-              }
-            } else if (compPalType === "kidsComp") {
-              if (chromaLightValue <= 0.26) {
-                setChromaLightValue((prev) => prev + 0.01);
-              }
-            } else if (compPalType === "luxuriousComp") {
-              if (chromaLightValue <= 0.25) {
-                setChromaLightValue((prev) => prev + 0.01);
-              }
-            } else if (compPalType === "moodyComp") {
-              if (chromaLightValue <= 0.2) {
-                setChromaLightValue((prev) => prev + 0.01);
-              }
-            } else if (compPalType === "pastelComp") {
-              if (chromaLightValue <= 0.11) {
-                setChromaLightValue((prev) => prev + 0.01);
-              }
-            } else if (compPalType === "neonComp") {
-              if (chromaLightValue <= 0.13) {
-                setChromaLightValue((prev) => prev + 0.01);
-              }
-            } else if (compPalType === "retroComp") {
-              if (chromaLightValue <= 0.18) {
-                setChromaLightValue((prev) => prev + 0.01);
-              }
-            } else if (compPalType === "earthyComp") {
-              if (chromaLightValue <= 0.18) {
-                setChromaLightValue((prev) => prev + 0.01);
-              }
-            }
-          } else if (type === "chroma") {
-            if (
-              compPalType === "vintageComp" ||
-              monoPalType === "vintageMono"
-            ) {
-              if (chromaLightValue <= 0.05) {
-                setChromaLightValue((prev) => prev + 0.01);
-              }
-            } else if (compPalType === "neutralComp") {
-              if (chromaLightValue <= 0.03) {
-                setChromaLightValue((prev) => prev + 0.01);
-              }
-            } else if (compPalType === "kidsComp") {
-              if (chromaLightValue <= 0.06) {
-                setChromaLightValue((prev) => prev + 0.01);
-              }
-            } else if (compPalType === "luxuriousComp") {
-              if (chromaLightValue <= 0.06) {
-                setChromaLightValue((prev) => prev + 0.01);
-              }
-            } else if (compPalType === "moodyComp") {
-              if (chromaLightValue <= 0.08) {
-                setChromaLightValue((prev) => prev + 0.01);
-              }
-            } else if (compPalType === "pastelComp") {
-              if (chromaLightValue <= 0.04) {
-                setChromaLightValue((prev) => prev + 0.01);
-              }
-            } else if (compPalType === "neonComp") {
-              if (chromaLightValue <= 0.07) {
-                setChromaLightValue((prev) => prev + 0.01);
-              }
-            } else if (compPalType === "retroComp") {
-              if (chromaLightValue <= 0.06) {
-                setChromaLightValue((prev) => prev + 0.01);
-              }
-            } else if (compPalType === "earthyComp") {
-              if (chromaLightValue <= 0.06) {
-                setChromaLightValue((prev) => prev + 0.01);
-              }
-            }
-          }
-        }}
+        onClick={() => handleIncrement(0.01)}
       >
         +
       </button>

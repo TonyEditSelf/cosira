@@ -24,27 +24,26 @@ export default function monochromaticPalGen(
 
     baseColor = oklch;
 
-     darkBase = {
-  ...baseColor,
-  l: Math.min(LMAX, Math.max(LMIN, baseColor.l * 0.85)), // -9 pts
-};
+    darkBase = {
+      ...baseColor,
+      l: Math.min(LMAX, Math.max(LMIN, baseColor.l * 0.85)), // -9 pts
+    };
 
- darkerBase = {
-  ...baseColor,
-  l: Math.min(LMAX, Math.max(LMIN, baseColor.l * 0.70)), // -18 pts
-};
+    darkerBase = {
+      ...baseColor,
+      l: Math.min(LMAX, Math.max(LMIN, baseColor.l * 0.7)), // -18 pts
+    };
 
- darkestBase = {
-  ...baseColor,
-  l: Math.min(LMAX, Math.max(LMIN, baseColor.l * 0.55)), // -27 pts
-};
+    darkestBase = {
+      ...baseColor,
+      l: Math.min(LMAX, Math.max(LMIN, baseColor.l * 0.55)), // -27 pts
+    };
 
-darkerNeutralBase = {
-  ...darkerBase,
-  // l: Math.min(LMAX, Math.max(LMIN, darkerBase.l * 1.1)),
-  c: Math.min(0.04, Math.max(0.01, darkerBase.c * 0.15)),
-};
-
+    darkerNeutralBase = {
+      ...darkerBase,
+      // l: Math.min(LMAX, Math.max(LMIN, darkerBase.l * 1.1)),
+      c: Math.min(0.04, Math.max(0.01, darkerBase.c * 0.15)),
+    };
 
     mutedDarkerBase = {
       ...darkerBase,
@@ -52,26 +51,26 @@ darkerNeutralBase = {
       c: Math.min(CMAX, Math.max(CMIN, darkerBase.c * 0.7)),
     };
 
-     lightBase = {
-  ...baseColor,
-  l: Math.min(LMAX, Math.max(LMIN, baseColor.l * 1.15)), // +9 pts
-};
+    lightBase = {
+      ...baseColor,
+      l: Math.min(LMAX, Math.max(LMIN, baseColor.l * 1.15)), // +9 pts
+    };
 
- lighterBase = {
-  ...baseColor,
-  l: Math.min(LMAX, Math.max(LMIN, baseColor.l * 1.30)), // +18 pts
-};
+    lighterBase = {
+      ...baseColor,
+      l: Math.min(LMAX, Math.max(LMIN, baseColor.l * 1.3)), // +18 pts
+    };
 
- lightestBase = {
-  ...baseColor,
-  l: Math.min(LMAX, Math.max(LMIN, baseColor.l * 1.45)), // +27 pts
-};
+    lightestBase = {
+      ...baseColor,
+      l: Math.min(LMAX, Math.max(LMIN, baseColor.l * 1.45)), // +27 pts
+    };
 
-lighterNeutralBase = {
-  ...lighterBase,
-  // l: Math.min(LMAX, Math.max(LMIN, lighterBase.l * 1.1)), // 10% lighter (scaled), clamped
-  c: Math.min(0.04, Math.max(0.01, lighterBase.c * 0.15)),
-};
+    lighterNeutralBase = {
+      ...lighterBase,
+      // l: Math.min(LMAX, Math.max(LMIN, lighterBase.l * 1.1)), // 10% lighter (scaled), clamped
+      c: Math.min(0.04, Math.max(0.01, lighterBase.c * 0.15)),
+    };
 
     mutedLighterBase = {
       ...lighterBase,

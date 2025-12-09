@@ -10,42 +10,33 @@ export default function DoubleSplitCompOptions() {
     setDoubleSplitCompPalType,
   } = useColorPaletteContext();
 
+  const options = [
+    { id: "leftDoubleSplitComp", label: "Left Double Split Comp" },
+    { id: "rightDoubleSplitComp", label: "Right Double Split Comp" },
+  ];
+
+  const handleChange = (value) => {
+    setDoubleSplitCompPalType(value);
+    const pal = doubleSplitCompPalGen(oklch, value);
+    setPalette(pal);
+    setDuplicatePalette(pal);
+  };
+
   return (
-    <div className="flex flex-col gap-5">
-      <div>
-        <div className="flex gap-4">
+    <div className="flex flex-col gap-0">
+      {options.map(({ id, label }) => (
+        <div key={id} className="flex gap-4">
           <input
             type="radio"
             name="doubleSplitCompPalType"
-            id="leftDoubleSplitComp"
-            value={"leftDoubleSplitComp"}
-            checked={doubleSplitCompPalType === "leftDoubleSplitComp"}
-            onChange={(e) => {
-              setDoubleSplitCompPalType(e.target.value);
-              const pal = doubleSplitCompPalGen(oklch, e.target.value);
-              setPalette(pal);
-              setDuplicatePalette(pal);
-            }}
+            id={id}
+            value={id}
+            checked={doubleSplitCompPalType === id}
+            onChange={() => handleChange(id)}
           />
-          <label htmlFor="leftDoubleSplitComp">Left Double Split Comp</label>
+          <label htmlFor={id}>{label}</label>
         </div>
-        <div className="flex gap-4">
-          <input
-            type="radio"
-            name="doubleSplitCompPalType"
-            id="rightDoubleSplitComp"
-            value={"rightDoubleSplitComp"}
-            checked={doubleSplitCompPalType === "rightDoubleSplitComp"}
-            onChange={(e) => {
-              setDoubleSplitCompPalType(e.target.value);
-              const pal = doubleSplitCompPalGen(oklch, e.target.value);
-              setPalette(pal);
-              setDuplicatePalette(pal);
-            }}
-          />
-          <label htmlFor="rightDoubleSplitComp">Right Double Split Comp</label>
-        </div>
-      </div>
+      ))}
     </div>
   );
 }
