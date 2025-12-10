@@ -12,13 +12,9 @@ export default function ComplementaryOptions() {
 
   const compTypes = [
     { id: "classicComp", label: "Classic Comp" },
-    { id: "OpalComp", label: "Opalescent Comp" },
     { id: "BioLumComp", label: "Bioluminescent Comp" },
-    { id: "TemporalComp", label: "Temporal Comp" },
     { id: "AtmosphericComp", label: "Atmospheric Comp" },
-    { id: "EtherealComp", label: "Ethereal Comp" },
     { id: "vintageComp", label: "Vintage Comp" },
-    { id: "80sNeonComp", label: "80sNeon Comp" },
     { id: "MCMComp", label: "Mid-Century Modern" },
     { id: "retroComp", label: "Retro Comp" },
     { id: "moodyComp", label: "Moody Comp" },

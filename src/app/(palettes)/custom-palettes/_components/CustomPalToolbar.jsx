@@ -128,7 +128,10 @@ export default function CustomPalToolbar() {
         className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]"
         onClick={goBackPalHistory}
       />
-      {/* <FaPlay className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]" /> */}
+      {/* <FaPlay
+        onClick={generateRandomPalette}
+        className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]"
+      /> */}
 
       <FaAnglesRight
         className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]"
