@@ -18,6 +18,31 @@ import {
 
 import paletteDecider from "./custom-palettes/ColorPaletteUtils/paletteDecider";
 
+import { paletteTypes } from "../data/paletteTypes";
+import { paletteVariations } from "../data/paletteVarities";
+import analogousPalGen from "./custom-palettes/ColorPaletteUtils/analogousPalGen";
+import accentedAnalogousPalGen from "./custom-palettes/ColorPaletteUtils/accentedAnalogousPalGen";
+import achromaticPalGen from "./custom-palettes/ColorPaletteUtils/achromaticPalGen";
+import brandPalGen from "./custom-palettes/ColorPaletteUtils/brandPalGen";
+import chromaticNeutralPalGen from "./custom-palettes/ColorPaletteUtils/chromaticNeutralPalGen";
+import clashPalGen from "./custom-palettes/ColorPaletteUtils/clashPalGen";
+import complementaryPalGen from "./custom-palettes/ColorPaletteUtils/complementaryPalGen";
+import compoundPalGen from "./custom-palettes/ColorPaletteUtils/compoundPalGen";
+import dataVizPalettePalGen from "./custom-palettes/ColorPaletteUtils/dataVizPalettePalGen";
+import designsystemPalGen from "./custom-palettes/ColorPaletteUtils/designsystemPalGen";
+import doubleSplitCompPalGen from "./custom-palettes/ColorPaletteUtils/doubleSplitCompPalGen";
+import flowerPalGen from "./custom-palettes/ColorPaletteUtils/flowerPalGen";
+import gradientPalGen from "./custom-palettes/ColorPaletteUtils/gradientPalGen";
+import monochromaticPalGen from "./custom-palettes/ColorPaletteUtils/monochromaticPalGen";
+import nearCompPalGen from "./custom-palettes/ColorPaletteUtils/nearCompPalGen";
+import seasonalPalGen from "./custom-palettes/ColorPaletteUtils/seasonalPalGen";
+import splitCompPalGen from "./custom-palettes/ColorPaletteUtils/splitCompPalGen";
+import squarePalGen from "./custom-palettes/ColorPaletteUtils/squarePalGen";
+import tetradicPalGen from "./custom-palettes/ColorPaletteUtils/tetradicPalGen";
+import triadicPalGen from "./custom-palettes/ColorPaletteUtils/triadicPalGen";
+import uiPalettePalGen from "./custom-palettes/ColorPaletteUtils/uiPalettePalGen";
+import warmCoolPalGen from "./custom-palettes/ColorPaletteUtils/warmCoolPalGen";
+
 export const ColorPaletteContext = createContext(null);
 
 export function ColorPaletteContextProvider({ children }) {
@@ -27,6 +52,120 @@ export function ColorPaletteContextProvider({ children }) {
     h: 2.4025,
     a: 1,
   });
+
+  const [currentPaletteInfo, setCurrentPaletteInfo] = useState({
+    type: "",
+    variation: "",
+    typeName: "",
+  });
+
+  const generateRandomColor = () => {
+    return {
+      l: Math.random() * 0.4 + 0.4, // 0.4 to 0.8 (avoid very dark and very bright)
+      c: Math.random() * 0.15 + 0.08, // 0.08 to 0.23 (avoid both gray and oversaturated)
+      h: Math.random() * 360, // 0 to 360
+      a: 1,
+    };
+  };
+
+  // Function to generate random palette
+  const generateRandomPalette = () => {
+    // Generate random base color
+    const randomColor = generateRandomColor();
+    setOklch(randomColor);
+
+    // Select random palette type
+    const randomTypeIndex = Math.floor(Math.random() * paletteTypes.length);
+    const selectedType = paletteTypes[randomTypeIndex];
+    const paletteTypeValue = selectedType.value;
+
+    setSelectedPaletteType(paletteTypeValue);
+
+    let generatedPalette = null;
+    let selectedVariation = null;
+
+    // Check if this palette type has variations
+    if (paletteVariations[paletteTypeValue]) {
+      const variations = paletteVariations[paletteTypeValue];
+      const randomVariationIndex = Math.floor(
+        Math.random() * variations.length
+      );
+      selectedVariation = variations[randomVariationIndex];
+
+      // Generate palette based on type and variation
+      switch (paletteTypeValue) {
+        case "analogous":
+          setAnalogPalType(selectedVariation);
+          generatedPalette = analogousPalGen(
+            randomColor,
+            analogOptions,
+            selectedVariation
+          );
+          break;
+        case "complementary":
+          setCompPalType(selectedVariation);
+          generatedPalette = complementaryPalGen(
+            randomColor,
+            selectedVariation
+          );
+          break;
+        case "flowerPalette":
+          setFlowerPalType(selectedVariation);
+          generatedPalette = flowerPalGen(randomColor, selectedVariation);
+          break;
+        case "dataVizPalette":
+          setDataVizPalType(selectedVariation);
+          generatedPalette = dataVizPalettePalGen(
+            randomColor,
+            selectedVariation
+          );
+          break;
+        case "doubleSplitComp":
+          setDoubleSplitCompPalType(selectedVariation);
+          generatedPalette = doubleSplitCompPalGen(
+            randomColor,
+            selectedVariation
+          );
+          break;
+        // Add other cases for other palette types
+        default:
+          generatedPalette = [{ name: "Base", value: randomColor }];
+      }
+    } else {
+      // For palette types without variations
+      switch (paletteTypeValue) {
+        case "monochromatic":
+          generatedPalette = monochromaticPalGen(randomColor);
+          break;
+        case "triadic":
+          generatedPalette = triadicPalGen(randomColor);
+          break;
+        case "tetradic":
+          generatedPalette = tetradicPalGen(randomColor);
+          break;
+        case "splitComplementary":
+          generatedPalette = splitCompPalGen(randomColor);
+          break;
+        // Add other palette types without variations
+        default:
+          generatedPalette = [{ name: "Base", value: randomColor }];
+      }
+    }
+
+    if (generatedPalette) {
+      setPalette(generatedPalette);
+      setCurrentPaletteInfo({
+        type: paletteTypeValue,
+        variation: selectedVariation || "Default",
+        typeName: selectedType.label,
+      });
+    }
+  };
+
+  // Generate initial random palette on mount
+  useEffect(() => {
+    generateRandomPalette();
+  }, []);
 
   const [analogOptions, setAnalogOptions] = useState({
     analogousAngle1: -35,
@@ -467,6 +606,8 @@ export function ColorPaletteContextProvider({ children }) {
     setFavColors,
     favPalette,
     setFavPalette,
+    generateRandomColor,
+    generateRandomPalette,
   };
 
   return (

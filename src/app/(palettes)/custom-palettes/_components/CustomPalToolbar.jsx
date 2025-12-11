@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { IoContrast } from "react-icons/io5";
 import { IoMdClose } from "react-icons/io";
 import { SiShowtime } from "react-icons/si";
@@ -19,6 +22,7 @@ import { LuFullscreen } from "react-icons/lu";
 import { useColorPaletteContext } from "../../ColorContext";
 
 export default function CustomPalToolbar() {
+  const pathname = usePathname();
   const {
     palette,
     setPalette,
@@ -42,13 +46,18 @@ export default function CustomPalToolbar() {
     setDatabaseOpen,
     favPalette,
     setFavPalette,
+    generateRandomColor,
+    generateRandomPalette,
   } = useColorPaletteContext();
 
-  // console.log("favPalette before save: ", favPalette);
+  // console.log("Current pathname:", pathname);
+
+  // ADD THIS LINE - Define the variable
+  const isRandomPalettesPage = pathname === "/random-palettes";
 
   const goBackPalHistory = () => {
     setPaletteHistoryCounter((prev) => {
-      if (prev <= 0) return prev; // already at oldest
+      if (prev <= 0) return prev;
       setHistoryNavigation(true);
       const newCounter = prev - 1;
       setPalette(paletteHistory[newCounter].palette);
@@ -59,7 +68,7 @@ export default function CustomPalToolbar() {
 
   const goForwardPalHistory = () => {
     setPaletteHistoryCounter((prev) => {
-      if (prev >= paletteHistory.length - 1) return prev; // already at newest
+      if (prev >= paletteHistory.length - 1) return prev;
       setHistoryNavigation(true);
       const newCounter = prev + 1;
       setPalette(paletteHistory[newCounter].palette);
@@ -121,17 +130,18 @@ export default function CustomPalToolbar() {
           style={{ backgroundColor: `${cssColor}` }}
         ></button>
       </section>
-      {/* <Link href={"/palette-tester"} className="size-9">
-        <IoContrast className="size-9 cursor-pointer border border-[var(--navBorder)] hover:border-[var(--muted-foreground)] p-2 rounded-md" />
-      </Link> */}
       <FaAnglesLeft
         className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]"
         onClick={goBackPalHistory}
       />
-      {/* <FaPlay
-        onClick={generateRandomPalette}
-        className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]"
-      /> */}
+
+      {/* Conditionally render FaPlay only on random-palettes page */}
+      {isRandomPalettesPage && (
+        <FaPlay
+          onClick={generateRandomPalette}
+          className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]"
+        />
+      )}
 
       <FaAnglesRight
         className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]"
@@ -160,8 +170,6 @@ export default function CustomPalToolbar() {
       />
 
       <CgExport className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]" />
-
-      {/* <FaDatabase className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]" /> */}
 
       {!databaseOpen ? (
         <FaDatabase
