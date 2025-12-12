@@ -3,23 +3,20 @@ import {
   SelectContent,
   SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
 
-export default function SelectComp({ items, value, onChange }) {
+export default function SelectComp({ items, value, onChange, disabled }) {
   return (
-    <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="w-48">
-        <SelectValue placeholder={value} />
+    <Select value={value} onValueChange={onChange} disabled={disabled}>
+      <SelectTrigger className="min-w-[240px] w-[240px]">
+        <SelectValue placeholder="Select palette type" />
       </SelectTrigger>
-      <SelectContent className="lg:max-h-96">
+      <SelectContent>
         <SelectGroup>
-          {/* <SelectLabel>Fruits</SelectLabel> */}
-
-          {items.map((item, index) => (
-            <SelectItem key={index} value={item.value}>
+          {items.map((item) => (
+            <SelectItem key={item.value} value={item.value}>
               {item.label}
             </SelectItem>
           ))}

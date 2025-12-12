@@ -17,7 +17,7 @@ import {
 } from "./custom-palettes/_components/Pickers/components/colorutil";
 
 import paletteDecider from "./custom-palettes/ColorPaletteUtils/paletteDecider";
-
+import { randomPaletteTypes } from "../data/randomPaletteTypes";
 import { paletteTypes } from "../data/paletteTypes";
 import { paletteVariations } from "../data/paletteVarities";
 import analogousPalGen from "./custom-palettes/ColorPaletteUtils/analogousPalGen";
@@ -61,9 +61,9 @@ export function ColorPaletteContextProvider({ children }) {
 
   const generateRandomColor = () => {
     return {
-      l: Math.random() * 0.4 + 0.4, // 0.4 to 0.8 (avoid very dark and very bright)
-      c: Math.random() * 0.15 + 0.08, // 0.08 to 0.23 (avoid both gray and oversaturated)
-      h: Math.random() * 360, // 0 to 360
+      l: Math.random() * 0.15 + 0.65, // 0.65 to 0.8 (bright and luminous)
+      c: Math.random() * 0.12 + 0.18, // 0.18 to 0.3 (vivid and saturated)
+      h: Math.random() * 360, // 0 to 360 (full hue range)
       a: 1,
     };
   };
@@ -75,8 +75,10 @@ export function ColorPaletteContextProvider({ children }) {
     setOklch(randomColor);
 
     // Select random palette type
-    const randomTypeIndex = Math.floor(Math.random() * paletteTypes.length);
-    const selectedType = paletteTypes[randomTypeIndex];
+    const randomTypeIndex = Math.floor(
+      Math.random() * randomPaletteTypes.length
+    );
+    const selectedType = randomPaletteTypes[randomTypeIndex];
     const paletteTypeValue = selectedType.value;
 
     setSelectedPaletteType(paletteTypeValue);
@@ -171,6 +173,21 @@ export function ColorPaletteContextProvider({ children }) {
     analogousAngle1: -35,
     analogousAngle2: 35,
   });
+
+  // const [analogCenteredOptions, setAnalogCenteredOptions] = useState({
+  //   analogousAngle1: -30,
+  //   analogousAngle2: 50,
+  // });
+
+  // const [analogLeftOptions, setAnalogLeftOptions] = useState({
+  //   analogousAngle1: -30,
+  //   analogousAngle2: 50,
+  // });
+
+  // const [analogRightOptions, setAnalogRightOptions] = useState({
+  //   analogousAngle1: -30,
+  //   analogousAngle2: 50,
+  // });
 
   const [splitCompOptions, setSplitCompOptions] = useState({
     splitCompAngle1: -30,

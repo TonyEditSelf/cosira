@@ -111,13 +111,18 @@ export default function CustomPalToolbar() {
         items={paletteTypes}
         value={historyNavigation ? duplicatePaletteType : selectedPaletteType}
         onChange={(val) => {
-          if (selectedPaletteType !== undefined && setSelectedPaletteType) {
-            setSelectedPaletteType(val);
-          } else if (setDuplicatePaletteType) {
-            setDuplicatePaletteType(val);
+          // Only allow changes if NOT on random palettes page
+          if (!isRandomPalettesPage) {
+            if (selectedPaletteType !== undefined && setSelectedPaletteType) {
+              setSelectedPaletteType(val);
+            } else if (setDuplicatePaletteType) {
+              setDuplicatePaletteType(val);
+            }
           }
         }}
+        disabled={isRandomPalettesPage} // Add this prop
       />
+
       <FaAnglesUp className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]" />
       <FaAnglesDown className="size-9 cursor-pointer border border-[var(--navBorder)] hover:border-[var(--muted-foreground)] p-2 rounded-md" />
       <section className="flex gap-5 items-center border border-[var(--navBorder)] hover:border-[var(--muted-foreground)] pl-5 rounded-md">
