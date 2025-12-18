@@ -1,0 +1,105 @@
+4. Chroma Contrast Palettes (Quiet + Loud)
+
+Idea: Same hue & lightness, different chroma.
+
+Example
+
+Base: L 70, C 0.05, H 210
+
+Accent: L 70, C 0.25, H 210
+
+Result
+
+Accent pops without brightness changes
+
+Very modern, very controlled
+
+
+8. Emotional Lightness Palettes
+
+Idea: Encode emotion via L, not hue.
+
+Examples
+
+Anxiety → high L contrast
+
+Calm → mid-L clustering
+
+Luxury → low L + low C
+
+Playful → mid-L + high C
+
+This is difficult in RGB, easy in OKLCH.
+
+
+
+21. Broken-Lightness Palettes
+
+Idea: Intentionally violate smooth lightness ramps.
+
+L jumps while H stays close
+
+Creates tension and rhythm
+
+Great for experimental UI, editorial spreads
+
+Why it works: the eye notices structure, not chaos.
+
+
+22. Chroma-Only Gradients
+
+Idea: Same L and H, chroma fades to zero.
+
+Color → gray → color
+
+Perfect for focus/defocus states
+
+Feels subtle but intentional
+
+
+
+23. Near-Neutral Hue Drift
+
+Idea: Ultra-low chroma with slow hue drift.
+
+C = 0.01–0.04
+
+H shifts 30–60°
+
+Feels neutral, but never dead.
+
+
+24. Perceptual “Shadow” Palettes
+
+Idea: Shadows are cooler + lower chroma, not just darker.
+
+Highlights: higher L, warmer H
+
+Shadows: lower L, cooler H
+
+Much closer to how real light behaves.
+
+
+
+25. Inverted Contrast Palettes
+
+Idea: High chroma at low lightness, low chroma at high lightness.
+
+Saturated darks
+
+Washed-out lights
+
+Creates cinematic, night-scene vibes.
+
+
+33. Semantic Chroma Encoding
+
+Idea: Meaning = chroma, not hue.
+
+Same hue everywhere
+
+Urgency, importance, focus via C only
+
+Extremely clean for enterprise UI.
+
+

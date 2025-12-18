@@ -118,4 +118,5 @@ export const paletteVariations = {
   triadic: [],
   uiPalette: [],
   warmCool: [],
+  uiBrand: ["light", "dark"],
 };

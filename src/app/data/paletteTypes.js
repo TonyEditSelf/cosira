@@ -124,4 +124,9 @@ export const paletteTypes = [
     description:
       "Palettes inspired by the natural colors of flowers, such as sunflowers, roses, and tulips, their leaves, stemps, etc. These palettes capture the essence of floral beauty through carefully selected hues and tones.",
   },
+  {
+    label: "UI and Brand",
+    value: "uiBrand",
+    description: "Create UI and Brand colors.",
+  },
 ];

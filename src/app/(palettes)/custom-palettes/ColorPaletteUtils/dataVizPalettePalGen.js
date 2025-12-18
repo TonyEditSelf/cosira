@@ -9,7 +9,6 @@ export default function dataVizPalettePalGen(oklch, dataVizPalType) {
     const targetL = Math.min(LMAX, Math.max(LMIN, 0.65));
     const targetC = Math.min(CMAX, Math.max(CMIN, 0.16));
 
-    
     // Only hue is taken from the input color
     const baseHue = oklch.h % 360;
 
@@ -641,5 +640,54 @@ export default function dataVizPalettePalGen(oklch, dataVizPalType) {
       { name: "HighContrast-9", value: color9 },
       { name: "HighContrast-10", value: color10 },
     ];
+  } else if (dataVizPalType === "dataVizPalSeven") {
+    const LMAX = 0.75;
+    const LMIN = 0.5; // Tighter range for more equality
+    const CMAX = 0.28;
+    const CMIN = 0.12;
+
+    const baseHue = oklch.h % 360;
+    const baseL = oklch.l;
+    const baseC = oklch.c;
+
+    // Perceptually balanced hue distribution
+    // Optimized to avoid red-green adjacency
+    const hueOffsets = [0, 35, 70, 110, 150, 190, 225, 260, 295, 330];
+
+    // SMALLER lightness offsets for more perceptual equality
+    // Still alternates for distinction, but within tighter bounds
+    const lightnessOffsets = [
+      0.0, -0.08, 0.06, -0.09, -0.02, 0.05, -0.07, 0.03, 0.08, -0.05,
+    ];
+
+    // Strategic chroma multipliers
+    const chromaMultipliers = [
+      1.0, 0.95, 1.15, 0.9, 1.1, 0.85, 1.05, 1.0, 1.15, 0.9,
+    ];
+
+    const colors = [];
+
+    for (let i = 0; i < 10; i++) {
+      const hue = (baseHue + hueOffsets[i] + 360) % 360;
+
+      // Apply offset to base lightness with tighter clamping
+      const lightness = Math.min(
+        LMAX,
+        Math.max(LMIN, baseL + lightnessOffsets[i])
+      );
+
+      // Apply multiplier to base chroma
+      const chroma = Math.min(
+        CMAX,
+        Math.max(CMIN, baseC * chromaMultipliers[i])
+      );
+
+      colors.push({
+        name: `Category-${i + 1}`,
+        value: { ...oklch, h: hue, c: chroma, l: lightness },
+      });
+    }
+
+    return colors;
   }
 }

@@ -9,12 +9,12 @@ import { useColorPaletteContext } from "../../ColorContext";
 import TetradicOptions from "../ColorPaletteUtils/TetradicOptions";
 import ComplementaryOptions from "../ColorPaletteUtils/ComplementaryOptions";
 import MonochromaticOptions from "../ColorPaletteUtils/MonochromaticOptions";
-import DoubleSplitCompOptions from "../ColorPaletteUtils/DoubleSplitCompOptions";
 import GradientOptions from "../ColorPaletteUtils/GradientOptions";
 import LandCStepper from "./Pickers/components/LandCStepper";
 import SeasonalOptions from "../ColorPaletteUtils/SeasonalOptions";
 import DataVizOptions from "../ColorPaletteUtils/DataVizOptions";
 import FlowerPalOptions from "../ColorPaletteUtils/FlowerPalOptions";
+import UIBrandOptions from "../ColorPaletteUtils/UIBrandOptions";
 
 export default function PalettteProperties() {
   const {
@@ -98,11 +98,11 @@ export default function PalettteProperties() {
       {selectedPaletteType === "analogous" && <AnalogousOptions />}
       {selectedPaletteType === "splitComplementary" && <SplitCompOptions />}
       {selectedPaletteType === "tetradic" && <TetradicOptions />}
-      {selectedPaletteType === "doubleSplitComp" && <DoubleSplitCompOptions />}
       {selectedPaletteType === "gradient" && <GradientOptions />}
       {selectedPaletteType === "seasonal" && <SeasonalOptions />}
       {selectedPaletteType === "dataVizPalette" && <DataVizOptions />}
       {selectedPaletteType === "flowerPalette" && <FlowerPalOptions />}
+      {selectedPaletteType === "uiBrand" && <UIBrandOptions />}
 
       <div className="flex flex-col gap-2">
         {(monoPalType === "vintageMono" ||

@@ -1,0 +1,69 @@
+export default function UIBrandPalGen(oklch, UIBrandPaltype = "light") {
+  const { l: L_base, c: C_base, h: H_base } = oklch;
+  
+  // Default configuration (can be modified inside this function)
+  const config = {
+    accentHueOffset: 120,
+    hoverChromaMultiplier: 1.15,
+    activeChromaMultiplier: 0.9,
+  };
+
+  const clamp = (v, min, max) => Math.min(Math.max(v, min), max);
+  const wrapHue = (h) => ((h % 360) + 360) % 360;
+  const oklchStr = (L, C, H) =>
+    `oklch(${L.toFixed(1)}% ${C.toFixed(3)} ${wrapHue(H).toFixed(1)})`;
+
+  const isDark = UIBrandPaltype === "dark";
+
+  // Clamp base values
+  const L = clamp(L_base, 30, 80);
+  const C = clamp(C_base, 0.08, 0.28);
+  const H = wrapHue(H_base);
+
+  // Lightness steps for primary / accent variants
+  const steps = isDark ? [-16, -8, 0, 8, 16] : [-12, -6, 0, 6, 12];
+  const baseL = isDark ? L - 8 : L;
+
+  // --- Primary / Brand ---
+  const primary = oklchStr(baseL + steps[2], C, H);
+  const primaryHover = oklchStr(
+    baseL + steps[3],
+    clamp(C * config.hoverChromaMultiplier, 0, 0.35),
+    H
+  );
+  const primaryActive = oklchStr(
+    baseL + steps[1],
+    clamp(C * config.activeChromaMultiplier, 0, 0.35),
+    H
+  );
+
+  // --- Accent / Complementary ---
+  const accentHue = wrapHue(H + config.accentHueOffset);
+  const accentC = clamp(C * 1.15, 0.08, 0.35);
+  const accent = oklchStr(baseL + steps[2], accentC, accentHue);
+  const accentMuted = oklchStr(baseL + steps[3], accentC * 0.6, accentHue);
+
+  // --- UI Neutrals & Text ---
+  const background = oklchStr(isDark ? 10 : 97, 0.01, H);
+  const surface = oklchStr(isDark ? 20 : 92, 0.02, H);
+  const border = oklchStr(isDark ? 30 : 82, 0.02, H);
+
+  const textPrimaryL = isDark ? 90 : 25;
+  const textSecondaryL = isDark ? 70 : 45;
+  const textPrimary = oklchStr(textPrimaryL, 0.02, H);
+  const textSecondary = oklchStr(textSecondaryL, 0.02, H);
+
+  // --- Return array structure ---
+  return [
+    { name: "Primary-Active", value: primaryActive },
+    { name: "Primary", value: primary },
+    { name: "Primary-Hover", value: primaryHover },
+    { name: "Accent-Muted", value: accentMuted },
+    { name: "Accent", value: accent },
+    { name: "Background", value: background },
+    { name: "Surface", value: surface },
+    { name: "Border", value: border },
+    { name: "Text-Primary", value: textPrimary },
+    { name: "Text-Secondary", value: textSecondary },
+  ];
+}

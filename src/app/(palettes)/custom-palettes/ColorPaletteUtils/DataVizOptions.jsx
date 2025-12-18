@@ -17,6 +17,7 @@ export default function DataVizOptions() {
     { id: "dataVizPalFour", label: "Data Visualization 4" },
     { id: "dataVizPalFive", label: "Data Visualization 5" },
     { id: "dataVizPalSix", label: "Data Visualization 6" },
+    { id: "dataVizPalSeven", label: "Data Visualization 7" },
   ];
 
   const handleChange = (value) => {

@@ -203,20 +203,20 @@ export function ColorPaletteContextProvider({ children }) {
     showAll: false,
     showNone: false,
     colorNames: true,
-    colorTypes: false,
+    colorTypes: true,
     makeBaseOn: false,
     // role: false,
     primitiveName: false,
     hexOn: false,
-    hueOn: false,
-    lightOn: false,
-    chromaOn: false,
+    hueOn: true,
+    lightOn: true,
+    chromaOn: true,
     alphaOn: false,
     whiteContrastOn: false,
     blackContrastOn: false,
-    shades: false,
-    tints: false,
-    addColor: true,
+    shades: true,
+    tints: true,
+    addColor: false,
   });
 
   const toggleKeys = [
@@ -398,6 +398,7 @@ export function ColorPaletteContextProvider({ children }) {
   const [seasonalPalType, setSeasonalPalType] = useState("seasonalCombined");
   const [dataVizPalType, setDataVizPalType] = useState("dataVizPalOne");
   const [flowerPalType, setFlowerPalType] = useState("sunflower");
+  const [uiBrandPalType, setUiBrandPalType] = useState("light");
 
   const [paletteState, setPaletteState] = useState([]);
 
@@ -486,9 +487,9 @@ export function ColorPaletteContextProvider({ children }) {
   }, [selectedPaletteType]);
 
   useEffect(() => {
-    console.log("=== COLOR CONTEXT USEEFFECT RUNNING ===");
-    console.log("selectedPaletteType:", selectedPaletteType);
-    console.log("analogPalType:", analogPalType);
+    // console.log("=== COLOR CONTEXT USEEFFECT RUNNING ===");
+    // console.log("selectedPaletteType:", selectedPaletteType);
+    // console.log("analogPalType:", analogPalType);
 
     setShadesTintsTonesIndex(null);
     setHistoryNavigation(false);
@@ -506,10 +507,12 @@ export function ColorPaletteContextProvider({ children }) {
       gradientPalType,
       seasonalPalType,
       dataVizPalType,
-      flowerPalType
+      flowerPalType,
+      uiBrandPalType
     );
 
-    console.log("Palette from paletteDecider:", pal);
+    // console.log("Palette from paletteDecider:", pal);
+    // console.log("Palette: ", palette);
 
     // CRITICAL FIX: Only set palette if pal is valid
     if (pal && Array.isArray(pal) && pal.length > 0) {
@@ -529,18 +532,19 @@ export function ColorPaletteContextProvider({ children }) {
     }
   }, [
     oklch,
-    analogOptions, // Add this back!
+    analogOptions,
     splitCompOptions,
     tetradicAngle,
     selectedPaletteType,
-    compPalType, // Add this
-    monoPalType, // Add this
-    analogPalType, // Add this - THIS IS THE KEY ONE
-    doubleSplitCompPalType, // Add this
-    gradientPalType, // Add this
-    seasonalPalType, // Add this
-    dataVizPalType, // Add this
+    compPalType,
+    monoPalType,
+    analogPalType,
+    doubleSplitCompPalType,
+    gradientPalType,
+    seasonalPalType,
+    dataVizPalType,
     flowerPalType,
+    uiBrandPalType,
   ]);
 
   const values = {
@@ -625,6 +629,8 @@ export function ColorPaletteContextProvider({ children }) {
     setFavPalette,
     generateRandomColor,
     generateRandomPalette,
+    uiBrandPalType,
+    setUiBrandPalType,
   };
 
   return (

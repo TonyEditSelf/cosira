@@ -1,84 +1,89 @@
 export default function clashPalGen(oklch) {
   const LMAX = 0.95;
-  const LMIN = 0.25;
-  const CMAX = 0.3; // Higher saturation for jarring effect
-  const CMIN = 0.08;
+  const LMIN = 0.2;
+  const CMAX = 0.32;
+  const CMIN = 0.05;
 
   const baseColor = oklch;
 
-  // Intentionally off-harmony angles (30-60° off from harmonious positions)
+  // Asymmetric, organic clash angles
   const clash1 = {
     ...baseColor,
-    h: (baseColor.h + 45) % 360, // Halfway between analogous and complementary
-    c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.1)),
+    h: (baseColor.h + 67) % 360,
+    c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.25)),
+    l: Math.min(LMAX, Math.max(LMIN, baseColor.l * 1.15)),
   };
 
   const clash2 = {
     ...baseColor,
-    h: (baseColor.h + 135) % 360, // Off-split-complementary
-    c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.15)),
+    h: (baseColor.h + 157) % 360,
+    c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.3)),
+    l: Math.min(LMAX, Math.max(LMIN, baseColor.l * 0.75)),
   };
 
   const clash3 = {
     ...baseColor,
-    h: (baseColor.h + 225) % 360, // Another discord point
-    c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.12)),
+    h: (baseColor.h + 241) % 360,
+    c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.2)),
+    l: Math.min(LMAX, Math.max(LMIN, baseColor.l * 1.25)),
   };
 
   const clash4 = {
     ...baseColor,
-    h: (baseColor.h + 315) % 360, // Fourth discord point
-    c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.08)),
+    h: (baseColor.h + 293) % 360,
+    c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.35)),
+    l: Math.min(LMAX, Math.max(LMIN, baseColor.l)),
   };
 
-  // Base variants (high saturation)
+  // Base variants
   const baseBright = {
     ...baseColor,
-    c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.2)),
-    l: Math.min(LMAX, Math.max(LMIN, baseColor.l + 0.1)),
+    c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.35)),
+    l: Math.min(LMAX, Math.max(LMIN, baseColor.l + 0.25)),
   };
 
   const baseDark = {
     ...baseColor,
-    c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.25)),
-    l: Math.min(LMAX, Math.max(LMIN, baseColor.l - 0.2)),
+    c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.4)),
+    l: Math.min(LMAX, Math.max(LMIN, baseColor.l - 0.3)),
   };
 
-  // Clash variants
-  const clash1Bright = {
+  // Strategic neutrals
+  const baseNeutralDark = {
+    ...baseColor,
+    c: 0.03,
+    l: 0.15,
+  };
+
+  const baseNeutralLight = {
+    ...baseColor,
+    c: 0.04,
+    l: 0.92,
+  };
+
+  // Extreme variants
+  const clash1Extreme = {
     ...clash1,
-    c: Math.min(CMAX, Math.max(CMIN, clash1.c * 1.15)),
-    l: Math.min(LMAX, Math.max(LMIN, clash1.l + 0.15)),
+    c: Math.min(CMAX, clash1.c * 1.2),
+    l: Math.min(LMAX, Math.max(LMIN, 0.88)),
   };
 
-  const clash2Dark = {
+  const clash2Extreme = {
     ...clash2,
-    c: Math.min(CMAX, Math.max(CMIN, clash2.c * 1.18)),
-    l: Math.min(LMAX, Math.max(LMIN, clash2.l - 0.18)),
-  };
-
-  const clash3Bright = {
-    ...clash3,
-    c: Math.min(CMAX, Math.max(CMIN, clash3.c * 1.12)),
-    l: Math.min(LMAX, Math.max(LMIN, clash3.l + 0.12)),
-  };
-
-  const clash4Dark = {
-    ...clash4,
-    c: Math.min(CMAX, Math.max(CMIN, clash4.c * 1.15)),
-    l: Math.min(LMAX, Math.max(LMIN, clash4.l - 0.15)),
+    c: Math.min(CMAX, clash2.c * 1.25),
+    l: Math.min(LMAX, Math.max(LMIN, 0.28)),
   };
 
   return [
-    { name: "Base-Bright", value: baseBright },
+    { name: "Neutral-Dark", value: baseNeutralDark },
+    { name: "Neutral-Light", value: baseNeutralLight },
     { name: "Base", value: baseColor },
+    { name: "Base-Bright", value: baseBright },
     { name: "Base-Dark", value: baseDark },
     { name: "Clash1", value: clash1 },
-    { name: "Clash1-Bright", value: clash1Bright },
+    { name: "Clash1-Extreme", value: clash1Extreme },
     { name: "Clash2", value: clash2 },
-    { name: "Clash2-Dark", value: clash2Dark },
+    { name: "Clash2-Extreme", value: clash2Extreme },
     { name: "Clash3", value: clash3 },
-    { name: "Clash3-Bright", value: clash3Bright },
-    { name: "Clash4", value: clash4 },
   ];
 }

@@ -1,4 +1,3 @@
-// navDesktopElements.js
 export const navDesktopElements = [
   {
     label: "Color Playground",
@@ -13,8 +12,8 @@ export const navDesktopElements = [
     label: "Font Playground",
     submenu: [
       // Add your font playground items here
-      { label: "Font Item 1", path: "/font-item-1" },
-      { label: "Font Item 2", path: "/font-item-2" },
+      { label: "Choose Fonts", path: "/choose-fonts" },
+      { label: "Preview Fonts and Palette", path: "/preview-fonts-palette" },
     ],
   },
   {

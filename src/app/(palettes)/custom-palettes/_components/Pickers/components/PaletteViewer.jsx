@@ -13,6 +13,7 @@ import { FaCrosshairs, FaLayerGroup } from "react-icons/fa";
 import OffAndOn from "../../OffAndOn";
 import PalettteProperties from "../../PalettteProperties";
 import MyColorPicker from "../../MyColorPicker";
+import { Icon } from "@iconify/react";
 
 let colors = {};
 allColors.colornames.forEach((color) => {
@@ -58,8 +59,8 @@ export default function PaletteViewer() {
   const toggleConfig = [
     { key: "showAll", label: "Show All" },
     { key: "showNone", label: "Show None" },
-    { key: "shades", label: "Show Shades" },
-    { key: "tints", label: "Show Tints" },
+    { key: "shades", label: "Show Vividness/Tones" },
+    { key: "tints", label: "Show Tints/Shades" },
     { key: "primitiveName", label: "Show Color Names" },
     { key: "colorNames", label: "Show Fancy Color Names" },
     { key: "colorTypes", label: "Show Color Types" },
@@ -99,9 +100,9 @@ export default function PaletteViewer() {
           }}
           exit={{ width: "100%" }}
           transition={{ duration: 0.9, ease: "easeIn" }}
-          className="relative flex-1 ml-3 mr-2 mb-0 border rounded-md border-[var(--navBorder)] flex-col p-2"
+          className="relative flex-1 ml-3 mr-2 mb-0 border rounded-md border-[var(--navBorder)] flex-col p-2 overflow-x-scroll "
         >
-          <div role="palette viewer" className="flex h-full">
+          <div role="palette viewer" className="flex h-full ">
             {palette?.map((colorObj, index) => {
               const { l, c, h, a } = colorObj.value;
               let textColor;
@@ -137,11 +138,12 @@ export default function PaletteViewer() {
 
               return (
                 <div
-                  className={`h-full ${
-                    shadesTintsTonesIndex === index ? "py-0" : "py-5"
-                  } flex flex-col gap-2 flex-1 justify-between items-center font-semibold ${
-                    textColor === "white" ? "text-white " : "text-black "
-                  } `}
+                  className={`h-full
+                  ${palette.length > 11 ? "w-[100px] flex-none" : "flex-1"}
+                  ${shadesTintsTonesIndex === index ? "py-0" : "py-5"}
+                  flex flex-col gap-2 justify-between items-center font-semibold
+                  ${textColor === "white" ? "text-white" : "text-black"}
+                `}
                   key={index}
                   style={{ backgroundColor: cssColor }}
                   onMouseEnter={() => setHoverOn(true)}
@@ -263,14 +265,15 @@ export default function PaletteViewer() {
                               setShadesTintsTonesIndex(index);
                               setPickedShadesOrTones("shades");
                             }}
-                            className={`p-1 rounded-md cursor-pointer border ${
+                            className={`rounded-md cursor-pointer border ${
                               textColor === "white"
                                 ? "border-white "
                                 : "border-black "
                             } `}
                           >
-                            <BsCircleHalf
-                              className={`w-[12px] h-[12px] cursor-pointer } `}
+                            <Icon
+                              icon="mdi:alpha-l"
+                              className="w-[20px] h-[20px] font-bold cursor-pointer"
                             />
                           </span>
                         )}
@@ -282,14 +285,15 @@ export default function PaletteViewer() {
                               setShadesTintsTonesIndex(index);
                               setPickedShadesOrTones("tones");
                             }}
-                            className={`p-1 rounded-md border ${
+                            className={`rounded-md border ${
                               textColor === "white"
                                 ? "border-white "
                                 : "border-black "
                             } `}
                           >
-                            <FaLayerGroup
-                              className={`w-[12px] h-[12px] cursor-pointer } `}
+                            <Icon
+                              icon="mdi:alpha-c"
+                              className="w-[20px] h-[20px] font-bold cursor-pointer"
                             />
                           </span>
                         )}
