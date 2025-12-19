@@ -93,10 +93,42 @@ export default function PaletteViewer() {
             </motion.aside>
           )}
         </AnimatePresence>
+
+        <AnimatePresence>
+          {showHidePanelOpen && (
+            <motion.aside
+              initial={{ x: -200, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -200, opacity: 0 }}
+              transition={{ duration: 0.3, ease: easeIn }}
+              className="flex gap-6 h-[calc(100vh-122px)] overflow-y-scroll flex-col items-center ml-3 mr-0 pt-5 py-4 px-6 w-[310px] rounded-md border border-[var(--navBorder)]"
+            >
+              <h1 className="text-[12px] font-bold space-y-3 mb-3">
+                SHOW/HIDE
+              </h1>
+
+              <div className="flex flex-col gap-1 text-[11px]">
+                {toggleConfig.map(({ key, label }) => (
+                  <div key={key}>
+                    <span>{label}: </span>
+                    <OffAndOn
+                      isItOn={toggles[key]}
+                      setItOn={() => handleToggle(key)}
+                    />
+                  </div>
+                ))}
+              </div>
+            </motion.aside>
+          )}
+        </AnimatePresence>
         <motion.section
           initial={{ width: "100%" }}
           animate={{
-            width: leftPaletteAdjusterOpen ? "calc(100% - 20rem)" : "100%",
+            width: leftPaletteAdjusterOpen
+              ? "calc(100% - 5rem)"
+              : showHidePanelOpen
+              ? "calc(100% - 16rem)"
+              : "100%",
           }}
           exit={{ width: "100%" }}
           transition={{ duration: 0.9, ease: "easeIn" }}
@@ -337,26 +369,6 @@ export default function PaletteViewer() {
                 </div>
               );
             })}
-
-            {showHidePanelOpen && (
-              <div className="absolute top-2 bottom-2 left-2 bg-[var(--background)] border border-[var(--navBorder)] py-4 px-8 overflow-auto">
-                <h1 className="text-[12px] font-bold space-y-3 mb-3">
-                  SHOW/HIDE
-                </h1>
-
-                <div className="flex flex-col gap-1 text-[11px]">
-                  {toggleConfig.map(({ key, label }) => (
-                    <div key={key}>
-                      <span>{label}: </span>
-                      <OffAndOn
-                        isItOn={toggles[key]}
-                        setItOn={() => handleToggle(key)}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
 
             {databaseOpen && (
               <div className="absolute top-2 bottom-2 left-2 right-2 bg-[var(--background)] overflow-auto flex gap-3">

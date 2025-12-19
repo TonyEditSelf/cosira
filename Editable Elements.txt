@@ -517,6 +517,227 @@ const DarkPage = ({ colors, currentColorIndex, fonts }) => {
   );
 };
 
+// Editable Element Component
+const EditableElement = ({
+  children,
+  type,
+  id,
+  onSelect,
+  isSelected,
+  styles,
+  className = "",
+}) => {
+  const [isHovered, setIsHovered] = useState(false);
+
+  const handleClick = (e) => {
+    e.stopPropagation();
+    onSelect(id, type, styles);
+  };
+
+  const borderClass = isSelected
+    ? "outline outline-4 outline-blue-500"
+    : isHovered
+    ? "outline outline-2 outline-blue-300"
+    : "";
+
+  return (
+    <div
+      className={`relative ${borderClass} ${className}`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onClick={handleClick}
+      style={styles}
+    >
+      {children}
+      {isHovered && !isSelected && (
+        <div className="absolute -top-8 left-0 bg-gray-900 text-white text-xs px-2 py-1 rounded shadow-lg z-50 whitespace-nowrap">
+          {type === "text" && styles?.fontFamily && (
+            <>
+              Font: {styles.fontFamily} | Size: {styles.fontSize || "16px"}
+            </>
+          )}
+          {type === "color" && styles?.backgroundColor && (
+            <>Color: {styles.backgroundColor}</>
+          )}
+          {type === "body" && <>Click to edit background</>}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Element-specific Toolbar Component (appears above permanent toolbar)
+const ElementToolbar = ({
+  selectedElement,
+  onClose,
+  onStyleChange,
+  palette,
+}) => {
+  const [showFonts, setShowFonts] = useState(false);
+  const [showColors, setShowColors] = useState(false);
+  const [colorType, setColorType] = useState(null); // 'text' or 'background'
+
+  if (!selectedElement) return null;
+
+  const handleFontChange = (font) => {
+    onStyleChange({ ...selectedElement.styles, fontFamily: font });
+    setShowFonts(false);
+  };
+
+  const handleColorChange = (color) => {
+    if (colorType === "text") {
+      onStyleChange({ ...selectedElement.styles, color });
+    } else {
+      onStyleChange({ ...selectedElement.styles, backgroundColor: color });
+    }
+  };
+
+  return (
+    <div
+      className="fixed left-0 right-0 bg-gray-800 border-t-4 border-blue-500 shadow-2xl z-40"
+      style={{ bottom: "200px" }}
+    >
+      <div className="flex items-center justify-between px-6 py-4">
+        <div className="flex items-center gap-4">
+          <span className="text-white font-semibold">
+            Editing: {selectedElement.type}
+          </span>
+
+          {selectedElement.type === "text" && (
+            <>
+              <button
+                onClick={() => setShowFonts(!showFonts)}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center gap-2"
+              >
+                <Palette size={16} />
+                Typography
+              </button>
+
+              <button
+                onClick={() => {
+                  setColorType("text");
+                  setShowColors(!showColors);
+                }}
+                className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded"
+              >
+                Text Color
+              </button>
+
+              <button
+                onClick={() => {
+                  setColorType("background");
+                  setShowColors(!showColors);
+                }}
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+              >
+                Background
+              </button>
+            </>
+          )}
+
+          {selectedElement.type === "body" && (
+            <button
+              onClick={() => {
+                setColorType("background");
+                setShowColors(!showColors);
+              }}
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+            >
+              Background Color
+            </button>
+          )}
+        </div>
+
+        <button onClick={onClose} className="text-white hover:text-gray-300">
+          <X size={24} />
+        </button>
+      </div>
+
+      {/* Font Selector */}
+      {showFonts && (
+        <div className="bg-gray-700 border-t border-gray-600 p-4 max-h-64 overflow-y-auto">
+          <div className="grid grid-cols-4 gap-2">
+            {GOOGLE_FONTS.map((font) => (
+              <button
+                key={font}
+                onClick={() => handleFontChange(font)}
+                className="bg-gray-600 hover:bg-gray-500 text-white px-3 py-2 rounded text-sm text-left"
+                style={{ fontFamily: font }}
+              >
+                {font}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Color Picker */}
+      {showColors && (
+        <div className="bg-gray-700 border-t border-gray-600 p-4">
+          <div className="grid grid-cols-12 gap-2 max-w-3xl">
+            {palette.map((color, i) => (
+              <button
+                key={i}
+                onClick={() => handleColorChange(color)}
+                className="aspect-square rounded border-2 border-gray-600 hover:border-white transition-colors"
+                style={{ backgroundColor: color }}
+                title={color}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Permanent Bottom Toolbar (always visible)
+const PermanentToolbar = ({ palette, currentColorIndex, onColorChange }) => {
+  return (
+    <div className="fixed bottom-0 left-0 right-0 bg-gray-900 border-t-4 border-gray-700 shadow-2xl z-30">
+      <div className="px-6 py-4">
+        {/* Color Palette Display */}
+        <div className="mb-3">
+          <p className="text-sm font-semibold text-gray-300 mb-2">
+            Color Palette
+          </p>
+          <div className="flex gap-2">
+            {palette.slice(0, 12).map((color, i) => (
+              <button
+                key={i}
+                onClick={() => onColorChange(i)}
+                className={`w-12 h-12 rounded border-2 transition-all ${
+                  i === currentColorIndex
+                    ? "border-white scale-110"
+                    : "border-gray-600 hover:border-gray-400"
+                }`}
+                style={{ backgroundColor: color }}
+                title={color}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Current Color Info */}
+        <div className="flex items-center gap-4">
+          <span className="text-gray-400 text-sm">Current Accent:</span>
+          <div
+            className="w-8 h-8 rounded border-2 border-gray-600"
+            style={{ backgroundColor: palette[currentColorIndex] }}
+          />
+          <span className="text-gray-300 text-sm font-mono">
+            {palette[currentColorIndex]}
+          </span>
+          <div className="flex-1" />
+          <span className="text-gray-500 text-xs">
+            Click any element above to edit • {palette.length} colors available
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function FontPalettePreview() {
   const { palette } = useColorPaletteContext();
 
@@ -533,25 +754,34 @@ export default function FontPalettePreview() {
     return [...hexPalette, "#000000", "#FFFFFF", "#808080"];
   }, [hexPalette]);
 
-  const [fonts, setFonts] = useState({
-    heading: "Playfair Display",
-    subheading: "Lora",
-    link: "Inter",
-    body: "Open Sans",
+  const [fontsLoaded, setFontsLoaded] = useState(false);
+  const [selectedElement, setSelectedElement] = useState(null);
+  const [currentColorIndex, setCurrentColorIndex] = useState(0);
+  const [styles, setStyles] = useState({
+    logo: { fontFamily: "Playfair Display", fontSize: "30px", color: "#000" },
+    menu: { fontFamily: "Inter", fontSize: "16px", color: "#000" },
+    hero: { fontFamily: "Playfair Display", fontSize: "48px", color: "#000" },
+    body: {
+      fontFamily: "Open Sans",
+      fontSize: "16px",
+      color: "#666",
+      backgroundColor: "#FFFFFF",
+    },
+    link: {
+      fontFamily: "Inter",
+      fontSize: "14px",
+      color: hexPalette[0] || "#000",
+    },
+    footer: { fontFamily: "Open Sans", fontSize: "14px", color: "#666" },
   });
 
-  const [currentPageIndex, setCurrentPageIndex] = useState(0);
-  const [currentColorIndex, setCurrentColorIndex] = useState(0);
-  const [fontsLoaded, setFontsLoaded] = useState(false);
-  const pages = ["Light", "Dark"];
-
-  // Load fonts
+  // Load all fonts
   useEffect(() => {
-    const fontUrls = Object.values(fonts).filter(
-      (f, i, a) => a.indexOf(f) === i
-    );
+    const allFonts = Object.values(styles)
+      .map((s) => s.fontFamily)
+      .filter((f, i, a) => a.indexOf(f) === i);
     const link = document.createElement("link");
-    const fontQuery = fontUrls
+    const fontQuery = allFonts
       .map((f) => f.replace(/\s+/g, "+"))
       .join("&family=");
     link.href = `https://fonts.googleapis.com/css2?family=${fontQuery}&display=swap`;
@@ -560,155 +790,192 @@ export default function FontPalettePreview() {
 
     const timeout = setTimeout(() => setFontsLoaded(true), 1000);
     return () => clearTimeout(timeout);
-  }, [fonts]);
+  }, [styles]);
 
-  const handleFontChange = (type, value) => {
-    setFonts((prev) => ({ ...prev, [type]: value }));
+  const handleSelect = (id, type, elementStyles) => {
+    setSelectedElement({ id, type, styles: elementStyles });
   };
 
-  const cycleColor = (direction) => {
-    const newIndex =
-      direction === "next"
-        ? (currentColorIndex + 1) % hexPalette.length
-        : (currentColorIndex - 1 + hexPalette.length) % hexPalette.length;
-    setCurrentColorIndex(newIndex);
+  const handleStyleChange = (newStyles) => {
+    setStyles((prev) => ({
+      ...prev,
+      [selectedElement.id]: newStyles,
+    }));
+    setSelectedElement((prev) => ({ ...prev, styles: newStyles }));
   };
 
-  const currentPage = pages[currentPageIndex];
+  const handleBodyClick = () => {
+    setSelectedElement({ id: "body", type: "body", styles: styles.body });
+  };
+
+  if (!fontsLoaded) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-gray-900">
+        <p className="text-xl text-white opacity-60">Loading fonts...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex h-full bg-red-900 text-white gap-6 p-6">
-      {/* Left Panel */}
-      <div className="w-96 overflow-y-auto rounded-lg bg-gray-800 p-6 shadow-xl">
-        <h1 className="text-2xl font-bold mb-6">Font & Palette</h1>
-
-        {/* Page Toggle */}
-        <div className="mb-8 p-4 bg-gray-700 rounded-lg">
-          <p className="text-sm font-semibold text-gray-300 mb-3">
-            Preview Page
-          </p>
-          <div className="flex gap-2">
-            {pages.map((page, idx) => (
-              <button
-                key={page}
-                onClick={() => setCurrentPageIndex(idx)}
-                className={`flex-1 py-2 rounded font-medium transition-colors ${
-                  currentPageIndex === idx
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                }`}
+    <div
+      className="h-screen bg-gray-900 flex items-center justify-center p-8"
+      style={{ paddingBottom: "220px" }}
+    >
+      <div
+        className="w-full max-w-6xl h-full bg-white rounded-lg shadow-2xl overflow-hidden flex flex-col"
+        onClick={handleBodyClick}
+        style={{ backgroundColor: styles.body.backgroundColor }}
+      >
+        {/* Website Content - Scrollable */}
+        <div className="flex-1 overflow-y-auto">
+          {/* Header */}
+          <header
+            className="sticky top-0 bg-white shadow-sm z-10"
+            style={{ backgroundColor: styles.body.backgroundColor }}
+          >
+            <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+              <EditableElement
+                type="text"
+                id="logo"
+                onSelect={handleSelect}
+                isSelected={selectedElement?.id === "logo"}
+                styles={styles.logo}
+                className="flex items-center gap-3 cursor-pointer"
               >
-                {page}
-              </button>
-            ))}
-          </div>
-        </div>
+                <LogoSVG
+                  colors={hexPalette}
+                  currentColorIndex={currentColorIndex}
+                />
+                <span className="text-3xl font-bold">TOFABZA</span>
+              </EditableElement>
 
-        {/* Font Selection */}
-        <div className="mb-8">
-          <h2 className="text-lg font-semibold mb-4 text-gray-300">
-            Select Fonts
-          </h2>
-
-          {["heading", "body"].map((type) => (
-            <div key={type} className="mb-4">
-              <label className="block text-sm font-medium capitalize mb-2 text-gray-400">
-                {type}
-              </label>
-              <select
-                value={fonts[type]}
-                onChange={(e) => handleFontChange(type, e.target.value)}
-                className="w-full bg-gray-700 text-white rounded px-3 py-2 text-sm border border-gray-600 focus:border-blue-500 focus:outline-none"
-              >
-                {GOOGLE_FONTS.map((font) => (
-                  <option key={font} value={font}>
-                    {font}
-                  </option>
+              <nav className="flex gap-6">
+                {["Menu 1", "Menu 2", "Menu 3", "Menu 4"].map((item, i) => (
+                  <EditableElement
+                    key={i}
+                    type="text"
+                    id="menu"
+                    onSelect={handleSelect}
+                    isSelected={selectedElement?.id === "menu"}
+                    styles={styles.menu}
+                    className="cursor-pointer px-3 py-1"
+                  >
+                    {item}
+                  </EditableElement>
                 ))}
-              </select>
+              </nav>
             </div>
-          ))}
-        </div>
+          </header>
 
-        {/* Current Color Display */}
-        <div className="mb-6 p-4 bg-gray-700 rounded-lg">
-          <p className="text-sm font-semibold text-gray-300 mb-3">
-            Accent Color
-          </p>
-          <div
-            className="w-full h-16 rounded border-2 border-gray-600"
-            style={{ backgroundColor: hexPalette[currentColorIndex] }}
-            title={hexPalette[currentColorIndex]}
-          />
-          <p className="text-xs text-center mt-2 font-mono text-gray-300">
-            {hexPalette[currentColorIndex]}
-          </p>
-          <div className="flex gap-2 mt-3">
-            <button
-              onClick={() => cycleColor("prev")}
-              className="flex-1 bg-gray-600 hover:bg-gray-500 text-white rounded px-3 py-2 flex items-center justify-center gap-2 transition-colors text-sm"
-            >
-              <ChevronLeft size={16} />
-              Prev
-            </button>
-            <button
-              onClick={() => cycleColor("next")}
-              className="flex-1 bg-blue-600 hover:bg-blue-500 text-white rounded px-3 py-2 flex items-center justify-center gap-2 transition-colors text-sm"
-            >
-              Next
-              <ChevronRight size={16} />
-            </button>
-          </div>
-          <p className="text-xs text-gray-500 mt-2 text-center">
-            {currentColorIndex + 1} of {hexPalette.length}
-          </p>
-        </div>
+          {/* Hero Section */}
+          <section className="max-w-5xl mx-auto px-6 py-16">
+            <div className="grid grid-cols-2 gap-12 items-center">
+              <div>
+                <EditableElement
+                  type="text"
+                  id="hero"
+                  onSelect={handleSelect}
+                  isSelected={selectedElement?.id === "hero"}
+                  styles={styles.hero}
+                  className="cursor-pointer mb-6"
+                >
+                  <h1 className="leading-tight">
+                    Unleash Your Creativity with{" "}
+                    <span style={{ color: hexPalette[currentColorIndex] }}>
+                      Design
+                    </span>
+                  </h1>
+                </EditableElement>
+              </div>
+              <div style={{ height: "300px" }}>
+                <SwatchesSVG
+                  colors={hexPalette}
+                  currentColorIndex={currentColorIndex}
+                />
+              </div>
+            </div>
+          </section>
 
-        {/* Palette Visualization */}
-        <div className="mb-6">
-          <p className="text-sm font-semibold mb-3 text-gray-300">
-            Color Palette
-          </p>
-          <div className="grid grid-cols-6 gap-2 p-3 bg-gray-700 rounded-lg">
-            {hexPalette.map((color, i) => (
-              <div
-                key={i}
-                className={`aspect-square rounded border-2 transition-colors cursor-pointer ${
-                  i === currentColorIndex
-                    ? "border-white"
-                    : "border-gray-600 hover:border-gray-400"
-                }`}
-                style={{ backgroundColor: color }}
-                onClick={() => setCurrentColorIndex(i)}
-                title={color}
-              />
-            ))}
-          </div>
+          {/* Body Text */}
+          <section className="max-w-5xl mx-auto px-6 py-12">
+            <EditableElement
+              type="text"
+              id="body"
+              onSelect={handleSelect}
+              isSelected={selectedElement?.id === "body"}
+              styles={styles.body}
+              className="cursor-pointer space-y-4"
+            >
+              <p>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
+                eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
+                enim ad minim veniam, quis nostrud exercitation ullamco laboris
+                nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor
+                in reprehenderit in voluptate velit esse cillum dolore eu fugiat
+                nulla pariatur.
+              </p>
+              <p>
+                Excepteur sint occaecat cupidatat non proident, sunt in culpa
+                qui officia deserunt mollit anim id est laborum. Sed ut
+                perspiciatis unde omnis iste natus error sit voluptatem
+                accusantium doloremque laudantium, totam rem aperiam, eaque ipsa
+                quae ab illo inventore veritatis et quasi architecto beatae
+                vitae dicta sunt explicabo.
+              </p>
+            </EditableElement>
+          </section>
+
+          {/* Links */}
+          <section className="max-w-5xl mx-auto px-6 py-12">
+            <div className="flex gap-6">
+              {["Link 1", "Link 2", "Link 3", "Link 4"].map((item, i) => (
+                <EditableElement
+                  key={i}
+                  type="text"
+                  id="link"
+                  onSelect={handleSelect}
+                  isSelected={selectedElement?.id === "link"}
+                  styles={styles.link}
+                  className="cursor-pointer underline"
+                >
+                  {item}
+                </EditableElement>
+              ))}
+            </div>
+          </section>
+
+          {/* Footer */}
+          <footer className="border-t mt-16">
+            <div className="max-w-5xl mx-auto px-6 py-8">
+              <EditableElement
+                type="text"
+                id="footer"
+                onSelect={handleSelect}
+                isSelected={selectedElement?.id === "footer"}
+                styles={styles.footer}
+                className="cursor-pointer text-center"
+              >
+                <p>© 2024 TOFABZA. All rights reserved.</p>
+              </EditableElement>
+            </div>
+          </footer>
         </div>
       </div>
 
-      {/* Right Panel - Preview */}
-      <div className="flex-1 rounded-lg overflow-hidden shadow-xl">
-        {fontsLoaded ? (
-          currentPage === "Light" ? (
-            <LightPage
-              colors={hexPalette}
-              currentColorIndex={currentColorIndex}
-              fonts={fonts}
-            />
-          ) : (
-            <DarkPage
-              colors={hexPalette}
-              currentColorIndex={currentColorIndex}
-              fonts={fonts}
-            />
-          )
-        ) : (
-          <div className="h-full flex items-center justify-center bg-gray-800">
-            <p className="text-xl opacity-60">Loading fonts...</p>
-          </div>
-        )}
-      </div>
+      {/* Element-specific Toolbar (appears above permanent toolbar when element is selected) */}
+      <ElementToolbar
+        selectedElement={selectedElement}
+        onClose={() => setSelectedElement(null)}
+        onStyleChange={handleStyleChange}
+        palette={fullPalette}
+      />
+
+      {/* Permanent Bottom Toolbar (always visible) */}
+      <PermanentToolbar
+        palette={fullPalette}
+        currentColorIndex={currentColorIndex}
+        onColorChange={setCurrentColorIndex}
+      />
     </div>
   );
 }

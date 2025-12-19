@@ -1,0 +1,106 @@
+export default function UIBrandPalGen(oklch, type = "light") {
+  const { l: L_base, c: C_base, h: H_base } = oklch; // h IN DEGREES
+
+  const isDark = type === "dark";
+
+  const clamp = (v, min, max) => Math.min(Math.max(v, min), max);
+  const wrapHue = (h) => ((h % 360) + 360) % 360;
+
+  const oklchObj = (L_pct, C, H_deg, A = 1) => ({
+    l: clamp(L_pct / 100, 0, 1),
+    c: clamp(C, 0, 0.45),
+    h: wrapHue(H_deg), // 🔒 ALWAYS DEGREES
+    a: A,
+  });
+
+  // ---------- normalize input ----------
+  const H = wrapHue(H_base);
+  const C = clamp(C_base, 0.04, 0.32);
+  const L = clamp(L_base, 40, 70);
+
+  // ---------- lightness ----------
+  const scale = isDark
+    ? {
+        bg: 8,
+        surface: 14,
+        border: 22,
+        textPrimary: 92,
+        textSecondary: 70,
+        brand: L - 6,
+      }
+    : {
+        bg: 98,
+        surface: 94,
+        border: 86,
+        textPrimary: 18,
+        textSecondary: 40,
+        brand: L,
+      };
+
+  // ---------- chroma ----------
+  const chroma = {
+    brand: C,
+    brandHover: C * 1.2,
+    brandActive: C * 0.85,
+    surface: C * 0.12,
+    border: C * 0.18,
+    textPrimary: C * 0.08,
+    textSecondary: C * 0.12,
+  };
+
+  // ---------- hue motion (DEGREES) ----------
+  const hueShift = {
+    hover: isDark ? 6 : -6,
+    active: isDark ? -10 : 10,
+    accent: 60,
+  };
+
+  // ---------- primary ----------
+  const primary = oklchObj(scale.brand, chroma.brand, H);
+
+  const primaryHover = oklchObj(
+    scale.brand + (isDark ? 4 : -4),
+    chroma.brandHover,
+    H + hueShift.hover
+  );
+
+  const primaryActive = oklchObj(
+    scale.brand + (isDark ? -6 : 6),
+    chroma.brandActive,
+    H + hueShift.active
+  );
+
+  // ---------- accent ----------
+  const accent = oklchObj(scale.brand, chroma.brand * 1.1, H + hueShift.accent);
+
+  const accentMuted = oklchObj(
+    scale.brand + (isDark ? 6 : -6),
+    chroma.brand * 0.5,
+    H + hueShift.accent
+  );
+
+  // ---------- neutrals ----------
+  const background = oklchObj(scale.bg, chroma.surface * 0.6, H);
+  const surface = oklchObj(scale.surface, chroma.surface, H);
+  const border = oklchObj(scale.border, chroma.border, H);
+
+  // ---------- text ----------
+  const textPrimary = oklchObj(scale.textPrimary, chroma.textPrimary, H);
+  const textSecondary = oklchObj(scale.textSecondary, chroma.textSecondary, H);
+
+  return [
+    { name: "Primary", value: primary },
+    { name: "Primary-Hover", value: primaryHover },
+    { name: "Primary-Active", value: primaryActive },
+
+    { name: "Accent", value: accent },
+    { name: "Accent-Muted", value: accentMuted },
+
+    { name: "Background", value: background },
+    { name: "Surface", value: surface },
+    { name: "Border", value: border },
+
+    { name: "Text-Primary", value: textPrimary },
+    { name: "Text-Secondary", value: textSecondary },
+  ];
+}
