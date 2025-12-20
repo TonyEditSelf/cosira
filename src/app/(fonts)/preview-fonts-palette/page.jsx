@@ -7,8 +7,10 @@ import FontPaletteToolbar from "./FontPaletteToolbar";
 export default function PreviewFontsAndPalette() {
   return (
     <PageWrapper>
-      <FontPalettePreview />
-      <FontPaletteToolbar />
+      <div>
+        <FontPalettePreview />
+        <FontPaletteToolbar />
+      </div>
     </PageWrapper>
   );
 }
