@@ -385,8 +385,7 @@ export function ColorPaletteContextProvider({ children }) {
   const [sliderLightValue, setSliderLightValue] = useState(0);
   const [sliderChromaValue, setSliderChromaValue] = useState(0);
 
-  const [selectedPaletteType, setSelectedPaletteType] =
-    useState("monochromatic");
+  const [selectedPaletteType, setSelectedPaletteType] = useState("hueMint5");
 
   const [compPalType, setCompPalType] = useState("classicComp");
   const [monoPalType, setMonoPalType] = useState("classicMono");
@@ -399,6 +398,7 @@ export function ColorPaletteContextProvider({ children }) {
   const [dataVizPalType, setDataVizPalType] = useState("dataVizPalOne");
   const [flowerPalType, setFlowerPalType] = useState("sunflower");
   const [uiBrandPalType, setUiBrandPalType] = useState("light");
+  const [arcPalType, setArcPalType] = useState("arcBottomUp");
 
   const [paletteState, setPaletteState] = useState([]);
 
@@ -508,7 +508,8 @@ export function ColorPaletteContextProvider({ children }) {
       seasonalPalType,
       dataVizPalType,
       flowerPalType,
-      uiBrandPalType
+      uiBrandPalType,
+      arcPalType
     );
 
     // console.log("Palette from paletteDecider:", pal);
@@ -545,6 +546,7 @@ export function ColorPaletteContextProvider({ children }) {
     dataVizPalType,
     flowerPalType,
     uiBrandPalType,
+    arcPalType,
   ]);
 
   const values = {
@@ -631,6 +633,8 @@ export function ColorPaletteContextProvider({ children }) {
     generateRandomPalette,
     uiBrandPalType,
     setUiBrandPalType,
+    arcPalType,
+    setArcPalType,
   };
 
   return (

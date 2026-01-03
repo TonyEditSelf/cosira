@@ -21,6 +21,9 @@ import dataVizPalettePalGen from "./dataVizPalettePalGen";
 import designsystemPalGen from "./designsystemPalGen";
 import flowerPalGen from "./flowerPalGen";
 import uIBrandPalGen from "./uIBrandPalGen";
+import arcPalGen from "./arcPalGen";
+import hueMintPal5 from "./hueMintPal5";
+import hueMintPal10 from "./hueMintPal10";
 
 export default function paletteDecider(
   oklch,
@@ -36,7 +39,8 @@ export default function paletteDecider(
   seasonalPalType,
   dataVizPalType,
   flowerPalType,
-  uiBrandPalType
+  uiBrandPalType,
+  arcPalType
 ) {
   if (selectedPaletteType === "complementary") {
     return complementaryPalGen(oklch, compPalType);
@@ -84,6 +88,12 @@ export default function paletteDecider(
     return flowerPalGen(oklch, flowerPalType);
   } else if (selectedPaletteType === "uiBrand") {
     return uIBrandPalGen(oklch, uiBrandPalType);
+  } else if (selectedPaletteType === "arcPal") {
+    return arcPalGen(oklch, arcPalType);
+  } else if (selectedPaletteType === "hueMintPal5") {
+    return hueMintPal5(oklch);
+  } else if (selectedPaletteType === "hueMintPal10") {
+    return hueMintPal10(oklch);
   }
   return null;
 }

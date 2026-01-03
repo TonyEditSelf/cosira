@@ -4,62 +4,6 @@ import { useColorPaletteContext } from "@/app/(palettes)/ColorContext";
 import { oklchToHex } from "@/app/(palettes)/custom-palettes/_components/Pickers/components/colorutil";
 import FontPaletteToolbar from "./FontPaletteToolbar";
 
-const GOOGLE_FONTS = [
-  "Playfair Display",
-  "Lora",
-  "Merriweather",
-  "Inter",
-  "Poppins",
-  "Roboto",
-  "Open Sans",
-  "Montserrat",
-  "Ubuntu",
-  "Raleway",
-  "Libre Baskerville",
-  "EB Garamond",
-  "Crimson Text",
-  "DM Sans",
-  "JetBrains Mono",
-  "Space Grotesk",
-  "Sora",
-  "Quicksand",
-  "Outfit",
-  "Manrope",
-];
-
-const WCAG_AA_RATIO = 4.5;
-
-const getLuminance = (hex) => {
-  if (!hex || typeof hex !== "string" || !hex.startsWith("#")) {
-    return 0;
-  }
-  const rgb = parseInt(hex.slice(1), 16);
-  const r = (rgb >> 16) & 0xff;
-  const g = (rgb >> 8) & 0xff;
-  const b = (rgb >> 0) & 0xff;
-  const [rs, gs, bs] = [r, g, b].map((c) => {
-    c = c / 255;
-    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
-  });
-  return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
-};
-
-const getContrastRatio = (color1, color2) => {
-  const l1 = getLuminance(color1);
-  const l2 = getLuminance(color2);
-  const lighter = Math.max(l1, l2);
-  const darker = Math.min(l1, l2);
-  return (lighter + 0.05) / (darker + 0.05);
-};
-
-const meetsWCAGAA = (bgColor, fgColor) => {
-  return getContrastRatio(bgColor, fgColor) >= WCAG_AA_RATIO;
-};
-
-const getContrastingColors = (color, palette) => {
-  return palette.filter((c) => meetsWCAGAA(color, c));
-};
-
 // Logo SVG Component
 const LogoSVG = ({ colors, currentColorIndex }) => {
   const getColor = (offset) => {
@@ -313,101 +257,104 @@ const SwatchesSVG = ({ colors, currentColorIndex }) => {
 };
 
 // Light Page Component
+
 const LightPage = ({ colors, currentColorIndex, fonts }) => {
   const accentColor = colors[currentColorIndex];
 
   return (
     <div
-      className="h-full p-12 overflow-auto"
-      style={{ backgroundColor: "#FFFFFF", color: "#000000" }}
+      className="h-full overflow-auto rounded-md"
+      style={{ backgroundColor: "#f8f8f8", color: "#000000" }}
     >
-      <div className="max-w-5xl mx-auto">
-        {/* Header with Logo */}
-        <div className="flex items-center gap-3 mb-12">
-          <LogoSVG colors={colors} currentColorIndex={currentColorIndex} />
-          <span
-            style={{ fontFamily: fonts.heading }}
-            className="text-3xl font-bold"
-          >
-            TOFABZA
-          </span>
-        </div>
-
-        {/* Main Section */}
-        <div className="grid grid-cols-2 gap-12 items-center mb-12">
-          {/* Text Content */}
-          <div>
-            <h1
-              style={{ fontFamily: fonts.heading }}
-              className="text-5xl font-bold mb-6 leading-tight"
+      <div className="p-8 md:p-12">
+        <div className="max-w-5xl mx-auto">
+          {/* Header with Logo */}
+          <div className="flex items-center gap-3 mb-12">
+            <LogoSVG colors={colors} currentColorIndex={currentColorIndex} />
+            <span
+              style={{ fontFamily: fonts.company }}
+              className="text-3xl font-bold"
             >
-              Unleash Your Creativity with
-              <span style={{ color: accentColor, marginLeft: "8px" }}>
-                Design
-              </span>
-            </h1>
-            <p
-              style={{ fontFamily: fonts.body }}
-              className="text-lg leading-relaxed mb-8 text-gray-600"
-            >
-              Elevate your design skills to new heights with our curated
-              selection of courses, designed to inspire, educate, and empower
-              your creative journey.
-            </p>
-
-            {/* Stats */}
-            <div className="flex gap-8">
-              <div>
-                <p
-                  style={{ fontFamily: fonts.heading }}
-                  className="text-2xl font-bold"
-                >
-                  300+
-                </p>
-                <p
-                  style={{ fontFamily: fonts.body }}
-                  className="text-sm text-gray-600"
-                >
-                  Courses
-                </p>
-              </div>
-              <div>
-                <p
-                  style={{ fontFamily: fonts.heading, color: accentColor }}
-                  className="text-2xl font-bold"
-                >
-                  50+
-                </p>
-                <p
-                  style={{ fontFamily: fonts.body }}
-                  className="text-sm text-gray-600"
-                >
-                  Expert Mentors
-                </p>
-              </div>
-              <div>
-                <p
-                  style={{ fontFamily: fonts.heading }}
-                  className="text-2xl font-bold text-gray-400"
-                >
-                  1000+
-                </p>
-                <p
-                  style={{ fontFamily: fonts.body }}
-                  className="text-sm text-gray-600"
-                >
-                  Hours of Content
-                </p>
-              </div>
-            </div>
+              TOFABZA
+            </span>
           </div>
 
-          {/* Pattern SVG */}
-          <div style={{ height: "400px" }}>
-            <SwatchesSVG
-              colors={colors}
-              currentColorIndex={currentColorIndex}
-            />
+          {/* Main Section */}
+          <div className="grid grid-cols-2 gap-12 items-center mb-12">
+            {/* Text Content */}
+            <div>
+              <h1
+                style={{ fontFamily: fonts.heading }}
+                className="text-5xl font-bold mb-6 leading-tight"
+              >
+                Unleash Your Creativity with
+                <span style={{ color: accentColor, marginLeft: "8px" }}>
+                  Design
+                </span>
+              </h1>
+              <p
+                style={{ fontFamily: fonts.body }}
+                className="text-lg leading-relaxed mb-8 text-gray-600"
+              >
+                Elevate your design skills to new heights with our curated
+                selection of courses, designed to inspire, educate, and empower
+                your creative journey.
+              </p>
+
+              {/* Stats */}
+              <div className="flex gap-8">
+                <div>
+                  <p
+                    style={{ fontFamily: fonts.heading }}
+                    className="text-2xl font-bold"
+                  >
+                    300+
+                  </p>
+                  <p
+                    style={{ fontFamily: fonts.body }}
+                    className="text-sm text-gray-600"
+                  >
+                    Courses
+                  </p>
+                </div>
+                <div>
+                  <p
+                    style={{ fontFamily: fonts.heading, color: accentColor }}
+                    className="text-2xl font-bold"
+                  >
+                    50+
+                  </p>
+                  <p
+                    style={{ fontFamily: fonts.body }}
+                    className="text-sm text-gray-600"
+                  >
+                    Expert Mentors
+                  </p>
+                </div>
+                <div>
+                  <p
+                    style={{ fontFamily: fonts.heading }}
+                    className="text-2xl font-bold text-gray-400"
+                  >
+                    1000+
+                  </p>
+                  <p
+                    style={{ fontFamily: fonts.body }}
+                    className="text-sm text-gray-600"
+                  >
+                    Hours of Content
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Pattern SVG */}
+            <div style={{ height: "350px", maxHeight: "50vh" }}>
+              <SwatchesSVG
+                colors={colors}
+                currentColorIndex={currentColorIndex}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -416,101 +363,105 @@ const LightPage = ({ colors, currentColorIndex, fonts }) => {
 };
 
 // Dark Page Component
+
+// Dark Page Component
 const DarkPage = ({ colors, currentColorIndex, fonts }) => {
   const accentColor = colors[currentColorIndex];
 
   return (
     <div
-      className="h-full p-12 overflow-auto"
-      style={{ backgroundColor: "#2A2A2A", color: "#FFFFFF" }}
+      className="h-full overflow-auto"
+      style={{ backgroundColor: "#121212", color: "#FFFFFF" }}
     >
-      <div className="max-w-5xl mx-auto">
-        {/* Header with Logo */}
-        <div className="flex items-center gap-3 mb-12">
-          <LogoSVG colors={colors} currentColorIndex={currentColorIndex} />
-          <span
-            style={{ fontFamily: fonts.heading }}
-            className="text-3xl font-bold"
-          >
-            TOFABZA
-          </span>
-        </div>
-
-        {/* Main Section */}
-        <div className="grid grid-cols-2 gap-12 items-center mb-12">
-          {/* Text Content */}
-          <div>
-            <h1
-              style={{ fontFamily: fonts.heading }}
-              className="text-5xl font-bold mb-6 leading-tight"
+      <div className="p-8 md:p-12">
+        <div className="max-w-5xl mx-auto">
+          {/* Header with Logo */}
+          <div className="flex items-center gap-3 mb-12">
+            <LogoSVG colors={colors} currentColorIndex={currentColorIndex} />
+            <span
+              style={{ fontFamily: fonts.company }}
+              className="text-3xl font-bold"
             >
-              A Branding Playground
-              <span style={{ color: accentColor, marginLeft: "8px" }}>
-                Design
-              </span>
-            </h1>
-            <p
-              style={{ fontFamily: fonts.body }}
-              className="text-lg leading-relaxed mb-8 text-gray-300"
-            >
-              Elevate your design skills to new heights with our curated
-              selection of courses, designed to inspire, educate, and empower
-              your creative journey.
-            </p>
-
-            {/* Stats */}
-            <div className="flex gap-8">
-              <div>
-                <p
-                  style={{ fontFamily: fonts.heading }}
-                  className="text-2xl font-bold"
-                >
-                  300+
-                </p>
-                <p
-                  style={{ fontFamily: fonts.body }}
-                  className="text-sm text-gray-400"
-                >
-                  Courses
-                </p>
-              </div>
-              <div>
-                <p
-                  style={{ fontFamily: fonts.heading, color: accentColor }}
-                  className="text-2xl font-bold"
-                >
-                  50+
-                </p>
-                <p
-                  style={{ fontFamily: fonts.body }}
-                  className="text-sm text-gray-400"
-                >
-                  Expert Mentors
-                </p>
-              </div>
-              <div>
-                <p
-                  style={{ fontFamily: fonts.heading }}
-                  className="text-2xl font-bold text-gray-500"
-                >
-                  1000+
-                </p>
-                <p
-                  style={{ fontFamily: fonts.body }}
-                  className="text-sm text-gray-400"
-                >
-                  Hours of Content
-                </p>
-              </div>
-            </div>
+              TOFABZA
+            </span>
           </div>
 
-          {/* Pattern SVG */}
-          <div style={{ height: "400px", filter: "brightness(1.1)" }}>
-            <SwatchesSVG
-              colors={colors}
-              currentColorIndex={currentColorIndex}
-            />
+          {/* Main Section */}
+          <div className="grid grid-cols-2 gap-12 items-center mb-12">
+            {/* Text Content */}
+            <div>
+              <h1
+                style={{ fontFamily: fonts.heading }}
+                className="text-5xl font-bold mb-6 leading-tight"
+              >
+                A Branding Playground
+                <span style={{ color: accentColor, marginLeft: "8px" }}>
+                  Design
+                </span>
+              </h1>
+              <p
+                style={{ fontFamily: fonts.body }}
+                className="text-lg leading-relaxed mb-8 text-gray-300"
+              >
+                Elevate your design skills to new heights with our curated
+                selection of courses, designed to inspire, educate, and empower
+                your creative journey.
+              </p>
+
+              {/* Stats */}
+              <div className="flex gap-8">
+                <div>
+                  <p
+                    style={{ fontFamily: fonts.heading }}
+                    className="text-2xl font-bold"
+                  >
+                    300+
+                  </p>
+                  <p
+                    style={{ fontFamily: fonts.body }}
+                    className="text-sm text-gray-400"
+                  >
+                    Courses
+                  </p>
+                </div>
+                <div>
+                  <p
+                    style={{ fontFamily: fonts.heading, color: accentColor }}
+                    className="text-2xl font-bold"
+                  >
+                    50+
+                  </p>
+                  <p
+                    style={{ fontFamily: fonts.body }}
+                    className="text-sm text-gray-400"
+                  >
+                    Expert Mentors
+                  </p>
+                </div>
+                <div>
+                  <p
+                    style={{ fontFamily: fonts.heading }}
+                    className="text-2xl font-bold text-gray-500"
+                  >
+                    1000+
+                  </p>
+                  <p
+                    style={{ fontFamily: fonts.body }}
+                    className="text-sm text-gray-400"
+                  >
+                    Hours of Content
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Pattern SVG - MOVED INSIDE THE GRID */}
+            <div style={{ height: "350px", maxHeight: "50vh" }}>
+              <SwatchesSVG
+                colors={colors}
+                currentColorIndex={currentColorIndex}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -535,6 +486,7 @@ export default function FontPalettePreview() {
   }, [hexPalette]);
 
   const [fonts, setFonts] = useState({
+    company: "DM Serif Display",
     heading: "Playfair Display",
     subheading: "Lora",
     link: "Inter",
@@ -545,6 +497,12 @@ export default function FontPalettePreview() {
   const [currentColorIndex, setCurrentColorIndex] = useState(0);
   const [fontsLoaded, setFontsLoaded] = useState(false);
   const pages = ["Light", "Dark"];
+
+  const currentPage = pages[currentPageIndex];
+
+  const handlePageChange = (page) => {
+    setCurrentPageIndex(pages.indexOf(page));
+  };
 
   // Load fonts
   useEffect(() => {
@@ -567,40 +525,58 @@ export default function FontPalettePreview() {
     setFonts((prev) => ({ ...prev, [type]: value }));
   };
 
-  const cycleColor = (direction) => {
-    const newIndex =
-      direction === "next"
-        ? (currentColorIndex + 1) % hexPalette.length
-        : (currentColorIndex - 1 + hexPalette.length) % hexPalette.length;
-    setCurrentColorIndex(newIndex);
+  const cycleColor = (direction, index) => {
+    if (direction === "set") {
+      setCurrentColorIndex(index);
+    } else if (direction === "next") {
+      setCurrentColorIndex((prev) => (prev + 1) % hexPalette.length);
+    } else if (direction === "prev") {
+      setCurrentColorIndex(
+        (prev) => (prev - 1 + hexPalette.length) % hexPalette.length
+      );
+    }
   };
 
-  const currentPage = pages[currentPageIndex];
-
   return (
-    <div className="relative flex-1 ml-3 mr-2 mb-0 border rounded-md border-[var(--navBorder)] flex-col p-2 overflow-y-scroll ">
-      {/* Right Panel - Preview */}
-      <div className="flex-1 rounded-lg overflow-hidden shadow-xl">
-        {fontsLoaded ? (
-          currentPage === "Light" ? (
-            <LightPage
-              colors={hexPalette}
-              currentColorIndex={currentColorIndex}
-              fonts={fonts}
-            />
+    <main className="hidden lg:flex flex-col h-full px-2">
+      <section
+        className="flex-1 overflow-auto border border-[var(--navBorder)] rounded-md"
+        style={{ maxHeight: "calc(100% - 80px)" }}
+      >
+        {/* Right Panel - Preview */}
+        <div className="flex-1 min-h-0 overflow-auto p-2">
+          {fontsLoaded ? (
+            currentPage === "Light" ? (
+              <LightPage
+                colors={hexPalette}
+                currentColorIndex={currentColorIndex}
+                fonts={fonts}
+              />
+            ) : (
+              <DarkPage
+                colors={hexPalette}
+                currentColorIndex={currentColorIndex}
+                fonts={fonts}
+              />
+            )
           ) : (
-            <DarkPage
-              colors={hexPalette}
-              currentColorIndex={currentColorIndex}
-              fonts={fonts}
-            />
-          )
-        ) : (
-          <div className="h-full flex items-center justify-center bg-gray-800">
-            <p className="text-xl opacity-60">Loading fonts...</p>
-          </div>
-        )}
-      </div>
-    </div>
+            <div className="h-full flex items-center justify-center bg-gray-800">
+              <p className="text-xl opacity-60">Loading fonts...</p>
+            </div>
+          )}
+        </div>
+      </section>
+      <footer className="py-2">
+        <FontPaletteToolbar
+          fonts={fonts}
+          onFontChange={handleFontChange}
+          currentColorIndex={currentColorIndex}
+          onColorChange={cycleColor}
+          hexPalette={hexPalette}
+          currentPage={currentPage}
+          onPageChange={handlePageChange}
+        />
+      </footer>
+    </main>
   );
 }

@@ -15,6 +15,7 @@ import SeasonalOptions from "../ColorPaletteUtils/SeasonalOptions";
 import DataVizOptions from "../ColorPaletteUtils/DataVizOptions";
 import FlowerPalOptions from "../ColorPaletteUtils/FlowerPalOptions";
 import UIBrandOptions from "../ColorPaletteUtils/UIBrandOptions";
+import ArcPalOptions from "../ColorPaletteUtils/ArcPalOptions";
 
 export default function PalettteProperties() {
   const {
@@ -103,6 +104,7 @@ export default function PalettteProperties() {
       {selectedPaletteType === "dataVizPalette" && <DataVizOptions />}
       {selectedPaletteType === "flowerPalette" && <FlowerPalOptions />}
       {selectedPaletteType === "uiBrand" && <UIBrandOptions />}
+      {selectedPaletteType === "arcPal" && <ArcPalOptions />}
 
       <div className="flex flex-col gap-2">
         {(monoPalType === "vintageMono" ||

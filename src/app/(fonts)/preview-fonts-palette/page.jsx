@@ -2,15 +2,12 @@
 
 import PageWrapper from "@/components/ui/PageWrapper";
 import FontPalettePreview from "./FontPalettePreview";
-import FontPaletteToolbar from "./FontPaletteToolbar";
+// import FontPaletteToolbar from "./FontPaletteToolbar";
 
 export default function PreviewFontsAndPalette() {
   return (
     <PageWrapper>
-      <div>
-        <FontPalettePreview />
-        <FontPaletteToolbar />
-      </div>
+      <FontPalettePreview />
     </PageWrapper>
   );
 }

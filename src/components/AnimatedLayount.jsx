@@ -16,8 +16,8 @@ export default function AnimatedLayount({ children }) {
   const pathname = usePathname();
 
   return (
-    <>
-      <header>
+    <div className="h-screen flex flex-col overflow-hidden">
+      <header className="flex-shrink-0">
         <nav className="flex border border-[var(--border)] px-7 items-center justify-between py-2 lg:px-10 lg:border-0">
           <NavLogoHome />
 
@@ -30,11 +30,11 @@ export default function AnimatedLayount({ children }) {
           </div>
         </nav>
       </header>
-      <AnimatePresence>
-        <main key={pathname} className="flex-1">
+      <AnimatePresence mode="wait">
+        <main key={pathname} className="flex-1 min-h-0 overflow-hidden">
           {children}
         </main>
       </AnimatePresence>
-    </>
+    </div>
   );
 }

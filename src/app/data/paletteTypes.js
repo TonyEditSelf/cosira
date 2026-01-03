@@ -129,4 +129,19 @@ export const paletteTypes = [
     value: "uiBrand",
     description: "Create UI and Brand colors.",
   },
+  {
+    label: "Arc Palettes",
+    value: "arcPal",
+    description: "Create arc shaped palettes on a color area",
+  },
+  {
+    label: "Hue Mint 5",
+    value: "hueMintPal5",
+    description: "Similar to Hue Mint",
+  },
+  {
+    label: "Hue Mint 10",
+    value: "hueMintPal10",
+    description: "Similar to Hue Mint",
+  },
 ];
