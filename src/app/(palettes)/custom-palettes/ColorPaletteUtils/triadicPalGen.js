@@ -2,7 +2,7 @@ export default function triadicPalGen(
   oklch,
   vintagePalType = null,
   neutralPalType = null,
-  kidsPalType = null
+  kidsPalType = null,
 ) {
   let lightBase,
     baseColor,
@@ -25,366 +25,65 @@ export default function triadicPalGen(
 
     darkBase = {
       ...baseColor,
-      l: Math.min(1, Math.max(0, baseColor.l * 0.85)),
-    };
-    lightBase = {
-      ...baseColor,
-      l: Math.min(1, Math.max(0, baseColor.l * 1.15)),
-    };
-
-    triadicColor1 = { ...baseColor, h: (baseColor.h + 120) % 360 };
-
-    darkTriad1 = {
-      ...triadicColor1,
-      l: Math.min(1, Math.max(0, triadicColor1.l * 0.85)),
-    };
-
-    lightTriad1 = {
-      ...triadicColor1,
-      l: Math.min(1, Math.max(0, triadicColor1.l * 1.15)),
-    };
-
-    darkestTriad1 = {
-      ...darkTriad1,
-      l: Math.min(1, Math.max(0, darkTriad1.l * 0.85)),
-    };
-
-    triadicColor2 = { ...baseColor, h: (baseColor.h + 240) % 360 };
-
-    darkTriad2 = {
-      ...triadicColor2,
-      l: Math.min(1, Math.max(0, triadicColor2.l * 0.85)),
-    };
-
-    lightTriad2 = {
-      ...triadicColor2,
-      l: Math.min(1, Math.max(0, triadicColor2.l * 1.15)),
-    };
-
-    darkestTriad2 = {
-      ...darkTriad2,
-      l: Math.min(1, Math.max(0, darkTriad2.l * 0.85)),
-    };
-  } else if (vintagePalType === "vintageTriad") {
-    const VINTAGE_HUE_SHIFT = 15; // Shift hues toward yellow/warm
-    const VINTAGE_CHROMA_FACTOR = 0.5; // Global desaturation (50%)
-    const VINTAGE_CHROMA_MAX = 0.2; // Max chroma limit for soft tones
-    const L_MIN = 0.3; // Consistent minimum lightness clamp
-    const L_MAX = 0.9; // Consistent maximum lightness clamp
-
-    // --- CRITICAL STEP: Calculate the desaturated chroma based on the input oklch ---
-    const vintageChromaBase = Math.min(
-      VINTAGE_CHROMA_MAX,
-      Math.max(0.02, oklch.c * VINTAGE_CHROMA_FACTOR) // Apply global desaturation here
-    );
-
-    // --- 1. Base Color (Vintage-Tuned) ---
-    baseColor = {
-      ...oklch,
-      l: Math.min(L_MAX, Math.max(L_MIN, oklch.l)), // Consistent L clamp
-      c: vintageChromaBase, // Corrected, globally desaturated chroma
-      h: (oklch.h + VINTAGE_HUE_SHIFT) % 360, // Apply vintage warmth
-    };
-
-    darkBase = {
-      ...baseColor,
-      l: Math.min(L_MAX, Math.max(L_MIN, baseColor.l * 0.85)), // Consistent L clamp
-      // Darker: slightly more saturated than the base (x 1.1)
-      c: Math.min(VINTAGE_CHROMA_MAX, Math.max(0.02, baseColor.c * 1.1)),
+      l: Math.min(1, Math.max(0, baseColor.l * 0.7)), // More pronounced dark
+      c: Math.min(0.4, baseColor.c * 1.1), // Slightly boost chroma
     };
 
     lightBase = {
       ...baseColor,
-      l: Math.min(L_MAX, Math.max(L_MIN, baseColor.l * 1.15)), // Consistent L clamp
-      // Lighter: stronger desaturation (x 0.8)
-      c: Math.min(VINTAGE_CHROMA_MAX, Math.max(0.02, baseColor.c * 0.8)),
+      l: Math.min(1, Math.max(0, baseColor.l * 1.25)), // More pronounced light
+      c: Math.min(0.4, baseColor.c * 0.9), // Slightly reduce chroma for lighter variant
     };
 
-    // --- 2. Triadic Color 1 (Vintage-Tuned) ---
+    // Triadic colors with chroma and lightness adjustments
     triadicColor1 = {
       ...baseColor,
-      // H is 120° from baseColor's already warmed hue
       h: (baseColor.h + 120) % 360,
+      c: Math.min(0.4, baseColor.c * 0.95), // Slightly less saturated than base
     };
 
     darkTriad1 = {
       ...triadicColor1,
-      l: Math.min(L_MAX, Math.max(L_MIN, triadicColor1.l * 0.85)), // Consistent L clamp
-      // Darker: slightly more saturated
-      c: Math.min(VINTAGE_CHROMA_MAX, Math.max(0.02, triadicColor1.c * 1.1)),
+      l: Math.min(1, Math.max(0, triadicColor1.l * 0.65)),
+      c: Math.min(0.4, triadicColor1.c * 1.15), // Boost chroma in darks
     };
 
     lightTriad1 = {
       ...triadicColor1,
-      l: Math.min(L_MAX, Math.max(L_MIN, triadicColor1.l * 1.15)), // Consistent L clamp
-      // Lighter: stronger desaturation
-      c: Math.min(VINTAGE_CHROMA_MAX, Math.max(0.02, triadicColor1.c * 0.8)),
+      l: Math.min(1, Math.max(0, triadicColor1.l * 1.3)),
+      c: Math.min(0.4, triadicColor1.c * 0.85), // Reduce chroma in lights
     };
 
     darkestTriad1 = {
       ...darkTriad1,
-      l: Math.min(L_MAX, Math.max(L_MIN, darkTriad1.l * 0.85)), // Even darker L
-      // Retain high saturation for contrast
-      c: Math.min(VINTAGE_CHROMA_MAX, Math.max(0.02, darkTriad1.c * 1.05)),
+      l: Math.min(1, Math.max(0.1, darkTriad1.l * 0.7)), // Keep minimum lightness
+      c: Math.min(0.4, darkTriad1.c * 1.2),
     };
 
-    // --- 3. Triadic Color 2 (Vintage-Tuned) ---
+    // Second triadic color
     triadicColor2 = {
       ...baseColor,
-      // H is 240° from baseColor's already warmed hue
       h: (baseColor.h + 240) % 360,
+      c: Math.min(0.4, baseColor.c * 1.05), // Slightly more saturated than base
     };
 
     darkTriad2 = {
       ...triadicColor2,
-      l: Math.min(L_MAX, Math.max(L_MIN, triadicColor2.l * 0.85)), // Consistent L clamp
-      // Darker: slightly more saturated
-      c: Math.min(VINTAGE_CHROMA_MAX, Math.max(0.02, triadicColor2.c * 1.1)),
+      l: Math.min(1, Math.max(0, triadicColor2.l * 0.65)),
+      c: Math.min(0.4, triadicColor2.c * 1.15),
     };
 
     lightTriad2 = {
       ...triadicColor2,
-      l: Math.min(L_MAX, Math.max(L_MIN, triadicColor2.l * 1.15)), // Consistent L clamp
-      // Lighter: stronger desaturation
-      c: Math.min(VINTAGE_CHROMA_MAX, Math.max(0.02, triadicColor2.c * 0.8)),
+      l: Math.min(1, Math.max(0, triadicColor2.l * 1.3)),
+      c: Math.min(0.4, triadicColor2.c * 0.85),
     };
 
     darkestTriad2 = {
       ...darkTriad2,
-      l: Math.min(L_MAX, Math.max(L_MIN, darkTriad2.l * 0.85)), // Even darker L
-      // Retain high saturation for contrast
-      c: Math.min(VINTAGE_CHROMA_MAX, Math.max(0.02, darkTriad2.c * 1.05)),
+      l: Math.min(1, Math.max(0.1, darkTriad2.l * 0.7)),
+      c: Math.min(0.4, darkTriad2.c * 1.2),
     };
-  } else if (neutralPalType === "neutralTriad") {
-    const NEUTRAL_CHROMA_MAX = 0.08; // Strict max chroma limit for near-gray/beige tones
-    const CHROMA_DEGRADATION = 0.4; // Factor to push input chroma to neutral range (40% of original C)
-    const L_MIN = 0.3; // Min Lightness for soft shadow (Atmospheric Neutral range)
-    const L_MAX = 0.9; // Max Lightness for soft highlight (Atmospheric Neutral range)
-
-    // --- CRITICAL STEP: Calculate the severely desaturated Chroma for the entire palette ---
-    const neutralChromaBase = Math.min(
-      NEUTRAL_CHROMA_MAX,
-      Math.max(0.01, oklch.c * CHROMA_DEGRADATION) // Apply degradation to original chroma
-    );
-
-    // --- 1. Base Color (Neutral-Tuned) ---
-    baseColor = {
-      ...oklch,
-      l: Math.min(L_MAX, Math.max(L_MIN, oklch.l)), // Consistent L clamp
-      c: neutralChromaBase, // Severely desaturated chroma
-      h: oklch.h, // RETAIN ORIGINAL HUE (provides subtle warm/cool undertone)
-    };
-
-    // --- 2. Dark & Light Variants of Base ---
-    darkBase = {
-      ...baseColor,
-      l: Math.min(L_MAX, Math.max(L_MIN, baseColor.l * 0.85)),
-      // Darker: slight Chroma increase (x 1.1) capped at 0.08 max
-      c: Math.min(NEUTRAL_CHROMA_MAX, Math.max(0.01, baseColor.c * 1.1)),
-    };
-
-    lightBase = {
-      ...baseColor,
-      l: Math.min(L_MAX, Math.max(L_MIN, baseColor.l * 1.15)),
-      // Lighter: stronger desaturation (x 0.8) capped at 0.08 max
-      c: Math.min(NEUTRAL_CHROMA_MAX, Math.max(0.01, baseColor.c * 0.8)),
-    };
-
-    // --- 3. Triadic Color 1 (Neutral-Tuned) ---
-    triadicColor1 = {
-      ...baseColor,
-      // H is 120° from baseColor's original hue
-      h: (baseColor.h + 120) % 360,
-    };
-
-    darkTriad1 = {
-      ...triadicColor1,
-      l: Math.min(L_MAX, Math.max(L_MIN, triadicColor1.l * 0.85)), // Consistent L clamp
-      c: Math.min(NEUTRAL_CHROMA_MAX, Math.max(0.01, triadicColor1.c * 1.1)),
-    };
-
-    lightTriad1 = {
-      ...triadicColor1,
-      l: Math.min(L_MAX, Math.max(L_MIN, triadicColor1.l * 1.15)), // Consistent L clamp
-      c: Math.min(NEUTRAL_CHROMA_MAX, Math.max(0.01, triadicColor1.c * 0.8)),
-    };
-
-    darkestTriad1 = {
-      ...darkTriad1,
-      l: Math.min(L_MAX, Math.max(L_MIN, darkTriad1.l * 0.85)), // Even darker L
-      // Retain high saturation (relative to the NEUTRAL_CHROMA_MAX)
-      c: Math.min(NEUTRAL_CHROMA_MAX, Math.max(0.01, darkTriad1.c * 1.05)),
-    };
-
-    // --- 4. Triadic Color 2 (Neutral-Tuned) ---
-    triadicColor2 = {
-      ...baseColor,
-      // H is 240° from baseColor's original hue
-      h: (baseColor.h + 240) % 360,
-    };
-
-    darkTriad2 = {
-      ...triadicColor2,
-      l: Math.min(L_MAX, Math.max(L_MIN, triadicColor2.l * 0.85)), // Consistent L clamp
-      c: Math.min(NEUTRAL_CHROMA_MAX, Math.max(0.01, triadicColor2.c * 1.1)),
-    };
-
-    lightTriad2 = {
-      ...triadicColor2,
-      l: Math.min(L_MAX, Math.max(L_MIN, triadicColor2.l * 1.15)), // Consistent L clamp
-      c: Math.min(NEUTRAL_CHROMA_MAX, Math.max(0.01, triadicColor2.c * 0.8)),
-    };
-
-    darkestTriad2 = {
-      ...darkTriad2,
-      l: Math.min(L_MAX, Math.max(L_MIN, darkTriad2.l * 0.85)), // Even darker L
-      // Retain high saturation (relative to the NEUTRAL_CHROMA_MAX)
-      c: Math.min(NEUTRAL_CHROMA_MAX, Math.max(0.01, darkTriad2.c * 1.05)),
-    };
-  } else if (kidsPalType === "kidsTriad") {
-    const CF_MIN_L = 0.75;
-    const CF_MAX_L = 0.95;
-    const CF_MIN_C = 0.25;
-    const CF_MAX_C = 0.32;
-
-    // --- KID-FRIENDLY IDEAL TARGET (Scaling Center) ---
-    const CF_IDEAL_L = 0.85;
-    const CF_IDEAL_C = 0.285;
-
-    // --- 1. Calculate the Scaled and Clamped Base L and C (FIXED FOR NaN) ---
-
-    let scaledL;
-    // === FIX 1: Guard against zero or near-zero lightness input to prevent NaN ===
-    if (oklch.l < 0.0001) {
-      scaledL = CF_MIN_L;
-    } else {
-      const lightnessMultiplier = CF_IDEAL_L / oklch.l;
-      scaledL = oklch.l * lightnessMultiplier;
-    }
-    // =======================================================================
-
-    let scaledC;
-    // === FIX 2: Guard against zero or near-zero chroma input to prevent NaN (Original Fix) ===
-    if (oklch.c < 0.0001) {
-      scaledC = CF_MIN_C;
-    } else {
-      const chromaMultiplier = CF_IDEAL_C / oklch.c;
-      scaledC = oklch.c * chromaMultiplier;
-    }
-    // ======================================================================
-
-    // Define the common BASE L and C for the entire palette by clamping
-    const baseL = Math.min(CF_MAX_L, Math.max(CF_MIN_L, scaledL));
-    const baseC = Math.min(CF_MAX_C, Math.max(CF_MIN_C, scaledC));
-
-    // --- 2. Define the Triadic Hues ---
-    const h0 = oklch.h;
-    const h1 = (oklch.h + 120) % 360;
-    const h2 = (oklch.h + 240) % 360;
-
-    // --- 3. Helper to Apply Step and Clamp Final Color ---
-    const calculateClampedColor = (hue, lFactor, cFactor) => {
-      const newL = baseL * lFactor;
-      const newC = baseC * cFactor;
-
-      return {
-        h: hue,
-        l: Math.min(CF_MAX_L, Math.max(CF_MIN_L, newL)),
-        c: Math.min(CF_MAX_C, Math.max(CF_MIN_C, newC)),
-      };
-    };
-
-    // --- 4. Define Step Factors ---
-    const stepFactors = {
-      lighter: { l: 1.1, c: 0.9, name: "Lighter" },
-      base: { l: 1.0, c: 1.0, name: "Base" },
-      darker: { l: 0.9, c: 1.1, name: "Darker" },
-    };
-
-    // --- 5. Generate the 9-Color Palette ---
-
-    const palette = [
-      // --- HUE 0 (Primary) ---
-      {
-        name: "Base",
-        value: calculateClampedColor(
-          h0,
-          stepFactors.base.l,
-          stepFactors.base.c
-        ),
-      },
-      {
-        name: "pri-lighter",
-        value: calculateClampedColor(
-          h0,
-          stepFactors.lighter.l,
-          stepFactors.lighter.c
-        ),
-      },
-      {
-        name: "pri-darker",
-        value: calculateClampedColor(
-          h0,
-          stepFactors.darker.l,
-          stepFactors.darker.c
-        ),
-      },
-
-      // --- HUE 1 (Secondary) ---
-      {
-        name: "sec-base",
-        value: calculateClampedColor(
-          h1,
-          stepFactors.base.l,
-          stepFactors.base.c
-        ),
-      },
-      {
-        name: "sec-lighter",
-        value: calculateClampedColor(
-          h1,
-          stepFactors.lighter.l,
-          stepFactors.lighter.c
-        ),
-      },
-      {
-        name: "sec-darker",
-        value: calculateClampedColor(
-          h1,
-          stepFactors.darker.l,
-          stepFactors.darker.c
-        ),
-      },
-
-      // --- HUE 2 (Tertiary) ---
-      {
-        name: "tert-base",
-        value: calculateClampedColor(
-          h2,
-          stepFactors.base.l,
-          stepFactors.base.c
-        ),
-      },
-      {
-        name: "tert-lighter",
-        value: calculateClampedColor(
-          h2,
-          stepFactors.lighter.l,
-          stepFactors.lighter.c
-        ),
-      },
-      {
-        name: "tert-darker",
-        value: calculateClampedColor(
-          h2,
-          stepFactors.darker.l,
-          stepFactors.darker.c
-        ),
-      },
-    ];
-
-    // --- Return the 9-color Polychromatic Palette ---
-    return palette;
   }
 
   return [

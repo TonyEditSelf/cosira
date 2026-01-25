@@ -1,7 +1,7 @@
 import { useColorPaletteContext } from "../../ColorContext";
 import triadicPalGen from "./triadicPalGen";
 
-export default function MonochromaticOptions() {
+export default function TriadicOptions() {
   const {
     setPalette,
     setDuplicatePalette,

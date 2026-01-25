@@ -63,7 +63,7 @@ export default function PaletteViewer() {
     { key: "tints", label: "Show Tints/Shades" },
     { key: "primitiveName", label: "Show Color Names" },
     { key: "colorNames", label: "Show Fancy Color Names" },
-    { key: "colorTypes", label: "Show Color Types" },
+    // { key: "colorTypes", label: "Show Color Types" },
     { key: "makeBaseOn", label: "Show Make Base" },
     { key: "hexOn", label: "Show Hex" },
     { key: "hueOn", label: "Show Hue" },
@@ -101,7 +101,7 @@ export default function PaletteViewer() {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: -200, opacity: 0 }}
               transition={{ duration: 0.3, ease: easeIn }}
-              className="flex gap-6 h-[calc(100vh-122px)] overflow-y-scroll flex-col items-center ml-3 mr-0 pt-5 py-4 px-6 w-[310px] rounded-md border border-[var(--navBorder)]"
+              className="flex gap-6 h-[calc(100vh-122px)] overflow-y-scroll flex-col items-center ml-3 mr-0 pt-5 py-4 px-6 w-[200px] rounded-md border border-[var(--navBorder)]"
             >
               <h1 className="text-[12px] font-bold space-y-3 mb-3">
                 SHOW/HIDE
@@ -127,8 +127,8 @@ export default function PaletteViewer() {
             width: leftPaletteAdjusterOpen
               ? "calc(100% - 5rem)"
               : showHidePanelOpen
-              ? "calc(100% - 16rem)"
-              : "100%",
+                ? "calc(100% - 16rem)"
+                : "100%",
           }}
           exit={{ width: "100%" }}
           transition={{ duration: 0.9, ease: "easeIn" }}
@@ -189,7 +189,7 @@ export default function PaletteViewer() {
                             allShadesTintsTones.l,
                             allShadesTintsTones.c,
                             allShadesTintsTones.h,
-                            allShadesTintsTones.a
+                            allShadesTintsTones.a,
                           );
 
                           return (
@@ -205,9 +205,9 @@ export default function PaletteViewer() {
                                     ? "border border-white"
                                     : "border-0"
                                   : allShadesTintsTones.c ===
-                                    colorForShadesTintsTones.c
-                                  ? "border border-white"
-                                  : null
+                                      colorForShadesTintsTones.c
+                                    ? "border border-white"
+                                    : null
                               } `}
                               key={STTIndex}
                               style={{
@@ -223,8 +223,8 @@ export default function PaletteViewer() {
                                           ...item,
                                           value: allShadesTintsTones,
                                         }
-                                      : item
-                                  )
+                                      : item,
+                                  ),
                                 );
                               }}
                             >
@@ -233,7 +233,7 @@ export default function PaletteViewer() {
                               </span>
                             </div>
                           );
-                        }
+                        },
                       )}
                     </div>
                   ) : (
@@ -249,21 +249,33 @@ export default function PaletteViewer() {
                             {role}
                           </span>
                         )}
-                        {toggles.colorTypes && <span>{colorObj.name}</span>}
+                        {/* {toggles.colorTypes && <span>{colorObj.name}</span>} */}
                         {toggles.hexOn && (
                           <span className="text-xs">{hex.toUpperCase()}</span>
                         )}
-                        {toggles.lightOn && <span>L: {l.toFixed(2)}</span>}
-                        {toggles.chromaOn && <span>C: {c.toFixed(2)}</span>}
-                        {toggles.hueOn && <span>H: {h.toFixed(2)}</span>}
+                        {toggles.lightOn && (
+                          <span className="text-[9px]">L: {l.toFixed(2)}</span>
+                        )}
+                        {toggles.chromaOn && (
+                          <span className="text-[9px]">C: {c.toFixed(2)}</span>
+                        )}
+                        {toggles.hueOn && (
+                          <span className="text-[9px]">H: {h.toFixed(2)}</span>
+                        )}
                         {toggles.alphaOn && (
-                          <span>A: {(a ?? 1).toFixed(2)}</span>
+                          <span className="text-[9px]">
+                            A: {(a ?? 1).toFixed(2)}
+                          </span>
                         )}
                         {toggles.whiteContrastOn && (
-                          <span>WC: {contrast1.toFixed(2)}</span>
+                          <span className="text-[9px]">
+                            WC: {contrast1.toFixed(2)}
+                          </span>
                         )}
                         {toggles.blackContrastOn && (
-                          <span>BC: {contrast2.toFixed(2)}</span>
+                          <span className="text-[9px]">
+                            BC: {contrast2.toFixed(2)}
+                          </span>
                         )}
                         {toggles.makeBaseOn &&
                           selectedPaletteType !== "kidFriendly" && (
@@ -291,7 +303,7 @@ export default function PaletteViewer() {
                             onClick={() => {
                               shadesTintsTonesFunction(
                                 colorObj.value,
-                                "shadesTints"
+                                "shadesTints",
                               );
                               setColorForShadesTintsTones(colorObj.value);
                               setShadesTintsTonesIndex(index);
@@ -336,7 +348,7 @@ export default function PaletteViewer() {
                               const exists = favColors.some(
                                 (color) =>
                                   JSON.stringify(color) ===
-                                  JSON.stringify(colorObj.value)
+                                  JSON.stringify(colorObj.value),
                               );
 
                               if (!exists) {

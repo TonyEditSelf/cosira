@@ -2,7 +2,7 @@ export default function monochromaticPalGen(
   oklch,
   monoPalType,
   sliderLightValue = 0,
-  sliderChromaValue = 0
+  sliderChromaValue = 0,
 ) {
   let darkerNeutralBase,
     mutedDarkerBase,
@@ -274,92 +274,6 @@ export default function monochromaticPalGen(
       l: Math.min(LMAX, Math.max(LMIN, baseColor.l + 0.22)),
       c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.7)), // muted → slightly higher chroma than neutral
     };
-  } else if (monoPalType === "neutralMono") {
-    const LMAX = 0.88;
-    const LMIN = 0.35;
-    const CMAX = 0.28;
-    const CMIN = 0.15;
-
-    // --- Base color (bright, energetic tone) ---
-    baseColor = {
-      ...oklch,
-      l: Math.min(LMAX, Math.max(LMIN, 0.62 + sliderLightValue)),
-      c: Math.min(CMAX, Math.max(CMIN, 0.22 + sliderChromaValue)),
-    };
-
-    // ---- Dark / neutral variants ----
-
-    // Deepest dark (Base-DDD) — strongest contrast, slightly boosted chroma for richness
-    darkestBase = {
-      ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l - 0.28)),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.15)),
-    };
-
-    // Darker (Base-DD) — strong dark but less extreme than darkestBase
-    darkerBase = {
-      ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l - 0.18)),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.1)),
-    };
-
-    // Dark (Base-D) — standard dark for UI elements
-    darkBase = {
-      ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l - 0.1)),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.05)),
-    };
-
-    // Darker neutral (Base-DN) — dark value but intentionally more neutral (lower chroma)
-    darkerNeutralBase = {
-      ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l - 0.2)),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.6)), // neutral → desaturated
-    };
-
-    // Muted darker (Base-MD) — dark but muted (useful for less saturated elements)
-    mutedDarkerBase = {
-      ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l - 0.22)),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.75)),
-    };
-
-    // ---- Light / neutral lighter variants ----
-
-    // Light (Base-L)
-    lightBase = {
-      ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l + 0.12)),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.95)),
-    };
-
-    // Lighter (Base-LL)
-    lighterBase = {
-      ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l + 0.18)),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.9)),
-    };
-
-    // Lightest (Base-LLL)
-    lightestBase = {
-      ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l + 0.22)),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.85)),
-    };
-
-    // Lighter neutral (Base-LN) — very light but slightly neutralized
-    lighterNeutralBase = {
-      ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l + 0.2)),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.65)),
-    };
-
-    // Muted lighter (Base-ML) — light but intentionally desaturated
-    mutedLighterBase = {
-      ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l + 0.16)),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.75)),
-    };
   } else if (monoPalType === "kidsMono") {
     const LMAX = 0.88;
     const LMIN = 0.35;
@@ -445,6 +359,67 @@ export default function monochromaticPalGen(
       ...baseColor,
       l: Math.min(LMAX, Math.max(LMIN, baseColor.l + 0.16)),
       c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.75)),
+    };
+  } else {
+    // DEFAULT CASE - when monoPalType is null/undefined or doesn't match
+    // Use classicMono as default
+    const LMAX = 1.0;
+    const LMIN = 0.0;
+    const CMAX = 0.08;
+    const CMIN = 0.0;
+
+    baseColor = oklch;
+
+    darkBase = {
+      ...baseColor,
+      l: Math.min(LMAX, Math.max(LMIN, baseColor.l - 0.09)),
+    };
+
+    darkerBase = {
+      ...baseColor,
+      l: Math.min(LMAX, Math.max(LMIN, baseColor.l - 0.18)),
+    };
+
+    darkestBase = {
+      ...baseColor,
+      l: Math.min(LMAX, Math.max(LMIN, baseColor.l - 0.27)),
+    };
+
+    darkerNeutralBase = {
+      ...darkerBase,
+      c: Math.min(0.04, Math.max(0.01, darkerBase.c * 0.15)),
+    };
+
+    mutedDarkerBase = {
+      ...darkerBase,
+      l: Math.min(LMAX, Math.max(LMIN, darkerBase.l - 0.05)),
+      c: Math.min(CMAX, Math.max(CMIN, darkerBase.c * 0.7)),
+    };
+
+    lightBase = {
+      ...baseColor,
+      l: Math.min(LMAX, Math.max(LMIN, baseColor.l + 0.09)),
+    };
+
+    lighterBase = {
+      ...baseColor,
+      l: Math.min(LMAX, Math.max(LMIN, baseColor.l + 0.18)),
+    };
+
+    lightestBase = {
+      ...baseColor,
+      l: Math.min(LMAX, Math.max(LMIN, baseColor.l + 0.27)),
+    };
+
+    lighterNeutralBase = {
+      ...lighterBase,
+      c: Math.min(0.04, Math.max(0.01, lighterBase.c * 0.15)),
+    };
+
+    mutedLighterBase = {
+      ...lighterBase,
+      l: Math.min(LMAX, Math.max(LMIN, lighterBase.l + 0.03)),
+      c: Math.min(CMAX, Math.max(CMIN, lighterBase.c * 0.7)),
     };
   }
 

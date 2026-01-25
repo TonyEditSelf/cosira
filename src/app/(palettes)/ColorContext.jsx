@@ -76,7 +76,7 @@ export function ColorPaletteContextProvider({ children }) {
 
     // Select random palette type
     const randomTypeIndex = Math.floor(
-      Math.random() * randomPaletteTypes.length
+      Math.random() * randomPaletteTypes.length,
     );
     const selectedType = randomPaletteTypes[randomTypeIndex];
     const paletteTypeValue = selectedType.value;
@@ -90,7 +90,7 @@ export function ColorPaletteContextProvider({ children }) {
     if (paletteVariations[paletteTypeValue]) {
       const variations = paletteVariations[paletteTypeValue];
       const randomVariationIndex = Math.floor(
-        Math.random() * variations.length
+        Math.random() * variations.length,
       );
       selectedVariation = variations[randomVariationIndex];
 
@@ -101,14 +101,14 @@ export function ColorPaletteContextProvider({ children }) {
           generatedPalette = analogousPalGen(
             randomColor,
             analogOptions,
-            selectedVariation
+            selectedVariation,
           );
           break;
         case "complementary":
           setCompPalType(selectedVariation);
           generatedPalette = complementaryPalGen(
             randomColor,
-            selectedVariation
+            selectedVariation,
           );
           break;
         case "flowerPalette":
@@ -119,14 +119,14 @@ export function ColorPaletteContextProvider({ children }) {
           setDataVizPalType(selectedVariation);
           generatedPalette = dataVizPalettePalGen(
             randomColor,
-            selectedVariation
+            selectedVariation,
           );
           break;
         case "doubleSplitComp":
           setDoubleSplitCompPalType(selectedVariation);
           generatedPalette = doubleSplitCompPalGen(
             randomColor,
-            selectedVariation
+            selectedVariation,
           );
           break;
         // Add other cases for other palette types
@@ -296,7 +296,7 @@ export function ColorPaletteContextProvider({ children }) {
   const handleCopy = async (color) => {
     if (color === "css") {
       const colorString = `oklch(${(oklch.l * 100).toFixed(
-        1
+        1,
       )}% ${oklch.c.toFixed(3)} ${oklch.h.toFixed(1)}deg)`;
       await navigator.clipboard.writeText(colorString);
       await navigator.clipboard.writeText(cssColor);
@@ -371,7 +371,7 @@ export function ColorPaletteContextProvider({ children }) {
   const alpha = oklch?.a ?? 1;
 
   const rgbColor = `rgba(${Math.round(r * 255)}, ${Math.round(
-    g * 255
+    g * 255,
   )}, ${Math.round(b * 255)}, ${alpha.toFixed(2)})`;
   const hexColor = oklchToHex(oklch.l, oklch.c, oklch.h, oklch.a);
 
@@ -385,13 +385,14 @@ export function ColorPaletteContextProvider({ children }) {
   const [sliderLightValue, setSliderLightValue] = useState(0);
   const [sliderChromaValue, setSliderChromaValue] = useState(0);
 
-  const [selectedPaletteType, setSelectedPaletteType] = useState("hueMint5");
+  const [selectedPaletteType, setSelectedPaletteType] =
+    useState("monochromatic");
 
   const [compPalType, setCompPalType] = useState("classicComp");
   const [monoPalType, setMonoPalType] = useState("classicMono");
   const [analogPalType, setAnalogPalType] = useState("classicCenteredAnalog");
   const [doubleSplitCompPalType, setDoubleSplitCompPalType] = useState(
-    "leftDoubleSplitComp"
+    "leftDoubleSplitComp",
   );
   const [gradientPalType, setGradientPalType] = useState("leftGradient");
   const [seasonalPalType, setSeasonalPalType] = useState("seasonalCombined");
@@ -509,7 +510,7 @@ export function ColorPaletteContextProvider({ children }) {
       dataVizPalType,
       flowerPalType,
       uiBrandPalType,
-      arcPalType
+      arcPalType,
     );
 
     // console.log("Palette from paletteDecider:", pal);
@@ -649,7 +650,7 @@ export function useColorPaletteContext() {
 
   if (!ctx) {
     throw new Error(
-      "To use ColorPaletteContextProvider, component must be wrapped in corresponding provider"
+      "To use ColorPaletteContextProvider, component must be wrapped in corresponding provider",
     );
   }
   return ctx;

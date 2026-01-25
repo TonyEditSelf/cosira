@@ -28,7 +28,7 @@ export default function MyColorPicker() {
       exit={{ y: 10, opacity: 0 }}
       transition={{ duration: 0.1, ease: easeIn }}
       ref={pickerRef}
-      className={`absolute flex justify-center items-center gap-3 left-1/2 -translate-x-1/2 bottom-2 rounded-md bg-[var(--background)] w-[590px] h-[460px] border border-[var(--navBorder)]`}
+      className={`fixed flex justify-center items-center gap-3 left-1/2 -translate-x-1/2 bottom-[102px] rounded-md bg-[var(--background)] w-[590px] h-[400px] border border-[var(--navBorder)] z-50`}
     >
       {myColorPickerOpen && (
         <div className="flex flex-col justify-center items-center gap-7 w-full px-10">

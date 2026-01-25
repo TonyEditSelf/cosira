@@ -93,7 +93,7 @@ export default function OklchColorWheel({ lightness, chroma, hue, onChange }) {
         });
       }
     },
-    [onChange]
+    [onChange],
   );
 
   const handleMouseDown = useCallback(
@@ -110,22 +110,22 @@ export default function OklchColorWheel({ lightness, chroma, hue, onChange }) {
       document.addEventListener("mousemove", handleMouseMove);
       document.addEventListener("mouseup", handleMouseUp);
     },
-    [handleMouseMove]
+    [handleMouseMove],
   );
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (canvas) {
-      canvas.width = 185;
-      canvas.height = 185;
+      canvas.width = 135;
+      canvas.height = 135;
       drawColorWheel();
     }
   }, [drawColorWheel]);
 
-  // Calculate marker position
-  const centerX = 140; // canvas width / 2
-  const centerY = 140; // canvas height / 2
-  const radius = 138; // canvas radius - 2
+  // Calculate marker position - FIXED to match canvas size
+  const centerX = 135 / 2; // 67.5
+  const centerY = 135 / 2; // 67.5
+  const radius = 135 / 2 - 2; // 65.5
   const hueRad = (hue * Math.PI) / 180;
   const chromaDistance = (chroma / 0.4) * radius;
   const markerX = centerX + chromaDistance * Math.cos(hueRad);
@@ -145,8 +145,8 @@ export default function OklchColorWheel({ lightness, chroma, hue, onChange }) {
         <div
           className="absolute w-4 h-4 border-3 border-white rounded-full shadow-lg pointer-events-none transform -translate-x-2 -translate-y-2"
           style={{
-            left: `${(markerX / 280) * 100}%`,
-            top: `${(markerY / 280) * 100}%`,
+            left: `${(markerX / 135) * 100}%`,
+            top: `${(markerY / 135) * 100}%`,
             boxShadow: "0 0 0 1px rgba(0,0,0,0.3), 0 2px 4px rgba(0,0,0,0.2)",
           }}
         />
