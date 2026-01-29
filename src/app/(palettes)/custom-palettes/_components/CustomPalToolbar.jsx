@@ -56,25 +56,29 @@ export default function CustomPalToolbar() {
   const isRandomPalettesPage = pathname === "/random-palettes";
 
   const goBackPalHistory = () => {
-    setPaletteHistoryCounter((prev) => {
-      if (prev <= 0) return prev;
-      setHistoryNavigation(true);
-      const newCounter = prev - 1;
-      setPalette(paletteHistory[newCounter].palette);
-      setDuplicatePaletteType(paletteHistory[newCounter].type);
-      return newCounter;
-    });
+    if (paletteHistoryCounter <= 0) return;
+
+    const newCounter = paletteHistoryCounter - 1;
+    setHistoryNavigation(true);
+    setPaletteHistoryCounter(newCounter);
+    setPalette(paletteHistory[newCounter].palette);
+    setDuplicatePaletteType(paletteHistory[newCounter].type);
+
+    // Reset navigation flag after a short delay
+    setTimeout(() => setHistoryNavigation(false), 100);
   };
 
   const goForwardPalHistory = () => {
-    setPaletteHistoryCounter((prev) => {
-      if (prev >= paletteHistory.length - 1) return prev;
-      setHistoryNavigation(true);
-      const newCounter = prev + 1;
-      setPalette(paletteHistory[newCounter].palette);
-      setDuplicatePaletteType(paletteHistory[newCounter].type);
-      return newCounter;
-    });
+    if (paletteHistoryCounter >= paletteHistory.length - 1) return;
+
+    const newCounter = paletteHistoryCounter + 1;
+    setHistoryNavigation(true);
+    setPaletteHistoryCounter(newCounter);
+    setPalette(paletteHistory[newCounter].palette);
+    setDuplicatePaletteType(paletteHistory[newCounter].type);
+
+    // Reset navigation flag after a short delay
+    setTimeout(() => setHistoryNavigation(false), 100);
   };
 
   return (

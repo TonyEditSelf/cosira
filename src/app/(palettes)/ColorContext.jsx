@@ -174,21 +174,6 @@ export function ColorPaletteContextProvider({ children }) {
     analogousAngle2: 35,
   });
 
-  // const [analogCenteredOptions, setAnalogCenteredOptions] = useState({
-  //   analogousAngle1: -30,
-  //   analogousAngle2: 50,
-  // });
-
-  // const [analogLeftOptions, setAnalogLeftOptions] = useState({
-  //   analogousAngle1: -30,
-  //   analogousAngle2: 50,
-  // });
-
-  // const [analogRightOptions, setAnalogRightOptions] = useState({
-  //   analogousAngle1: -30,
-  //   analogousAngle2: 50,
-  // });
-
   const [splitCompOptions, setSplitCompOptions] = useState({
     splitCompAngle1: -30,
     splitCompAngle2: 30,
@@ -205,7 +190,6 @@ export function ColorPaletteContextProvider({ children }) {
     colorNames: true,
     colorTypes: true,
     makeBaseOn: false,
-    // role: false,
     primitiveName: false,
     hexOn: false,
     hueOn: true,
@@ -385,8 +369,7 @@ export function ColorPaletteContextProvider({ children }) {
   const [sliderLightValue, setSliderLightValue] = useState(0);
   const [sliderChromaValue, setSliderChromaValue] = useState(0);
 
-  const [selectedPaletteType, setSelectedPaletteType] =
-    useState("monochromatic");
+  const [selectedPaletteType, setSelectedPaletteType] = useState("");
 
   const [compPalType, setCompPalType] = useState("classicComp");
   const [monoPalType, setMonoPalType] = useState("classicMono");
@@ -488,12 +471,10 @@ export function ColorPaletteContextProvider({ children }) {
   }, [selectedPaletteType]);
 
   useEffect(() => {
-    // console.log("=== COLOR CONTEXT USEEFFECT RUNNING ===");
-    // console.log("selectedPaletteType:", selectedPaletteType);
-    // console.log("analogPalType:", analogPalType);
-
     setShadesTintsTonesIndex(null);
-    setHistoryNavigation(false);
+
+    // Skip if no palette type selected yet (initial load)
+    if (!selectedPaletteType) return; // This exits early, so no error below
 
     const pal = paletteDecider(
       oklch,
@@ -513,25 +494,20 @@ export function ColorPaletteContextProvider({ children }) {
       arcPalType,
     );
 
-    // console.log("Palette from paletteDecider:", pal);
-    // console.log("Palette: ", palette);
-
-    // CRITICAL FIX: Only set palette if pal is valid
     if (pal && Array.isArray(pal) && pal.length > 0) {
       setPalette(pal);
-    } else {
-      console.error("paletteDecider returned invalid palette:", pal);
-    }
 
-    if (
-      selectedPaletteType === "analogous" &&
-      (analogOptions.analogousAngle2 !== 40 ||
-        analogOptions.analogousAngle1 !== -40)
-    ) {
-      setDuplicatePalette(null);
-    } else {
-      setDuplicatePalette(pal);
+      if (
+        selectedPaletteType === "analogous" &&
+        (analogOptions.analogousAngle2 !== 40 ||
+          analogOptions.analogousAngle1 !== -40)
+      ) {
+        setDuplicatePalette(null);
+      } else {
+        setDuplicatePalette(pal);
+      }
     }
+    // Remove the else block with console.error - it's not needed anymore
   }, [
     oklch,
     analogOptions,
