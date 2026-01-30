@@ -61,7 +61,7 @@ export default function PaletteViewer() {
     { key: "showNone", label: "Show None" },
     { key: "shades", label: "Show Vividness/Tones" },
     { key: "tints", label: "Show Tints/Shades" },
-    { key: "primitiveName", label: "Show Color Names" },
+    // { key: "primitiveName", label: "Show Color Names" },
     { key: "colorNames", label: "Show Fancy Color Names" },
     // { key: "colorTypes", label: "Show Color Types" },
     { key: "makeBaseOn", label: "Show Make Base" },
@@ -76,7 +76,7 @@ export default function PaletteViewer() {
   ];
 
   return (
-    <main className="hidden lg:flex flex-col h-full">
+    <main className="hidden lg:flex flex-col pt-3 h-full">
       <section className="flex flex-1">
         {/* {leftPaletteAdjusterOpen && editPalette && */}
         <AnimatePresence>
@@ -87,7 +87,7 @@ export default function PaletteViewer() {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: -200, opacity: 0 }}
               transition={{ duration: 0.3, ease: easeIn }}
-              className="flex gap-6 h-[calc(100vh-122px)] overflow-y-scroll flex-col items-center ml-3 mr-0 pt-5 py-4 px-6 w-[310px] rounded-md border border-[var(--navBorder)]"
+              className="flex gap-6 h-[calc(100vh-140px)] overflow-y-scroll flex-col items-center ml-3 mr-0 pt-5 py-4 px-6 w-[310px] rounded-md border border-[var(--navBorder)]"
             >
               <PalettteProperties />
             </motion.aside>
@@ -101,7 +101,7 @@ export default function PaletteViewer() {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: -200, opacity: 0 }}
               transition={{ duration: 0.3, ease: easeIn }}
-              className="flex gap-6 h-[calc(100vh-122px)] overflow-y-scroll flex-col items-center ml-3 mr-0 pt-5 py-4 px-6 w-[200px] rounded-md border border-[var(--navBorder)]"
+              className="flex gap-6 h-[calc(100vh-140px)] overflow-y-scroll flex-col items-center ml-3 mr-0 pt-5 py-4 px-6 w-[200px] rounded-md border border-[var(--navBorder)]"
             >
               <h1 className="text-[12px] font-bold space-y-3 mb-3">
                 SHOW/HIDE
@@ -134,7 +134,7 @@ export default function PaletteViewer() {
           transition={{ duration: 0.9, ease: "easeIn" }}
           className="relative flex-1 ml-3 mr-2 mb-0 border rounded-md border-[var(--navBorder)] flex-col p-2 overflow-x-scroll "
         >
-          <div role="palette viewer" className="flex h-full ">
+          <div role="palette viewer" className="flex h-full">
             {palette?.map((colorObj, index) => {
               const { l, c, h, a } = colorObj.value;
               let textColor;
@@ -239,11 +239,11 @@ export default function PaletteViewer() {
                   ) : (
                     <>
                       <div className="flex flex-col gap-3 justify-center text-xs items-center">
-                        {toggles.primitiveName && (
+                        {/* {toggles.primitiveName && (
                           <span className="text-[9px] break-words text-center">
                             {primitiveName}
                           </span>
-                        )}
+                        )} */}
                         {toggles.role && (
                           <span className="text-[9px] break-words text-center">
                             {role}
@@ -289,7 +289,7 @@ export default function PaletteViewer() {
                               }`}
                             >
                               <FaCrosshairs
-                                className={`w-[12px] h-[12px] cursor-pointer ${
+                                className={`w-3 h-3 cursor-pointer ${
                                   colorObj.name === "Base"
                                     ? "invisible"
                                     : "visible"
@@ -317,7 +317,7 @@ export default function PaletteViewer() {
                           >
                             <Icon
                               icon="mdi:alpha-l"
-                              className="w-[20px] h-[20px] font-bold cursor-pointer"
+                              className="w-5 h-5 font-bold cursor-pointer"
                             />
                           </span>
                         )}
@@ -337,7 +337,7 @@ export default function PaletteViewer() {
                           >
                             <Icon
                               icon="mdi:alpha-c"
-                              className="w-[20px] h-[20px] font-bold cursor-pointer"
+                              className="w-5 h-5 font-bold cursor-pointer"
                             />
                           </span>
                         )}
@@ -365,7 +365,7 @@ export default function PaletteViewer() {
                             } `}
                           >
                             <RiAddLargeLine
-                              className={`w-[12px] h-[12px] cursor-pointer } `}
+                              className={`w-3 h-3 cursor-pointer } `}
                             />
                           </span>
                         )}

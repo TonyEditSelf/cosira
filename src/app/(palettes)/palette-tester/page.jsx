@@ -1,9 +1,13 @@
-import PageWrapper from "@/components/ui/PageWrapper";
+"use client";
 
-export default function PaletteTester() {
+import React from "react";
+import PageWrapper from "@/components/ui/PageWrapper";
+import BlendColors from "./BlendColors";
+
+export default function PaletteExpander() {
   return (
     <PageWrapper>
-      <div>page</div>
+      <BlendColors />
     </PageWrapper>
   );
 }

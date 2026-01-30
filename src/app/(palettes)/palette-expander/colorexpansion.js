@@ -102,56 +102,27 @@ function makeShade(base, targetL, chromaMode) {
   return shade;
 }
 
-// Improved dark mode lightness curve
-// Creates more natural inversion with better contrast
 function invertLightness(l) {
-  // Using a curve that keeps mid-tones reasonable
-  // Maps: 0.95 -> 0.15, 0.5 -> 0.35, 0.1 -> 0.85
-  const inverted = 1 - l;
+  // Ottosson's perceptual inversion with gentle curve
+  // MODIFIED: Add slight compression to prevent pure black backgrounds
+  const inverted = 1 - Math.pow(l, 0.8);
 
-  // Apply compression curve to avoid extremes
-  if (inverted < 0.3) {
-    // Very dark becomes moderately light (but not too bright)
-    return 0.15 + inverted * 1.8;
-  } else if (inverted > 0.7) {
-    // Very light becomes quite dark
-    return 0.15 + (inverted - 0.7) * 0.5 + 0.7 * 0.85;
-  } else {
-    // Mid-range gets moderate compression
-    return 0.15 + inverted * 0.85;
-  }
+  // Ensure dark mode backgrounds aren't too dark (minimum 20% lightness)
+  return Math.max(inverted, 0.2);
 }
 
-// Adaptive chroma for dark mode
-// Reduces chroma more aggressively for bright colors in dark mode
-function darkModeChroma(c, originalL) {
-  let reduction = 0.8;
+function darkModeChroma(c, targetL) {
+  // More aggressive reduction for softer dark mode
+  const chromaScale = targetL < 0.3 ? 0.6 : 0.75; // Increased reduction
 
-  // Colors that were very light need more chroma reduction in dark mode
-  if (originalL > 0.85) {
-    reduction = 0.6;
-  } else if (originalL > 0.7) {
-    reduction = 0.7;
-  }
-
-  // Colors that were very saturated need extra reduction to prevent eye strain
-  if (c > 0.25) {
-    reduction *= 0.85;
-  }
-
-  return clamp(c * reduction, 0.01, 0.35);
+  return clamp(c * chromaScale, 0.01, 0.35); // Lower ceiling
 }
 
-// Subtle hue shift for dark mode (optional, can be disabled)
 function darkModeHueShift(h, l) {
-  // Blues get slightly cooler, reds slightly warmer in dark mode
-  // Only apply subtle shifts
-  if (h >= 200 && h <= 280) {
-    // Blues: shift cooler
-    return (h + 3) % 360;
-  } else if ((h >= 0 && h <= 30) || (h >= 330 && h <= 360)) {
-    // Reds: shift warmer
-    return (h + 360 - 2) % 360;
+  // Add subtle warmth to prevent cold, harsh appearance
+  if (h >= 180 && h <= 270) {
+    // Blues/cyans
+    return (h + 5) % 360; // Shift slightly warmer
   }
   return h;
 }
@@ -160,11 +131,10 @@ function darkModeHueShift(h, l) {
 export function invertForDarkMode(color, options = {}) {
   validateColor(color);
   const { l, c, h, a } = color;
-  const { enableHueShift = true } = options;
 
   const newL = invertLightness(l);
-  const newC = darkModeChroma(c, l);
-  const newH = enableHueShift ? darkModeHueShift(h, l) : h;
+  const newC = darkModeChroma(c, newL);
+  const newH = darkModeHueShift(h, newL); // ← Changed from just `h`
 
   const inverted = { l: newL, c: newC, h: newH };
   if (a !== undefined) inverted.a = a;
@@ -172,24 +142,21 @@ export function invertForDarkMode(color, options = {}) {
   return inverted;
 }
 
-// Generate 10-step scale for a base color
 export function generateScale(base) {
   validateColor(base);
 
-  // Use proportional steps instead of fixed deltas
-  const baseL = base.l;
-
+  // Create MUCH wider lightness range for better contrast
   return {
-    50: makeShade(base, 0.97, "low"),
-    100: makeShade(base, 0.93, "low"),
-    200: makeShade(base, 0.87, "soft"),
-    300: makeShade(base, 0.78, "reduce"),
-    400: makeShade(base, Math.max(baseL * 1.15, 0.65), "base"),
-    500: base,
-    600: makeShade(base, Math.max(baseL * 0.85, 0.35), "boost"),
-    700: makeShade(base, Math.max(baseL * 0.7, 0.28), "boost"),
-    800: makeShade(base, Math.max(baseL * 0.55, 0.2), "reduce"),
-    900: makeShade(base, Math.max(baseL * 0.4, 0.12), "soft"),
+    50: makeShade(base, 0.98, "low"), // Near white
+    100: makeShade(base, 0.95, "low"), // Very light
+    200: makeShade(base, 0.9, "soft"), // Light
+    300: makeShade(base, 0.8, "soft"), // Medium-light
+    400: makeShade(base, 0.7, "reduce"), // Medium
+    500: base, // Base (unchanged)
+    600: makeShade(base, 0.4, "boost"), // Medium-dark
+    700: makeShade(base, 0.3, "boost"), // Dark
+    800: makeShade(base, 0.2, "reduce"), // Very dark
+    900: makeShade(base, 0.12, "soft"), // Near black
   };
 }
 

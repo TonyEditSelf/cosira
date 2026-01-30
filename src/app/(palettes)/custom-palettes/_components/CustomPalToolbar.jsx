@@ -127,20 +127,20 @@ export default function CustomPalToolbar() {
         disabled={isRandomPalettesPage} // Add this prop
       />
 
-      <FaAnglesUp className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]" />
-      <FaAnglesDown className="size-9 cursor-pointer border border-[var(--navBorder)] hover:border-[var(--muted-foreground)] p-2 rounded-md" />
-      <section className="flex gap-5 items-center border border-[var(--navBorder)] hover:border-[var(--muted-foreground)] pl-5 rounded-md">
+      <FaAnglesUp className="size-9 cursor-pointer border border-(--navBorder) py-2 px-2 rounded-md hover:border-muted-foreground" />
+      <FaAnglesDown className="size-9 cursor-pointer border border-(--navBorder) hover:border-muted-foreground p-2 rounded-md" />
+      <section className="flex gap-5 items-center border border-(--navBorder) hover:border-muted-foreground pl-5 rounded-md">
         <p className="h-full">Pick Color: </p>
         <button
           onClick={() => {
             setMyColorPickerOpen((prev) => !prev);
           }}
-          className="rounded-md h-[35px]  py-1 px-20 cursor-pointer"
+          className="rounded-md h-8.75  py-1 px-20 cursor-pointer"
           style={{ backgroundColor: `${cssColor}` }}
         ></button>
       </section>
       <FaAnglesLeft
-        className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]"
+        className="size-9 cursor-pointer border border-(--navBorder) py-2 px-2 rounded-md hover:border-muted-foreground"
         onClick={goBackPalHistory}
       />
 
@@ -148,12 +148,12 @@ export default function CustomPalToolbar() {
       {isRandomPalettesPage && (
         <FaPlay
           onClick={generateRandomPalette}
-          className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]"
+          className="size-9 cursor-pointer border border-(--navBorder) py-2 px-2 rounded-md hover:border-muted-foreground"
         />
       )}
 
       <FaAnglesRight
-        className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]"
+        className="size-9 cursor-pointer border border-(--navBorder) py-2 px-2 rounded-md hover:border-muted-foreground"
         onClick={goForwardPalHistory}
       />
 
