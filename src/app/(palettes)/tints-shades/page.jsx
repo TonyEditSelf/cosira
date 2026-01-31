@@ -2,12 +2,12 @@
 
 import React from "react";
 import PageWrapper from "@/components/ui/PageWrapper";
-import BlendColors from "./BlendColors";
+import TintsShades from "./TintsShades";
 
 export default function PaletteExpander() {
   return (
     <PageWrapper>
-      <BlendColors />
+      <TintsShades />
     </PageWrapper>
   );
 }

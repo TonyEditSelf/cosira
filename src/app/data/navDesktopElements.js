@@ -4,8 +4,13 @@ export const navDesktopElements = [
     submenu: [
       { label: "Random Palettes", path: "/random-palettes" },
       { label: "Custom Palettes", path: "/custom-palettes" },
-      { label: "Palette Tester", path: "/palette-tester" },
       { label: "Palette Expander", path: "/palette-expander" },
+      { label: "Tints & Shades", path: "/tints-shades" },
+      { label: "Blend Colors", path: "/blend-colors" },
+      { label: "Color Average", path: "/color-average" },
+      { label: "Tonalist", path: "/tonalist" },
+      { label: "Bezier Blend", path: "/bezier-blend" },
+      { label: "Color Adjust", path: "/color-adjust" },
     ],
   },
   {
