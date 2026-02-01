@@ -1,13 +1,12 @@
 "use client";
 
-import React from "react";
 import PageWrapper from "@/components/ui/PageWrapper";
-import TintsShades from "./TintsShades";
+import EditColors from "./EditColors";
 
 export default function PaletteExpander() {
   return (
     <PageWrapper>
-      <TintsShades />
+      <EditColors />
     </PageWrapper>
   );
 }
