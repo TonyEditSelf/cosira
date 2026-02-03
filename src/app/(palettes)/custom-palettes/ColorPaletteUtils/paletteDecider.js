@@ -40,7 +40,9 @@ export default function paletteDecider(
   dataVizPalType,
   flowerPalType,
   uiBrandPalType,
-  arcPalType
+  arcPalType,
+  triadicPalType,
+  tetradicPalType,
 ) {
   if (selectedPaletteType === "complementary") {
     return complementaryPalGen(oklch, compPalType);
@@ -51,9 +53,9 @@ export default function paletteDecider(
   } else if (selectedPaletteType === "splitComplementary") {
     return splitCompPalGen(oklch, splitCompOptions);
   } else if (selectedPaletteType === "triadic") {
-    return triadicPalGen(oklch);
+    return triadicPalGen(oklch, triadicPalType);
   } else if (selectedPaletteType === "tetradic") {
-    return tetradicPalGen(oklch, tetradicAngle);
+    return tetradicPalGen(oklch, tetradicPalType);
   } else if (selectedPaletteType === "square") {
     return squarePalGen(oklch);
   } else if (selectedPaletteType === "accentedAnalogous") {

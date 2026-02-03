@@ -377,6 +377,8 @@ export function ColorPaletteContextProvider({ children }) {
   const [doubleSplitCompPalType, setDoubleSplitCompPalType] = useState(
     "leftDoubleSplitComp",
   );
+  const [triadicPalType, setTriadicPalType] = useState("classicTriad");
+  const [tetradicPalType, setTetradicPalType] = useState("classicTetra");
   const [gradientPalType, setGradientPalType] = useState("leftGradient");
   const [seasonalPalType, setSeasonalPalType] = useState("seasonalCombined");
   const [dataVizPalType, setDataVizPalType] = useState("dataVizPalOne");
@@ -492,6 +494,8 @@ export function ColorPaletteContextProvider({ children }) {
       flowerPalType,
       uiBrandPalType,
       arcPalType,
+      triadicPalType,
+      tetradicPalType,
     );
 
     if (pal && Array.isArray(pal) && pal.length > 0) {
@@ -524,6 +528,8 @@ export function ColorPaletteContextProvider({ children }) {
     flowerPalType,
     uiBrandPalType,
     arcPalType,
+    triadicPalType,
+    tetradicPalType,
   ]);
 
   const values = {
@@ -612,6 +618,10 @@ export function ColorPaletteContextProvider({ children }) {
     setUiBrandPalType,
     arcPalType,
     setArcPalType,
+    triadicPalType,
+    setTriadicPalType,
+    tetradicPalType,
+    setTetradicPalType,
   };
 
   return (

@@ -63,7 +63,7 @@ export default function PaletteViewer() {
     { key: "tints", label: "Show Tints/Shades" },
     // { key: "primitiveName", label: "Show Color Names" },
     { key: "colorNames", label: "Show Fancy Color Names" },
-    // { key: "colorTypes", label: "Show Color Types" },
+    { key: "colorTypes", label: "Show Color Types" },
     { key: "makeBaseOn", label: "Show Make Base" },
     { key: "hexOn", label: "Show Hex" },
     { key: "hueOn", label: "Show Hue" },
@@ -171,7 +171,7 @@ export default function PaletteViewer() {
               return (
                 <div
                   className={`h-full
-                  ${palette.length > 11 ? "w-[100px] flex-none" : "flex-1"}
+                  ${palette.length > 12 ? "w-[100px] flex-none" : "flex-1"}
                   ${shadesTintsTonesIndex === index ? "py-0" : "py-5"}
                   flex flex-col gap-2 justify-between items-center font-semibold
                   ${textColor === "white" ? "text-white" : "text-black"}
@@ -249,7 +249,7 @@ export default function PaletteViewer() {
                             {role}
                           </span>
                         )}
-                        {/* {toggles.colorTypes && <span>{colorObj.name}</span>} */}
+                        {toggles.colorTypes && <span>{colorObj.name}</span>}
                         {toggles.hexOn && (
                           <span className="text-xs">{hex.toUpperCase()}</span>
                         )}

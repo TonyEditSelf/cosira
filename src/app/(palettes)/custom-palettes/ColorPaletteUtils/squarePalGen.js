@@ -77,7 +77,7 @@ export default function squarePalGen(oklch) {
 
   return [
     { name: "Color1-D", value: color1Dark },
-    { name: "Color1", value: baseColor },
+    { name: "Base", value: baseColor },
     { name: "Color1-L", value: color1Light },
     { name: "Color2-D", value: color2Dark },
     { name: "Color2", value: color2 },

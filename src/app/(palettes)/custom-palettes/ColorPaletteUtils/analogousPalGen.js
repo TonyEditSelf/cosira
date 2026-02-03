@@ -36,7 +36,7 @@ export default function analogousPalGen(
   analogOptions,
   analogPalType,
   sliderLightValue = 0,
-  sliderChromaValue = 0
+  sliderChromaValue = 0,
 ) {
   if (analogPalType === "classicCenteredAnalog") {
     const L_DARK_SHIFT = 0.25;
@@ -155,12 +155,12 @@ export default function analogousPalGen(
     const a1 = createColorVariant(
       analogOptions.analogousAngle1,
       baseColor.l,
-      baseChromaCompensated
+      baseChromaCompensated,
     );
     const a2 = createColorVariant(
       analogOptions.analogousAngle2,
       baseColor.l,
-      baseChromaCompensated
+      baseChromaCompensated,
     );
 
     return [
@@ -226,12 +226,12 @@ export default function analogousPalGen(
     const a1 = createColorVariant(
       analogOptions.analogousAngle1,
       baseColor.l,
-      baseChromaCompensated
+      baseChromaCompensated,
     );
     const a2 = createColorVariant(
       analogOptions.analogousAngle2,
       baseColor.l,
-      baseChromaCompensated
+      baseChromaCompensated,
     );
 
     return [
@@ -259,7 +259,7 @@ export default function analogousPalGen(
 
     const vintageChromaBase = Math.min(
       VINTAGE_CHROMA_MAX,
-      Math.max(0.02, oklch.c * VINTAGE_CHROMA_FACTOR)
+      Math.max(0.02, oklch.c * VINTAGE_CHROMA_FACTOR),
     );
 
     const baseColor = {
@@ -349,7 +349,7 @@ export default function analogousPalGen(
 
     const vintageChromaBase = Math.min(
       VINTAGE_CHROMA_MAX,
-      Math.max(0.02, oklch.c * VINTAGE_CHROMA_FACTOR)
+      Math.max(0.02, oklch.c * VINTAGE_CHROMA_FACTOR),
     );
 
     const baseColor = {
@@ -439,7 +439,7 @@ export default function analogousPalGen(
 
     const vintageChromaBase = Math.min(
       VINTAGE_CHROMA_MAX,
-      Math.max(0.02, oklch.c * VINTAGE_CHROMA_FACTOR)
+      Math.max(0.02, oklch.c * VINTAGE_CHROMA_FACTOR),
     );
 
     const baseColor = {
@@ -567,12 +567,12 @@ export default function analogousPalGen(
     const a1 = createNeutralVariant(
       analogOptions.analogousAngle1,
       baseColor.l,
-      baseColor.c
+      baseColor.c,
     );
     const a2 = createNeutralVariant(
       analogOptions.analogousAngle2,
       baseColor.l,
-      baseColor.c
+      baseColor.c,
     );
 
     return [
@@ -638,12 +638,12 @@ export default function analogousPalGen(
     const a1 = createNeutralVariant(
       analogOptions.analogousAngle1,
       baseColor.l,
-      baseColor.c
+      baseColor.c,
     );
     const a2 = createNeutralVariant(
       analogOptions.analogousAngle1 * 2,
       baseColor.l,
-      baseColor.c
+      baseColor.c,
     );
 
     return [
@@ -709,12 +709,12 @@ export default function analogousPalGen(
     const a1 = createNeutralVariant(
       analogOptions.analogousAngle2,
       baseColor.l,
-      baseColor.c
+      baseColor.c,
     );
     const a2 = createNeutralVariant(
       analogOptions.analogousAngle2 * 2,
       baseColor.l,
-      baseColor.c
+      baseColor.c,
     );
 
     return [

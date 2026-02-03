@@ -28,12 +28,12 @@ export default function MyColorPicker() {
       exit={{ y: 10, opacity: 0 }}
       transition={{ duration: 0.1, ease: easeIn }}
       ref={pickerRef}
-      className={`fixed flex justify-center items-center gap-3 left-1/2 -translate-x-1/2 bottom-[102px] rounded-md bg-[var(--background)] w-[590px] h-[400px] border border-[var(--navBorder)] z-50`}
+      className={`fixed flex justify-center items-center gap-3 left-1/2 -translate-x-1/2 bottom-[72px] rounded-md bg-[var(--background)] w-[590px] h-[425px] border border-[var(--navBorder)] z-50`}
     >
       {myColorPickerOpen && (
-        <div className="flex flex-col justify-center items-center gap-7 w-full px-10">
-          <div className="flex w-full gap-10">
-            <div className="flex w-fit flex-col gap-1 justify-center items-center">
+        <div className="flex flex-col justify-center items-center gap-5 w-full px-15">
+          <div className="flex w-full gap-15">
+            <div className="flex w-fit flex-col gap-2 justify-center items-center">
               <OklchColorWheel
                 hue={oklch.h}
                 lightness={oklch.l}
@@ -50,7 +50,7 @@ export default function MyColorPicker() {
               />
             </div>
 
-            <div className="flex flex-1 flex-col w-full gap-2">
+            <div className="flex flex-col justify-center w-full gap-3">
               <div>
                 <h4 className="text-sm font-semibold mb-3">Hue</h4>
                 <HueSlider

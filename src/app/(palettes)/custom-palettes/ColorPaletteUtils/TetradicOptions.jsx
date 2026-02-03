@@ -1,27 +1,44 @@
 import { useColorPaletteContext } from "../../ColorContext";
+import tetradicPalGen from "./tetradicPalGen";
 
 export default function TetradicOptions() {
-  const { tetradicAngle, handleTetradicAngleChange } = useColorPaletteContext();
+  const {
+    setPalette,
+    setDuplicatePalette,
+    oklch,
+    tetradicPalType,
+    setTetradicPalType,
+  } = useColorPaletteContext();
+
+  const options = [
+    { id: "classicTetra", label: "Classic Tetradic" },
+    { id: "vintageTetra", label: "Vintage Tetradic" },
+    { id: "neutralTetra", label: "Neutral Tetradic" },
+    { id: "pastelTetra", label: "Pastel Tetradic" },
+  ];
+
+  const handleChange = (value) => {
+    setTetradicPalType(value);
+    const pal = tetradicPalGen(oklch, value);
+    setPalette(pal);
+    setDuplicatePalette(pal);
+  };
+
   return (
-    <div>
-      <h1 className="text-[15px] font-bold mb-3">TETRADIC OPTIONS</h1>
-      <div className="flex flex-col gap-4 text-sm font-semibold ">
-        <div className="flex flex-col w-fit">
-          <label htmlFor="tetradicAngle">Tetradic Angle:</label>
+    <div className="flex flex-col gap-0">
+      {options.map(({ id, label }) => (
+        <div key={id} className="flex gap-4">
           <input
-            className="border border-[var(--navBorder)] rounded-md px-2 py-1 mt-1"
-            type="number"
-            id="tetradicAngle"
-            min={60}
-            max={120}
-            step={1}
-            value={tetradicAngle}
-            onChange={(e) =>
-              handleTetradicAngleChange(parseFloat(e.target.value))
-            }
+            type="radio"
+            name="tetradicPal"
+            id={id}
+            value={id}
+            checked={tetradicPalType === id}
+            onChange={() => handleChange(id)}
           />
+          <label htmlFor={id}>{label}</label>
         </div>
-      </div>
+      ))}
     </div>
   );
 }

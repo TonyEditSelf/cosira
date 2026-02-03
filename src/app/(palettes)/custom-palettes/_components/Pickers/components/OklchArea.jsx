@@ -87,7 +87,7 @@ export default function OklchArea({ lightness, chroma, hue, onChange }) {
     const canvas = canvasRef.current;
     if (canvas) {
       // Set canvas size
-      canvas.width = 105;
+      canvas.width = 145;
       canvas.height = 140;
       drawColorArea();
     }
@@ -115,17 +115,6 @@ export default function OklchArea({ lightness, chroma, hue, onChange }) {
           boxShadow: "0 0 0 1px rgba(0,0,0,0.3), 0 2px 4px rgba(0,0,0,0.2)",
         }}
       />
-
-      {/* Labels */}
-      <div className="absolute bottom-2 left-2 text-xs font-medium text-gray-700 bg-white/80 px-2 py-1 rounded backdrop-blur-sm">
-        Chroma →
-      </div>
-      <div
-        className="absolute top-2 left-2 text-xs font-medium text-gray-700 bg-white/80 px-2 py-1 rounded backdrop-blur-sm"
-        style={{ writingMode: "vertical-rl", textOrientation: "mixed" }}
-      >
-        ← Lightness
-      </div>
     </div>
   );
 }

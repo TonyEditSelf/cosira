@@ -6,20 +6,20 @@ export default function TriadicOptions() {
     setPalette,
     setDuplicatePalette,
     oklch,
-    monoPalType,
-    setMonoPalType,
+    triadicPalType,
+    setTriadicPalType,
   } = useColorPaletteContext();
 
   const options = [
-    { id: "classicMono", label: "Classic Mono" },
-    { id: "vintageMono", label: "Vintage Mono" },
-    { id: "neutralMono", label: "Neutral Mono" },
-    { id: "kidsMono", label: "Kids Mono" },
+    { id: "classicTriad", label: "Classic Triadic" },
+    { id: "vintageTriad", label: "Vintage Triadic" },
+    { id: "neutralTriad", label: "Neutral Triadic" },
+    { id: "kidsTriad", label: "Kids Triadic" },
   ];
 
   const handleChange = (value) => {
-    setMonoPalType(value);
-    const pal = monochromaticPalGen(oklch, value);
+    setTriadicPalType(value);
+    const pal = triadicPalGen(oklch, value);
     setPalette(pal);
     setDuplicatePalette(pal);
   };
@@ -30,10 +30,10 @@ export default function TriadicOptions() {
         <div key={id} className="flex gap-4">
           <input
             type="radio"
-            name="monoPal"
+            name="triadicPal"
             id={id}
             value={id}
-            checked={monoPalType === id}
+            checked={triadicPalType === id}
             onChange={() => handleChange(id)}
           />
           <label htmlFor={id}>{label}</label>

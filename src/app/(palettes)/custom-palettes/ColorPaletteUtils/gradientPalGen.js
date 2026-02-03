@@ -170,7 +170,7 @@ export default function gradientPalGen(oklch, gradientPalType) {
     };
 
     return [
-      { name: "Step-1", value: step1 },
+      { name: "Base", value: step1 },
       { name: "Step-2", value: step2 },
       { name: "Step-3", value: step3 },
       { name: "Step-4", value: step4 },

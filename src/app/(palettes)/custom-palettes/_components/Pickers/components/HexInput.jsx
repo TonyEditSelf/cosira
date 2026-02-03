@@ -106,14 +106,14 @@ export default function HexInput({ oklch, onChange }) {
   return (
     <div className="flex gap-2">
       <div className="relative">
-        <Hash className="absolute left-2 top-1/2 transform -translate-y-1/2 w-7 h-7 text-gray-400 pr-4" />
+        <Hash className="absolute text-sm left-2 top-1/2 transform -translate-y-1/2 w-7 h-7 text-gray-400 pr-4" />
         <Input
           id="hex-input"
           type="text"
           value={hexValue}
           onChange={handleHexChange}
           placeholder="00000000"
-          className="pl-5 font-mono w-28 border border-[var(--navBorder)] hover:border-[var(--muted-foreground)] py-[6px] px-5 rounded-md"
+          className="pl-5 text-sm font-mono w-28 border border-[var(--navBorder)] hover:border-[var(--muted-foreground)] py-[6px] px-5 rounded-md"
           maxLength={9}
         />
       </div>
@@ -121,7 +121,7 @@ export default function HexInput({ oklch, onChange }) {
         onClick={handleRandomColor}
         // variant="outline"
         size="sm"
-        className="border border-[var(--navBorder)] hover:border-[var(--muted-foreground)] py-[4px] px-5 rounded-md font-mono"
+        className="border text-sm border-[var(--navBorder)] hover:border-[var(--muted-foreground)] py-[4px] px-5 rounded-md font-mono"
       >
         Random
       </Button>

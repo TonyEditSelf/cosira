@@ -116,8 +116,8 @@ export default function OklchColorWheel({ lightness, chroma, hue, onChange }) {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (canvas) {
-      canvas.width = 135;
-      canvas.height = 135;
+      canvas.width = 170;
+      canvas.height = 170;
       drawColorWheel();
     }
   }, [drawColorWheel]);

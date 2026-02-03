@@ -16,6 +16,7 @@ import DataVizOptions from "../ColorPaletteUtils/DataVizOptions";
 import FlowerPalOptions from "../ColorPaletteUtils/FlowerPalOptions";
 import UIBrandOptions from "../ColorPaletteUtils/UIBrandOptions";
 import ArcPalOptions from "../ColorPaletteUtils/ArcPalOptions";
+import TriadicOptions from "../ColorPaletteUtils/TriadicOptions";
 
 export default function PalettteProperties() {
   const {
@@ -99,6 +100,7 @@ export default function PalettteProperties() {
       {selectedPaletteType === "analogous" && <AnalogousOptions />}
       {selectedPaletteType === "splitComplementary" && <SplitCompOptions />}
       {selectedPaletteType === "tetradic" && <TetradicOptions />}
+      {selectedPaletteType === "triadic" && <TriadicOptions />}
       {selectedPaletteType === "gradient" && <GradientOptions />}
       {selectedPaletteType === "seasonal" && <SeasonalOptions />}
       {selectedPaletteType === "dataVizPalette" && <DataVizOptions />}

@@ -44,7 +44,7 @@ export default function HueSlider({ hue, lightness, chroma, onChange }) {
 
       onChange({ h: newHue });
     },
-    [onChange]
+    [onChange],
   );
 
   const handleMouseDown = useCallback(
@@ -61,7 +61,7 @@ export default function HueSlider({ hue, lightness, chroma, onChange }) {
       document.addEventListener("mousemove", handleMouseMove);
       document.addEventListener("mouseup", handleMouseUp);
     },
-    [handleMouseMove]
+    [handleMouseMove],
   );
 
   useEffect(() => {
