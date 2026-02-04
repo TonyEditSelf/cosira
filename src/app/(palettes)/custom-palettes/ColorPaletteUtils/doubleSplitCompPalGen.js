@@ -1,18 +1,9 @@
 import { clampColorToGamut } from "./gamutMapping";
 
-/**
- * Double Split Complementary Palette Generator - Production Ready
- *
- * Color Theory:
- * - Base color + 2 analogous splits (±30-40°)
- * - Complement (180°) + 2 complementary splits (±30-40°)
- * - Each group has light/base/dark variants for hierarchy
- *
- * Total: 12 distinct colors arranged in harmonic groups
- */
-
-export default function doubleSplitCompPalGen(oklch, variant = "balanced") {
-  // Variant-specific parameters with distinct generation strategies
+export default function doubleSplitCompPalGen(
+  oklch,
+  doubleSplitCompPalType = "balanced",
+) {
   const VARIANTS = {
     balanced: {
       LMAX: 0.9,
@@ -66,7 +57,7 @@ export default function doubleSplitCompPalGen(oklch, variant = "balanced") {
     },
   };
 
-  const config = VARIANTS[variant] || VARIANTS.balanced;
+  const config = VARIANTS[doubleSplitCompPalType] || VARIANTS.balanced;
   const {
     LMAX,
     LMIN,
@@ -104,10 +95,10 @@ export default function doubleSplitCompPalGen(oklch, variant = "balanced") {
     return clamp(baseC * chromaMultiplier, CMIN, CMAX);
   }
 
-  // Create light variant with proper perceptual spacing
+  // Create light doubleSplitCompPalType with proper perceptual spacing
   function createLightVariant(l, c, hue, chromaMod = 1.0) {
     const newL = clamp(l + lightOffset, LMIN, LMAX);
-    const chromaReduction = variant === "pastel" ? 0.75 : 0.8;
+    const chromaReduction = doubleSplitCompPalType === "pastel" ? 0.75 : 0.8;
 
     return clampColorToGamut({
       l: newL,
@@ -116,10 +107,10 @@ export default function doubleSplitCompPalGen(oklch, variant = "balanced") {
     });
   }
 
-  // Create dark variant with proper perceptual spacing
+  // Create dark doubleSplitCompPalType with proper perceptual spacing
   function createDarkVariant(l, c, hue, chromaMod = 1.0) {
     const newL = clamp(l - darkOffset, LMIN, LMAX);
-    const chromaReduction = variant === "deep" ? 0.75 : 0.85;
+    const chromaReduction = doubleSplitCompPalType === "deep" ? 0.75 : 0.85;
 
     return clampColorToGamut({
       l: newL,
@@ -129,10 +120,10 @@ export default function doubleSplitCompPalGen(oklch, variant = "balanced") {
   }
 
   // Initialize base color values
-  // Initialize base color values
   const baseHue = oklch.h % 360;
-  // For deep variant, bias toward darker range
-  const targetL = variant === "deep" ? Math.min(oklch.l, 0.45) : oklch.l;
+  // For deep doubleSplitCompPalType, bias toward darker range
+  const targetL =
+    doubleSplitCompPalType === "deep" ? Math.min(oklch.l, 0.45) : oklch.l;
   const baseL = clamp(targetL, LMIN, LMAX);
   const baseC = clamp(oklch.c * chromaBoost, CMIN, CMAX);
 
@@ -157,7 +148,7 @@ export default function doubleSplitCompPalGen(oklch, variant = "balanced") {
 
   // 1. Base Light - Higher lightness, reduced chroma
   palette.push({
-    name: "Base-Light",
+    name: "Base Light",
     value: createLightVariant(baseL, baseC, baseHue),
   });
 
@@ -173,7 +164,7 @@ export default function doubleSplitCompPalGen(oklch, variant = "balanced") {
 
   // 3. Base Dark - Lower lightness, slightly reduced chroma
   palette.push({
-    name: "Base-Dark",
+    name: "Base Dark",
     value: createDarkVariant(baseL, baseC, baseHue),
   });
 
@@ -184,7 +175,7 @@ export default function doubleSplitCompPalGen(oklch, variant = "balanced") {
   // 4. Analogous Warm - Slightly lighter than base
   const analogWarmL = clamp(baseL + 0.1, LMIN, LMAX);
   palette.push({
-    name: "Analog-Warm",
+    name: "Analog Warm",
     value: clampColorToGamut({
       l: analogWarmL,
       c: getAdaptiveChroma(analogWarmL, baseC * 0.92),
@@ -194,7 +185,7 @@ export default function doubleSplitCompPalGen(oklch, variant = "balanced") {
 
   // 5. Analogous Warm Light - Much lighter, lower chroma
   palette.push({
-    name: "Analog-Warm-Light",
+    name: "Analog Warm Light",
     value: createLightVariant(analogWarmL, baseC * 0.85, analogWarmHue),
   });
 
@@ -205,7 +196,7 @@ export default function doubleSplitCompPalGen(oklch, variant = "balanced") {
   // 6. Analogous Cool - Slightly darker than base
   const analogCoolL = clamp(baseL - 0.08, LMIN, LMAX);
   palette.push({
-    name: "Analog-Cool",
+    name: "Analog Cool",
     value: clampColorToGamut({
       l: analogCoolL,
       c: getAdaptiveChroma(analogCoolL, baseC * 0.95),
@@ -215,7 +206,7 @@ export default function doubleSplitCompPalGen(oklch, variant = "balanced") {
 
   // 7. Analogous Cool Dark - Much darker, reduced chroma
   palette.push({
-    name: "Analog-Cool-Dark",
+    name: "Analog Cool Dark",
     value: createDarkVariant(analogCoolL, baseC * 0.9, analogCoolHue),
   });
 
@@ -225,7 +216,7 @@ export default function doubleSplitCompPalGen(oklch, variant = "balanced") {
 
   // 8. Complement Light - Higher lightness, boosted chroma
   palette.push({
-    name: "Complement-Light",
+    name: "Comp Light",
     value: createLightVariant(baseL, baseC * 1.1, compHue, 1.05),
   });
 
@@ -241,7 +232,7 @@ export default function doubleSplitCompPalGen(oklch, variant = "balanced") {
 
   // 10. Complement Dark - Lower lightness
   palette.push({
-    name: "Complement-Dark",
+    name: "Comp Dark",
     value: createDarkVariant(baseL, baseC * 1.05, compHue),
   });
 
@@ -252,7 +243,7 @@ export default function doubleSplitCompPalGen(oklch, variant = "balanced") {
   // 11. Complement Split Warm - Darker than base
   const compSplitL = clamp(baseL - 0.12, LMIN, LMAX);
   palette.push({
-    name: "Complement-Split-Warm",
+    name: "Comp Split Warm",
     value: clampColorToGamut({
       l: compSplitL,
       c: getAdaptiveChroma(compSplitL, baseC * 1.05),
@@ -263,7 +254,7 @@ export default function doubleSplitCompPalGen(oklch, variant = "balanced") {
   // 12. Complement Split Cool - Even darker, distinct from warm
   const compSplitCoolL = clamp(baseL - 0.2, LMIN, LMAX);
   palette.push({
-    name: "Complement-Split-Cool",
+    name: "Comp Split Cool",
     value: clampColorToGamut({
       l: compSplitCoolL,
       c: clamp(baseC * 0.95, CMIN, CMAX),
@@ -312,7 +303,7 @@ function validatePaletteDistinctness(palette) {
   }
 }
 
-// Export variant configurations
+// Export doubleSplitCompPalType configurations
 export const PALETTE_TYPES = {
   balanced: {
     id: "balanced",

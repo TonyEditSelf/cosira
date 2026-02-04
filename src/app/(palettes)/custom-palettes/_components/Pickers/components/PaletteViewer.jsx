@@ -249,7 +249,11 @@ export default function PaletteViewer() {
                             {role}
                           </span>
                         )}
-                        {toggles.colorTypes && <span>{colorObj.name}</span>}
+                        {toggles.colorTypes && (
+                          <span className="break-words text-center">
+                            {colorObj.name}
+                          </span>
+                        )}
                         {toggles.hexOn && (
                           <span className="text-xs">{hex.toUpperCase()}</span>
                         )}
