@@ -11,6 +11,7 @@ export const navDesktopElements = [
       { label: "Tonalist", path: "/tonalist" },
       { label: "Bezier Blend", path: "/bezier-blend" },
       { label: "Color Adjust", path: "/color-adjust" },
+      { label: "Dark Mode Generator", path: "/dark-mode-gen" },
     ],
   },
   {

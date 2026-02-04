@@ -1,5 +1,5 @@
 import { useColorPaletteContext } from "../../ColorContext";
-import analogousPalGen from "./analogousPalGen";
+import analogousPalGen, { getBaseAngles } from "./analogousPalGen";
 
 export default function AnalogousOptions() {
   const {
@@ -9,56 +9,84 @@ export default function AnalogousOptions() {
     analogPalType,
     setAnalogPalType,
     analogOptions,
-    handleAnalogOptionsChange,
-    palette,
+    setAnalogOptions,
   } = useColorPaletteContext();
 
+  const getCurrentAngles = () => {
+    const baseAngle = getBaseAngles(analogPalType);
+    return {
+      angle1: analogOptions.analogousAngle1 ?? -baseAngle,
+      angle2: analogOptions.analogousAngle2 ?? baseAngle,
+    };
+  };
+
   const analogTypes = [
-    { id: "classicCenteredAnalog", label: "Classic Centered Analog" },
-    { id: "classicLeftAnalog", label: "Left-Leaning Classic" },
-    { id: "classicRightAnalog", label: "Right-Leaning Classic" },
-    { id: "vintageCenteredAnalog", label: "Vintage Centered Analog" },
-    { id: "vintageLeftAnalog", label: "Left-Leaning Vintage" },
-    { id: "vintageRightAnalog", label: "Right-Leaning Vintage" },
-    { id: "neutralCenteredAnalog", label: "Neutral Centered Analog" },
-    { id: "neutralLeftAnalog", label: "Left-Leaning Neutral" },
-    { id: "neutralRightAnalog", label: "Right-Leaning Neutral" },
-    { id: "pastelKidCentered", label: "Pastel-Kid Centered" },
-    { id: "pastelKidLeft", label: "Pastel-Kid Left" },
-    { id: "pastelKidRight", label: "Pastel-Kid Right" },
+    { id: "classicCenteredAnalog", label: "Classic Centered" },
+    { id: "classicLeftAnalog", label: "Classic Left" },
+    { id: "classicRightAnalog", label: "Classic Right" },
+    { id: "vintageCenteredAnalog", label: "Vintage Centered" },
+    { id: "vintageLeftAnalog", label: "Vintage Left" },
+    { id: "vintageRightAnalog", label: "Vintage Right" },
+    { id: "neutralCenteredAnalog", label: "Neutral Centered" },
+    { id: "neutralLeftAnalog", label: "Neutral Left" },
+    { id: "neutralRightAnalog", label: "Neutral Right" },
+    { id: "pastelKidCentered", label: "Pastel Centered" },
+    { id: "pastelKidLeft", label: "Pastel Left" },
+    { id: "pastelKidRight", label: "Pastel Right" },
   ];
 
   const handleTypeChange = (value) => {
-    // Generate and set palette with the new type value immediately
-    const pal = analogousPalGen(oklch, analogOptions, value);
+    // Reset angles when changing palette type
+    setAnalogOptions({
+      analogousAngle1: null,
+      analogousAngle2: null,
+    });
+
+    // Generate palette with new type
+    const pal = analogousPalGen(
+      oklch,
+      { analogousAngle1: null, analogousAngle2: null },
+      value,
+    );
     setPalette(pal);
     setDuplicatePalette(pal);
-
-    // Update the type state - this will trigger the useEffect in context
-    // but the palette is already set correctly
     setAnalogPalType(value);
   };
 
-  const handleAngleChange = (value, id) => {
-    const newValue = parseFloat(value);
-    handleAnalogOptionsChange(newValue, id);
-
-    // Create updated options object to pass immediately
+  const handleAngleChange = (newAngle1) => {
     const updatedOptions = {
-      ...analogOptions,
-      [id]: newValue,
+      analogousAngle1: newAngle1,
+      analogousAngle2: -newAngle1,
     };
 
-    // Generate palette with updated options
+    setAnalogOptions(updatedOptions);
+
     const pal = analogousPalGen(oklch, updatedOptions, analogPalType);
     setPalette(pal);
+    setDuplicatePalette(pal);
+  };
+
+  const handleReset = () => {
+    setAnalogOptions({
+      analogousAngle1: null,
+      analogousAngle2: null,
+    });
+
+    const pal = analogousPalGen(
+      oklch,
+      { analogousAngle1: null, analogousAngle2: null },
+      analogPalType,
+    );
+    setPalette(pal);
+    setDuplicatePalette(pal);
   };
 
   return (
     <div className="flex flex-col gap-5">
       <div>
+        <h3 className="font-semibold mb-2">Palette Type</h3>
         {analogTypes.map(({ id, label }) => (
-          <div key={id} className="flex gap-4">
+          <div key={id} className="flex gap-4 items-center py-1">
             <input
               type="radio"
               name="analogPal"
@@ -72,51 +100,25 @@ export default function AnalogousOptions() {
         ))}
       </div>
 
-      <div>
-        <h1 className="text-[12px] font-bold mb-3">ANALOGUE OPTIONS</h1>
-        <div className="flex flex-col gap-4 text-[11px] font-semibold">
-          <div className="flex flex-col w-fit">
-            <label htmlFor="analogousAngle1">Analog 1 Angle:</label>
-            <input
-              className="border border-[var(--navBorder)] rounded-md px-2 py-1 mt-1"
-              type="number"
-              id="analogousAngle1"
-              min={-90}
-              max={0}
-              step={1}
-              value={analogOptions.analogousAngle1}
-              onChange={(e) => handleAngleChange(e.target.value, e.target.id)}
-            />
-          </div>
-
-          <div className="flex flex-col w-fit">
-            <label htmlFor="analogousAngle2">Analog 2 Angle:</label>
-            <input
-              className="border border-[var(--navBorder)] rounded-md px-2 py-1 mt-1"
-              type="number"
-              id="analogousAngle2"
-              min={0}
-              max={90}
-              step={1}
-              value={analogOptions.analogousAngle2}
-              onChange={(e) => handleAngleChange(e.target.value, e.target.id)}
-            />
-          </div>
-
-          <div className="flex flex-col w-fit">
-            <label htmlFor="totalAngle">Total Angle:</label>
-            <input
-              className="border border-[var(--navBorder)] rounded-md px-2 py-1 mt-1"
-              type="number"
-              id="totalAngle"
-              readOnly
-              value={
-                Math.abs(analogOptions.analogousAngle1) +
-                Math.abs(analogOptions.analogousAngle2)
-              }
-            />
-          </div>
-        </div>
+      <div className="flex flex-col gap-2">
+        <label className="font-semibold">
+          Analogous Angle: ±{Math.abs(getCurrentAngles().angle1)}°
+        </label>
+        <input
+          type="range"
+          min="-60"
+          max="-10"
+          step="1"
+          value={analogOptions.analogousAngle1 ?? -getBaseAngles(analogPalType)}
+          onChange={(e) => handleAngleChange(parseInt(e.target.value))}
+          className="w-full"
+        />
+        <button
+          onClick={handleReset}
+          className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition-colors"
+        >
+          Reset to Default (±{getBaseAngles(analogPalType)}°)
+        </button>
       </div>
     </div>
   );

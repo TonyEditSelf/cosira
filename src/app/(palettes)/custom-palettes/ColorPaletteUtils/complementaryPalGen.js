@@ -1,1291 +1,838 @@
-export default function complementaryPalGen(
-  oklch,
-  compPalType,
-  sliderLightValue = 0,
-  sliderChromaValue = 0
-) {
-  if (compPalType === "classicComp") {
-    const LMAX = 0.95;
-    const LMIN = 0.25;
-    const CMAX = 0.25;
-    const CMIN = 0.05;
+/**
+ * Improved Complementary Palette Generator
+ * Balances user control (sliders) with palette character constraints
+ * Uses "soft constraints" instead of hard overrides
+ */
 
-    const baseColor = oklch;
+function gamutMap(oklch) {
+  const { l, c, h } = oklch;
 
-    // Base variants (balanced classic adjustments)
-    const darkestBase = {
-      ...baseColor,
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.15)), // subtle boost in darks
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l - 0.28)),
+  function oklchToRgb(l, c, h) {
+    const a = c * Math.cos((h * Math.PI) / 180);
+    const b = c * Math.sin((h * Math.PI) / 180);
+
+    const l_ = l + 0.3963377774 * a + 0.2158037573 * b;
+    const m_ = l - 0.1055613458 * a - 0.0638541728 * b;
+    const s_ = l - 0.0894841775 * a - 1.291485548 * b;
+
+    const l3 = l_ * l_ * l_;
+    const m3 = m_ * m_ * m_;
+    const s3 = s_ * s_ * s_;
+
+    const r_lin = +4.0767416621 * l3 - 3.3077115913 * m3 + 0.2309699292 * s3;
+    const g_lin = -1.2684380046 * l3 + 2.6097574011 * m3 - 0.3413193965 * s3;
+    const b_lin = -0.0041960863 * l3 - 0.7034186147 * m3 + 1.707614701 * s3;
+
+    return {
+      r: r_lin,
+      g: g_lin,
+      b: b_lin,
+      inGamut:
+        r_lin >= 0 &&
+        r_lin <= 1 &&
+        g_lin >= 0 &&
+        g_lin <= 1 &&
+        b_lin >= 0 &&
+        b_lin <= 1,
     };
+  }
 
-    const darkBase = {
-      ...baseColor,
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.08)),
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l - 0.15)),
-    };
+  let testRgb = oklchToRgb(l, c, h);
+  if (testRgb.inGamut) {
+    return { l, c, h };
+  }
 
-    const lightBase = {
-      ...baseColor,
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.93)), // subtle desaturation
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l + 0.12)), // previously matched 0.92
-    };
+  let cMin = 0;
+  let cMax = c;
+  let cResult = c;
 
-    const lightestBase = {
-      ...baseColor,
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.85)),
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l + 0.28)),
-    };
+  for (let i = 0; i < 15; i++) {
+    const cTest = (cMin + cMax) / 2;
+    testRgb = oklchToRgb(l, cTest, h);
 
-    // Complementary color (balanced classic)
-    const compColor = {
+    if (testRgb.inGamut) {
+      cMin = cTest;
+      cResult = cTest;
+    } else {
+      cMax = cTest;
+    }
+  }
+
+  return { l, c: cResult, h };
+}
+
+/**
+ * Soft constraint helper - nudges value toward target range without hard override
+ * @param {number} value - User's input value
+ * @param {number} min - Ideal minimum for this palette
+ * @param {number} max - Ideal maximum for this palette
+ * @param {number} strength - How strongly to enforce (0 = no enforcement, 1 = hard clamp)
+ */
+function softConstrain(value, min, max, strength = 0.5) {
+  if (value < min) {
+    const distance = min - value;
+    return value + distance * strength;
+  }
+  if (value > max) {
+    const distance = value - max;
+    return value - distance * strength;
+  }
+  return value;
+}
+
+export default function complementaryPalGen(oklch, compPalType) {
+  // ============================================================================
+  // CLASSIC COMPLEMENTARY - Balanced, timeless color harmony
+  // ============================================================================
+  if (compPalType === "classic") {
+    // Classic accepts ANY user input - no constraints
+    const baseColor = gamutMap(oklch);
+
+    const base900 = gamutMap({
       ...baseColor,
+      l: baseColor.l * 0.35,
+      c: baseColor.c * 1.2,
+    });
+    const base700 = gamutMap({
+      ...baseColor,
+      l: baseColor.l * 0.65,
+      c: baseColor.c * 1.1,
+    });
+    const base500 = baseColor;
+    const base300 = gamutMap({
+      ...baseColor,
+      l: baseColor.l + (0.95 - baseColor.l) * 0.45,
+      c: baseColor.c * 0.9,
+    });
+    const base100 = gamutMap({
+      ...baseColor,
+      l: baseColor.l + (0.95 - baseColor.l) * 0.75,
+      c: baseColor.c * 0.7,
+    });
+
+    const compColor = gamutMap({
+      l: baseColor.l,
+      c: baseColor.c,
       h: (baseColor.h + 180) % 360,
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c)), // same saturation for balance, but clamped
-    };
+    });
 
-    const darkestComp = {
+    const comp900 = gamutMap({
       ...compColor,
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 1.15)),
-      l: Math.min(LMAX, Math.max(LMIN, compColor.l - 0.28)),
-    };
+      l: compColor.l * 0.35,
+      c: compColor.c * 1.2,
+    });
+    const comp700 = gamutMap({
+      ...compColor,
+      l: compColor.l * 0.65,
+      c: compColor.c * 1.1,
+    });
+    const comp500 = compColor;
+    const comp300 = gamutMap({
+      ...compColor,
+      l: compColor.l + (0.95 - compColor.l) * 0.45,
+      c: compColor.c * 0.9,
+    });
+    const comp100 = gamutMap({
+      ...compColor,
+      l: compColor.l + (0.95 - compColor.l) * 0.75,
+      c: compColor.c * 0.7,
+    });
 
-    const darkComp = {
-      ...compColor,
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 1.08)),
-      l: Math.min(LMAX, Math.max(LMIN, compColor.l - 0.15)),
-    };
-
-    const lightComp = {
-      ...compColor,
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 0.93)),
-      l: Math.min(LMAX, Math.max(LMIN, compColor.l + 0.12)),
-    };
-
-    const lightestComp = {
-      ...compColor,
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 0.85)),
-      l: Math.min(LMAX, Math.max(LMIN, compColor.l + 0.28)),
-    };
+    const neutral = gamutMap({ l: 0.5, c: 0.02, h: baseColor.h });
+    const neutralLight = gamutMap({ l: 0.96, c: 0.01, h: baseColor.h });
 
     return [
-      { name: "Base-DD", value: darkestBase },
-      { name: "Base-D", value: darkBase },
-      { name: "Base", value: baseColor },
-      { name: "Base-L", value: lightBase },
-      { name: "Base-LL", value: lightestBase },
-      { name: "Comp-LL", value: lightestComp },
-      { name: "Comp-L", value: lightComp },
-      { name: "Comp", value: compColor },
-      { name: "Comp-D", value: darkComp },
-      { name: "Comp-DD", value: darkestComp },
-    ];
-  } else if (compPalType === "vintageComp") {
-    const LMAX = 0.68; // softer highlights (vintage = faded)
-    const LMIN = 0.38; // deeper but not crushed shadows
-    const CMAX = 0.14; // lower saturation ceiling for authentic vintage
-    const CMIN = 0.04; // nearly grayscale at minimum
-
-    const baseColor = {
-      ...oklch,
-      l: Math.min(LMAX, Math.max(LMIN, 0.53 + sliderLightValue)), // tighter range
-      c: Math.min(CMAX, Math.max(CMIN, 0.09 + sliderChromaValue)), // more muted baseline
-    };
-
-    // --- Base tonal steps (vintage-specific curves) ---
-    const darkestBase = {
-      ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l * 0.75)), // proportional darkening
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.15)), // slight chroma boost in shadows
-      h: (baseColor.h - 3 + 360) % 360, // warmer in shadows
-    };
-
-    const darkBase = {
-      ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l * 0.88)),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.08)),
-      h: (baseColor.h - 1.5 + 360) % 360,
-    };
-
-    const lightBase = {
-      ...baseColor,
-      l: Math.min(
-        LMAX,
-        Math.max(LMIN, baseColor.l + (LMAX - baseColor.l) * 0.35)
-      ),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.85)), // desaturate highlights (vintage fade)
-      h: (baseColor.h + 2) % 360, // slightly yellower in highlights
-    };
-
-    const lightestBase = {
-      ...baseColor,
-      l: Math.min(
-        LMAX,
-        Math.max(LMIN, baseColor.l + (LMAX - baseColor.l) * 0.6)
-      ),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.7)), // strong desaturation (faded film)
-      h: (baseColor.h + 4) % 360,
-    };
-
-    // --- Complementary (vintage teal/cyan bias) ---
-    const compHue = (baseColor.h + 175) % 360; // slightly less than 180° for vintage color theory
-    const compColor = {
-      ...baseColor,
-      h: compHue,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l * 0.96)), // slightly darker complement
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.78)), // more muted than base (vintage balance)
-    };
-
-    // --- Complement tonal steps (asymmetric vintage curves) ---
-    const darkestComp = {
-      ...compColor,
-      l: Math.min(LMAX, Math.max(LMIN, compColor.l * 0.72)),
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 1.2)), // cooler shadows can be slightly richer
-      h: (compHue - 4 + 360) % 360, // shift toward blue in shadows
-    };
-
-    const darkComp = {
-      ...compColor,
-      l: Math.min(LMAX, Math.max(LMIN, compColor.l * 0.86)),
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 1.1)),
-      h: (compHue - 2 + 360) % 360,
-    };
-
-    const lightComp = {
-      ...compColor,
-      l: Math.min(
-        LMAX,
-        Math.max(LMIN, compColor.l + (LMAX - compColor.l) * 0.4)
-      ),
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 0.82)),
-      h: (compHue + 3) % 360, // shift toward cyan in highlights
-    };
-
-    const lightestComp = {
-      ...compColor,
-      l: Math.min(
-        LMAX,
-        Math.max(LMIN, compColor.l + (LMAX - compColor.l) * 0.65)
-      ),
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 0.65)),
-      h: (compHue + 5) % 360,
-    };
-
-    return [
-      { name: "Base-DD", value: darkestBase },
-      { name: "Base-D", value: darkBase },
-      { name: "Base", value: baseColor },
-      { name: "Base-L", value: lightBase },
-      { name: "Base-LL", value: lightestBase },
-      { name: "Comp-LL", value: lightestComp },
-      { name: "Comp-L", value: lightComp },
-      { name: "Comp", value: compColor },
-      { name: "Comp-D", value: darkComp },
-      { name: "Comp-DD", value: darkestComp },
-    ];
-  } else if (compPalType === "MCMComp") {
-    const LMAX = 0.7; // Soft, earthen highlights
-    const LMIN = 0.35; // Deep, strong shadows
-    const CMAX = 0.28; // Moderate to high saturation for accents
-    const CMIN = 0.06; // Slightly desaturated foundation
-
-    // --- Base Color (MCM balanced tone foundation) ---
-    const baseColor = {
-      ...oklch,
-      l: Math.min(LMAX, Math.max(LMIN, 0.55 + sliderLightValue)), // grounded midtone
-      c: Math.min(CMAX, Math.max(CMIN, 0.18 + sliderChromaValue)), // moderate saturation baseline
-    };
-
-    // --- Base Tonal Steps (MCM-specific tonal curve) ---
-    const darkestBase = {
-      ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l * 0.78)), // natural deepening (not crushed)
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.1)), // subtle richness in shadows
-      h: (baseColor.h - 2 + 360) % 360, // warm shadow bias (wood-like warmth)
-    };
-
-    const darkBase = {
-      ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l * 0.88)),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.05)),
-      h: (baseColor.h - 1 + 360) % 360,
-    };
-
-    const lightBase = {
-      ...baseColor,
-      l: Math.min(
-        LMAX,
-        Math.max(LMIN, baseColor.l + (LMAX - baseColor.l) * 0.35)
-      ),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.92)), // gently desaturated highlights
-      h: (baseColor.h + 1.5) % 360, // slightly cooler for linen/light wood glow
-    };
-
-    const lightestBase = {
-      ...baseColor,
-      l: Math.min(
-        LMAX,
-        Math.max(LMIN, baseColor.l + (LMAX - baseColor.l) * 0.6)
-      ),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.8)), // soft, muted highlight
-      h: (baseColor.h + 3) % 360,
-    };
-
-    // --- Complementary (MCM teal/avocado balance) ---
-    const compHue = (baseColor.h + 175) % 360; // slightly off-true complement for organic harmony
-    const compColor = {
-      ...baseColor,
-      h: compHue,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l * 0.95)), // slightly darker complement
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.85)), // more muted for visual balance
-    };
-
-    // --- Complement Tonal Steps (MCM asymmetric warmth/cool balance) ---
-    const darkestComp = {
-      ...compColor,
-      l: Math.min(LMAX, Math.max(LMIN, compColor.l * 0.75)),
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 1.08)), // richer cool shadows
-      h: (compHue - 2 + 360) % 360, // slight blue shift for shadow coolness
-    };
-
-    const darkComp = {
-      ...compColor,
-      l: Math.min(LMAX, Math.max(LMIN, compColor.l * 0.86)),
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 1.02)),
-      h: (compHue - 1 + 360) % 360,
-    };
-
-    const lightComp = {
-      ...compColor,
-      l: Math.min(
-        LMAX,
-        Math.max(LMIN, compColor.l + (LMAX - compColor.l) * 0.4)
-      ),
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 0.88)), // smoother highlight desat
-      h: (compHue + 2) % 360, // warm neutral lift
-    };
-
-    const lightestComp = {
-      ...compColor,
-      l: Math.min(
-        LMAX,
-        Math.max(LMIN, compColor.l + (LMAX - compColor.l) * 0.65)
-      ),
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 0.75)),
-      h: (compHue + 3.5) % 360,
-    };
-
-    // --- Return Full MCM Palette ---
-    return [
-      { name: "Base-DD", value: darkestBase },
-      { name: "Base-D", value: darkBase },
-      { name: "Base", value: baseColor },
-      { name: "Base-L", value: lightBase },
-      { name: "Base-LL", value: lightestBase },
-      { name: "Comp-LL", value: lightestComp },
-      { name: "Comp-L", value: lightComp },
-      { name: "Comp", value: compColor },
-      { name: "Comp-D", value: darkComp },
-      { name: "Comp-DD", value: darkestComp },
-    ];
-  } else if (compPalType === "neutralComp") {
-    // --- Hue-dominant neutral constraints ---
-    const LMAX = 0.96; // near-white highlights
-    const LMIN = 0.18; // deep shadows
-    const CMAX = 0.08; // subtle hue presence (neutral but not gray)
-    const CMIN = 0.02; // nearly achromatic
-
-    // --- Base color (neutral with hue bias) ---
-    const baseColor = {
-      ...oklch,
-      l: Math.min(LMAX, Math.max(LMIN, 0.57 + sliderLightValue)), // mid-tone base
-      c: Math.min(CMAX, Math.max(CMIN, 0.05 + sliderChromaValue)), // subtle chroma
-    };
-
-    // --- Base tonal steps (wide neutral range) ---
-    const darkestBase = {
-      ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l * 0.35)), // deep shadow
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.3)), // slightly more hue in darks
-    };
-
-    const darkBase = {
-      ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l * 0.65)),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.15)),
-    };
-
-    const lightBase = {
-      ...baseColor,
-      l: Math.min(
-        LMAX,
-        Math.max(LMIN, baseColor.l + (LMAX - baseColor.l) * 0.45)
-      ),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.85)), // less hue in lights
-    };
-
-    const lightestBase = {
-      ...baseColor,
-      l: Math.min(
-        LMAX,
-        Math.max(LMIN, baseColor.l + (LMAX - baseColor.l) * 0.75)
-      ),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.6)), // subtle hint in near-white
-    };
-
-    // --- Complementary neutral (opposite hue bias) ---
-    const compColor = {
-      ...baseColor,
-      h: (baseColor.h + 180) % 360, // opposite hue
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.9)), // slightly less saturated than base
-    };
-
-    // --- Complement tonal steps (matching neutrality) ---
-    const darkestComp = {
-      ...compColor,
-      l: Math.min(LMAX, Math.max(LMIN, compColor.l * 0.35)),
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 1.3)),
-    };
-
-    const darkComp = {
-      ...compColor,
-      l: Math.min(LMAX, Math.max(LMIN, compColor.l * 0.65)),
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 1.15)),
-    };
-
-    const lightComp = {
-      ...compColor,
-      l: Math.min(
-        LMAX,
-        Math.max(LMIN, compColor.l + (LMAX - compColor.l) * 0.45)
-      ),
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 0.85)),
-    };
-
-    const lightestComp = {
-      ...compColor,
-      l: Math.min(
-        LMAX,
-        Math.max(LMIN, compColor.l + (LMAX - compColor.l) * 0.75)
-      ),
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 0.6)),
-    };
-
-    // --- Return hue-dominant neutral palette ---
-    return [
-      { name: "Base-DD", value: darkestBase },
-      { name: "Base-D", value: darkBase },
-      { name: "Base", value: baseColor },
-      { name: "Base-L", value: lightBase },
-      { name: "Base-LL", value: lightestBase },
-      { name: "Comp-LL", value: lightestComp },
-      { name: "Comp-L", value: lightComp },
-      { name: "Comp", value: compColor },
-      { name: "Comp-D", value: darkComp },
-      { name: "Comp-DD", value: darkestComp },
-    ];
-  } else if (compPalType === "kidsComp") {
-    // --- Kid-friendly vibrant constraints ---
-    const LMAX = 0.88; // bright, cheerful highlights
-    const LMIN = 0.35; // deeper but still playful shadows
-    const CMAX = 0.28; // high saturation for vibrant colors
-    const CMIN = 0.15; // minimum is still fairly saturated (no dull colors)
-
-    // --- Base color (bright, energetic tone) ---
-    const baseColor = {
-      ...oklch,
-      l: Math.min(LMAX, Math.max(LMIN, 0.62 + sliderLightValue)), // bright, cheerful base
-      c: Math.min(CMAX, Math.max(CMIN, 0.22 + sliderChromaValue)), // vibrant baseline
-    };
-
-    // --- Base tonal steps (playful contrast) ---
-    const darkestBase = {
-      ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l - 0.28)), // stronger contrast for fun
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.15)), // boost saturation in darks (rich colors)
-    };
-
-    const darkBase = {
-      ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l - 0.16)),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.08)),
-    };
-
-    const lightBase = {
-      ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l + 0.14)),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.95)), // keep saturation in lights (energetic)
-    };
-
-    const lightestBase = {
-      ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l + 0.2)),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.85)), // slight desaturation at brightest (pastel touch)
-    };
-
-    // --- Complementary color (playful contrast) ---
-    const compColor = {
-      ...baseColor,
-      h: (baseColor.h + 180) % 360, // true complementary for bold contrast
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.05)), // complement can be slightly MORE saturated
-    };
-
-    // --- Complement tonal steps (symmetric for balance) ---
-    const darkestComp = {
-      ...compColor,
-      l: Math.min(LMAX, Math.max(LMIN, compColor.l - 0.28)),
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 1.15)),
-    };
-
-    const darkComp = {
-      ...compColor,
-      l: Math.min(LMAX, Math.max(LMIN, compColor.l - 0.16)),
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 1.08)),
-    };
-
-    const lightComp = {
-      ...compColor,
-      l: Math.min(LMAX, Math.max(LMIN, compColor.l + 0.14)),
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 0.95)),
-    };
-
-    const lightestComp = {
-      ...compColor,
-      l: Math.min(LMAX, Math.max(LMIN, compColor.l + 0.2)),
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 0.85)),
-    };
-
-    // --- Return kid-friendly vibrant palette ---
-    return [
-      { name: "Base-DD", value: darkestBase },
-      { name: "Base-D", value: darkBase },
-      { name: "Base", value: baseColor },
-      { name: "Base-L", value: lightBase },
-      { name: "Base-LL", value: lightestBase },
-      { name: "Comp-LL", value: lightestComp },
-      { name: "Comp-L", value: lightComp },
-      { name: "Comp", value: compColor },
-      { name: "Comp-D", value: darkComp },
-      { name: "Comp-DD", value: darkestComp },
-    ];
-  } else if (compPalType === "luxuriousComp") {
-    const LMAX = 0.72; // soft, refined highlights (not too bright)
-    const LMIN = 0.22; // deep, rich shadows
-    const CMAX = 0.18; // controlled saturation for sophistication
-    const CMIN = 0.06; // muted baseline (elegant restraint)
-
-    // --- Base color (refined, sophisticated tone) ---
-    const baseColor = {
-      ...oklch,
-      l: Math.min(LMAX, Math.max(LMIN, 0.47 + sliderLightValue)), // mid-dark luxe base
-      c: Math.min(CMAX, Math.max(CMIN, 0.12 + sliderChromaValue)), // muted elegance
-    };
-
-    // --- Base tonal steps (refined contrast) ---
-    const darkestBase = {
-      ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l - 0.22)), // deep, jewel-like
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.25)), // richer in shadows (depth)
-    };
-
-    const darkBase = {
-      ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l - 0.12)),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.12)),
-    };
-
-    const lightBase = {
-      ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l + 0.16)),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.88)), // subtle desaturation (refined)
-    };
-
-    const lightestBase = {
-      ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l + 0.24)),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.72)), // champagne-like softness
-    };
-
-    // --- Complementary color (sophisticated contrast) ---
-    const compColor = {
-      ...baseColor,
-      h: (baseColor.h + 175) % 360, // slightly asymmetric (more refined)
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l * 0.94)), // complement slightly darker (balance)
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.92)), // slightly more muted (elegant restraint)
-    };
-
-    // --- Complement tonal steps (refined balance) ---
-    const darkestComp = {
-      ...compColor,
-      l: Math.min(LMAX, Math.max(LMIN, compColor.l - 0.22)),
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 1.28)), // rich jewel tones
-    };
-
-    const darkComp = {
-      ...compColor,
-      l: Math.min(LMAX, Math.max(LMIN, compColor.l - 0.12)),
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 1.12)),
-    };
-
-    const lightComp = {
-      ...compColor,
-      l: Math.min(LMAX, Math.max(LMIN, compColor.l + 0.16)),
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 0.88)),
-    };
-
-    const lightestComp = {
-      ...compColor,
-      l: Math.min(LMAX, Math.max(LMIN, compColor.l + 0.24)),
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 0.72)),
-    };
-
-    // --- Return luxurious complementary palette ---
-    return [
-      { name: "Base-DD", value: darkestBase },
-      { name: "Base-D", value: darkBase },
-      { name: "Base", value: baseColor },
-      { name: "Base-L", value: lightBase },
-      { name: "Base-LL", value: lightestBase },
-      { name: "Comp-LL", value: lightestComp },
-      { name: "Comp-L", value: lightComp },
-      { name: "Comp", value: compColor },
-      { name: "Comp-D", value: darkComp },
-      { name: "Comp-DD", value: darkestComp },
-    ];
-  } else if (compPalType === "moodyComp") {
-    const LMAX = 0.58; // subdued highlights (moody = dark atmosphere)
-    const LMIN = 0.18; // deep, dramatic shadows
-    const CMAX = 0.19; // controlled saturation for mood
-    const CMIN = 0.03; // can go quite desaturated
-
-    const baseColor = {
-      ...oklch,
-      l: Math.min(LMAX, Math.max(LMIN, 0.38 + sliderLightValue)), // darker base for mood
-      c: Math.min(CMAX, Math.max(CMIN, 0.11 + sliderChromaValue)), // medium-muted baseline
-    };
-
-    // --- Base tonal steps (dramatic moody curves) ---
-    const darkestBase = {
-      ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l * 0.55)), // deep, atmospheric shadows
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.3)), // richer in darks (depth)
-      h: (baseColor.h - 5 + 360) % 360, // subtle shift toward cooler
-    };
-
-    const darkBase = {
-      ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l * 0.78)),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.15)),
-      h: (baseColor.h - 2 + 360) % 360,
-    };
-
-    const lightBase = {
-      ...baseColor,
-      l: Math.min(
-        LMAX,
-        Math.max(LMIN, baseColor.l + (LMAX - baseColor.l) * 0.5)
-      ),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.88)), // maintain some saturation
-      h: (baseColor.h + 1) % 360, // minimal shift in highlights
-    };
-
-    const lightestBase = {
-      ...baseColor,
-      l: Math.min(
-        LMAX,
-        Math.max(LMIN, baseColor.l + (LMAX - baseColor.l) * 0.8)
-      ),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.75)), // desaturated but not washed out
-      h: (baseColor.h + 2) % 360,
-    };
-
-    // --- Complementary (moody atmospheric contrast) ---
-    const compHue = (baseColor.h + 180) % 360; // true complementary for drama
-    const compColor = {
-      ...baseColor,
-      h: compHue,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l * 0.88)), // notably darker complement (moody asymmetry)
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.92)), // slightly more muted
-    };
-
-    // --- Complement tonal steps (dramatic moody curves) ---
-    const darkestComp = {
-      ...compColor,
-      l: Math.min(LMAX, Math.max(LMIN, compColor.l * 0.5)), // very deep shadows
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 1.35)), // rich, saturated darks
-      h: (compHue - 6 + 360) % 360, // dramatic hue shift in shadows
-    };
-
-    const darkComp = {
-      ...compColor,
-      l: Math.min(LMAX, Math.max(LMIN, compColor.l * 0.75)),
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 1.18)),
-      h: (compHue - 3 + 360) % 360,
-    };
-
-    const lightComp = {
-      ...compColor,
-      l: Math.min(
-        LMAX,
-        Math.max(LMIN, compColor.l + (LMAX - compColor.l) * 0.55)
-      ),
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 0.85)),
-      h: (compHue + 2) % 360,
-    };
-
-    const lightestComp = {
-      ...compColor,
-      l: Math.min(
-        LMAX,
-        Math.max(LMIN, compColor.l + (LMAX - compColor.l) * 0.85)
-      ),
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 0.7)),
-      h: (compHue + 3) % 360,
-    };
-
-    // --- Return moody complementary palette ---
-    return [
-      { name: "Base-DD", value: darkestBase },
-      { name: "Base-D", value: darkBase },
-      { name: "Base", value: baseColor },
-      { name: "Base-L", value: lightBase },
-      { name: "Base-LL", value: lightestBase },
-      { name: "Comp-LL", value: lightestComp },
-      { name: "Comp-L", value: lightComp },
-      { name: "Comp", value: compColor },
-      { name: "Comp-D", value: darkComp },
-      { name: "Comp-DD", value: darkestComp },
-    ];
-  } else if (compPalType === "pastelComp") {
-    const LMAX = 0.94; // bright, airy highlights (pastel = light)
-    const LMIN = 0.68; // soft shadows (pastels don't go dark)
-    const CMAX = 0.16; // gentle saturation for softness
-    const CMIN = 0.06; // can be quite muted but still colorful
-
-    const baseColor = {
-      ...oklch,
-      l: Math.min(LMAX, Math.max(LMIN, 0.81 + sliderLightValue)), // light, dreamy base
-      c: Math.min(CMAX, Math.max(CMIN, 0.11 + sliderChromaValue)), // soft chroma baseline
-    };
-
-    // --- Base tonal steps (gentle pastel curves) ---
-    const darkestBase = {
-      ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l * 0.88)), // gentle darkening only
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.12)), // subtle chroma boost
-      h: (baseColor.h - 1 + 360) % 360, // minimal hue shift
-    };
-
-    const darkBase = {
-      ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l * 0.94)),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.06)),
-      h: (baseColor.h - 0.5 + 360) % 360,
-    };
-
-    const lightBase = {
-      ...baseColor,
-      l: Math.min(
-        LMAX,
-        Math.max(LMIN, baseColor.l + (LMAX - baseColor.l) * 0.45)
-      ),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.92)), // gentle desaturation
-      h: (baseColor.h + 0.5) % 360, // very subtle shift
-    };
-
-    const lightestBase = {
-      ...baseColor,
-      l: Math.min(
-        LMAX,
-        Math.max(LMIN, baseColor.l + (LMAX - baseColor.l) * 0.75)
-      ),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.8)), // softer at lightest
-      h: (baseColor.h + 1) % 360,
-    };
-
-    // --- Complementary (soft, balanced contrast) ---
-    const compHue = (baseColor.h + 180) % 360; // true complementary
-    const compColor = {
-      ...baseColor,
-      h: compHue,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l * 0.98)), // similar lightness (pastel balance)
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.96)), // just slightly more muted
-    };
-
-    // --- Complement tonal steps (gentle, symmetric curves) ---
-    const darkestComp = {
-      ...compColor,
-      l: Math.min(LMAX, Math.max(LMIN, compColor.l * 0.88)),
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 1.12)),
-      h: (compHue - 1 + 360) % 360,
-    };
-
-    const darkComp = {
-      ...compColor,
-      l: Math.min(LMAX, Math.max(LMIN, compColor.l * 0.94)),
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 1.06)),
-      h: (compHue - 0.5 + 360) % 360,
-    };
-
-    const lightComp = {
-      ...compColor,
-      l: Math.min(
-        LMAX,
-        Math.max(LMIN, compColor.l + (LMAX - compColor.l) * 0.45)
-      ),
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 0.92)),
-      h: (compHue + 0.5) % 360,
-    };
-
-    const lightestComp = {
-      ...compColor,
-      l: Math.min(
-        LMAX,
-        Math.max(LMIN, compColor.l + (LMAX - compColor.l) * 0.75)
-      ),
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 0.8)),
-      h: (compHue + 1) % 360,
-    };
-
-    // --- Return pastel complementary palette ---
-    return [
-      { name: "Base-DD", value: darkestBase },
-      { name: "Base-D", value: darkBase },
-      { name: "Base", value: baseColor },
-      { name: "Base-L", value: lightBase },
-      { name: "Base-LL", value: lightestBase },
-      { name: "Comp-LL", value: lightestComp },
-      { name: "Comp-L", value: lightComp },
-      { name: "Comp", value: compColor },
-      { name: "Comp-D", value: darkComp },
-      { name: "Comp-DD", value: darkestComp },
-    ];
-  } else if (compPalType === "neonComp") {
-    const LMAX = 0.85; // bright but not washed out (neon glow)
-    const LMIN = 0.28; // can go dark but stay electric
-    const CMAX = 0.37; // maximum saturation for neon intensity
-    const CMIN = 0.2; // even darks are highly saturated
-
-    const baseColor = {
-      ...oklch,
-      l: Math.min(LMAX, Math.max(LMIN, 0.72 + sliderLightValue)), // neon sweet spot
-      c: Math.min(CMAX, Math.max(CMIN, 0.3 + sliderChromaValue)), // intensely saturated baseline
-    };
-
-    // --- Base tonal steps (electric neon curves) ---
-    const darkestBase = {
-      ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l * 0.5)), // deep but electric
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.15)), // boost saturation in darks
-      h: baseColor.h, // pure hue for neon clarity
-    };
-
-    const darkBase = {
-      ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l * 0.75)),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.08)),
-      h: baseColor.h,
-    };
-
-    const lightBase = {
-      ...baseColor,
-      l: Math.min(
-        LMAX,
-        Math.max(LMIN, baseColor.l + (LMAX - baseColor.l) * 0.5)
-      ),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.98)), // maintain intensity
-      h: baseColor.h,
-    };
-
-    const lightestBase = {
-      ...baseColor,
-      l: Math.min(
-        LMAX,
-        Math.max(LMIN, baseColor.l + (LMAX - baseColor.l) * 0.8)
-      ),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.92)), // slight reduction but still vibrant
-      h: baseColor.h,
-    };
-
-    // --- Complementary (electric contrast) ---
-    const compHue = (baseColor.h + 180) % 360; // true complementary for maximum impact
-    const compColor = {
-      ...baseColor,
-      h: compHue,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l)), // same lightness for balanced glow
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.05)), // complement can be MORE saturated
-    };
-
-    // --- Complement tonal steps (symmetric electric curves) ---
-    const darkestComp = {
-      ...compColor,
-      l: Math.min(LMAX, Math.max(LMIN, compColor.l * 0.5)),
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 1.15)),
-      h: compHue,
-    };
-
-    const darkComp = {
-      ...compColor,
-      l: Math.min(LMAX, Math.max(LMIN, compColor.l * 0.75)),
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 1.08)),
-      h: compHue,
-    };
-
-    const lightComp = {
-      ...compColor,
-      l: Math.min(
-        LMAX,
-        Math.max(LMIN, compColor.l + (LMAX - compColor.l) * 0.5)
-      ),
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 0.98)),
-      h: compHue,
-    };
-
-    const lightestComp = {
-      ...compColor,
-      l: Math.min(
-        LMAX,
-        Math.max(LMIN, compColor.l + (LMAX - compColor.l) * 0.8)
-      ),
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 0.92)),
-      h: compHue,
-    };
-
-    // --- Return neon complementary palette ---
-    return [
-      { name: "Base-DD", value: darkestBase },
-      { name: "Base-D", value: darkBase },
-      { name: "Base", value: baseColor },
-      { name: "Base-L", value: lightBase },
-      { name: "Base-LL", value: lightestBase },
-      { name: "Comp-LL", value: lightestComp },
-      { name: "Comp-L", value: lightComp },
-      { name: "Comp", value: compColor },
-      { name: "Comp-D", value: darkComp },
-      { name: "Comp-DD", value: darkestComp },
-    ];
-  } else if (compPalType === "retroComp") {
-    const LMAX = 0.78; // warm, saturated highlights (retro glow)
-    const LMIN = 0.42; // rich midtones (70s vibe)
-    const CMAX = 0.24; // bold saturation for retro pop
-    const CMIN = 0.12; // still colorful at minimum
-
-    const baseColor = {
-      ...oklch,
-      l: Math.min(LMAX, Math.max(LMIN, 0.6 + sliderLightValue)), // warm retro base
-      c: Math.min(CMAX, Math.max(CMIN, 0.18 + sliderChromaValue)), // punchy baseline
-    };
-
-    // --- Base tonal steps (retro curves with hue shifts) ---
-    const darkestBase = {
-      ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l * 0.75)),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.18)), // richer in darks
-      h: (baseColor.h - 8 + 360) % 360, // warm shift (toward orange/red)
-    };
-
-    const darkBase = {
-      ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l * 0.88)),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.1)),
-      h: (baseColor.h - 4 + 360) % 360,
-    };
-
-    const lightBase = {
-      ...baseColor,
-      l: Math.min(
-        LMAX,
-        Math.max(LMIN, baseColor.l + (LMAX - baseColor.l) * 0.55)
-      ),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.94)), // maintain boldness
-      h: (baseColor.h + 3) % 360, // slight yellow shift in lights
-    };
-
-    const lightestBase = {
-      ...baseColor,
-      l: Math.min(
-        LMAX,
-        Math.max(LMIN, baseColor.l + (LMAX - baseColor.l) * 0.85)
-      ),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.85)), // still punchy
-      h: (baseColor.h + 6) % 360,
-    };
-
-    // --- Complementary (funky retro contrast) ---
-    const compHue = (baseColor.h + 185) % 360; // slightly off for retro feel
-    const compColor = {
-      ...baseColor,
-      h: compHue,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l * 0.96)), // slightly asymmetric
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.02)), // complement can be punchier
-    };
-
-    // --- Complement tonal steps (retro asymmetry) ---
-    const darkestComp = {
-      ...compColor,
-      l: Math.min(LMAX, Math.max(LMIN, compColor.l * 0.72)),
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 1.2)),
-      h: (compHue - 10 + 360) % 360, // cool shift (toward blue/teal)
-    };
-
-    const darkComp = {
-      ...compColor,
-      l: Math.min(LMAX, Math.max(LMIN, compColor.l * 0.86)),
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 1.12)),
-      h: (compHue - 5 + 360) % 360,
-    };
-
-    const lightComp = {
-      ...compColor,
-      l: Math.min(
-        LMAX,
-        Math.max(LMIN, compColor.l + (LMAX - compColor.l) * 0.6)
-      ),
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 0.92)),
-      h: (compHue + 4) % 360,
-    };
-
-    const lightestComp = {
-      ...compColor,
-      l: Math.min(
-        LMAX,
-        Math.max(LMIN, compColor.l + (LMAX - compColor.l) * 0.9)
-      ),
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 0.82)),
-      h: (compHue + 7) % 360,
-    };
-
-    // --- Return retro complementary palette ---
-    return [
-      { name: "Base-DD", value: darkestBase },
-      { name: "Base-D", value: darkBase },
-      { name: "Base", value: baseColor },
-      { name: "Base-L", value: lightBase },
-      { name: "Base-LL", value: lightestBase },
-      { name: "Comp-LL", value: lightestComp },
-      { name: "Comp-L", value: lightComp },
-      { name: "Comp", value: compColor },
-      { name: "Comp-D", value: darkComp },
-      { name: "Comp-DD", value: darkestComp },
-    ];
-  } else if (compPalType === "earthyComp") {
-    const LMAX = 0.7; // natural, subdued highlights
-    const LMIN = 0.32; // warm, organic shadows
-    const CMAX = 0.15; // muted, natural saturation
-    const CMIN = 0.04; // can be quite desaturated (clay/stone)
-
-    const baseColor = {
-      ...oklch,
-      l: Math.min(LMAX, Math.max(LMIN, 0.52 + sliderLightValue)), // earthy mid-tone
-      c: Math.min(CMAX, Math.max(CMIN, 0.09 + sliderChromaValue)), // natural muted baseline
-    };
-
-    // --- Base tonal steps (organic earthy curves) ---
-    const darkestBase = {
-      ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l * 0.7)), // rich soil darkness
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.25)), // deeper tones more saturated
-      h: (baseColor.h - 4 + 360) % 360, // warmer in shadows (clay/bark)
-    };
-
-    const darkBase = {
-      ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l * 0.85)),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.12)),
-      h: (baseColor.h - 2 + 360) % 360,
-    };
-
-    const lightBase = {
-      ...baseColor,
-      l: Math.min(
-        LMAX,
-        Math.max(LMIN, baseColor.l + (LMAX - baseColor.l) * 0.5)
-      ),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.88)), // desaturate in lights (sandy)
-      h: (baseColor.h + 1.5) % 360, // subtle warm shift
-    };
-
-    const lightestBase = {
-      ...baseColor,
-      l: Math.min(
-        LMAX,
-        Math.max(LMIN, baseColor.l + (LMAX - baseColor.l) * 0.8)
-      ),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.72)), // very muted (stone/cream)
-      h: (baseColor.h + 3) % 360,
-    };
-
-    // --- Complementary (natural balance) ---
-    const compHue = (baseColor.h + 170) % 360; // slightly off for organic feel
-    const compColor = {
-      ...baseColor,
-      h: compHue,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l * 0.94)), // slightly darker (natural asymmetry)
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.85)), // more muted (forest/sage)
-    };
-
-    // --- Complement tonal steps (organic asymmetry) ---
-    const darkestComp = {
-      ...compColor,
-      l: Math.min(LMAX, Math.max(LMIN, compColor.l * 0.68)),
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 1.28)), // rich forest darks
-      h: (compHue - 5 + 360) % 360, // cooler in shadows (moss/pine)
-    };
-
-    const darkComp = {
-      ...compColor,
-      l: Math.min(LMAX, Math.max(LMIN, compColor.l * 0.83)),
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 1.14)),
-      h: (compHue - 2.5 + 360) % 360,
-    };
-
-    const lightComp = {
-      ...compColor,
-      l: Math.min(
-        LMAX,
-        Math.max(LMIN, compColor.l + (LMAX - compColor.l) * 0.52)
-      ),
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 0.86)),
-      h: (compHue + 2) % 360,
-    };
-
-    const lightestComp = {
-      ...compColor,
-      l: Math.min(
-        LMAX,
-        Math.max(LMIN, compColor.l + (LMAX - compColor.l) * 0.82)
-      ),
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 0.7)),
-      h: (compHue + 3.5) % 360,
-    };
-
-    // --- Return earthy complementary palette ---
-    return [
-      { name: "Base-DD", value: darkestBase },
-      { name: "Base-D", value: darkBase },
-      { name: "Base", value: baseColor },
-      { name: "Base-L", value: lightBase },
-      { name: "Base-LL", value: lightestBase },
-      { name: "Comp-LL", value: lightestComp },
-      { name: "Comp-L", value: lightComp },
-      { name: "Comp", value: compColor },
-      { name: "Comp-D", value: darkComp },
-      { name: "Comp-DD", value: darkestComp },
-    ];
-  } else if (compPalType === "BioLumComp") {
-    // --- Bioluminescent Complement Palette (Glow-in-the-Dark Theory) ---
-    // Electric hues with deep-sea contrast — eerie luminous balance
-
-    const LMAX = 0.88; // glows but not white
-    const LMIN = 0.2; // dark abyss base
-    const CMAX = 0.38; // intense phosphorescent saturation
-    const CMIN = 0.08; // faint background glow
-
-    const baseColor = oklch;
-
-    // --- BASE FAMILY (primary glow origin) ---
-    const darkestBase = {
-      ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l - 0.3)),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.2)),
-      h: (baseColor.h - 10 + 360) % 360, // drifts slightly cooler, deep glow
-    };
-
-    const darkBase = {
-      ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l - 0.15)),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.1)),
-      h: (baseColor.h - 5 + 360) % 360,
-    };
-
-    const lightBase = {
-      ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l + 0.12)),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.05)),
-      h: (baseColor.h + 8) % 360, // bioluminescent shift toward cyan-green
-    };
-
-    const lightestBase = {
-      ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l + 0.26)),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.15)),
-      h: (baseColor.h + 16) % 360, // glowing edges
-    };
-
-    // --- COMPLEMENT FAMILY (opposing spectral luminescence) ---
-    const compColor = {
-      ...baseColor,
-      h: (baseColor.h + 180) % 360, // core complement
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l * 1.02)),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.0)),
-    };
-
-    // glowing, violet-tinged complement variants
-    const darkestComp = {
-      ...compColor,
-      l: Math.min(LMAX, Math.max(LMIN, compColor.l - 0.28)),
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 1.25)),
-      h: (compColor.h + 12) % 360, // blue-violet deep flash
-    };
-
-    const darkComp = {
-      ...compColor,
-      l: Math.min(LMAX, Math.max(LMIN, compColor.l - 0.14)),
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 1.12)),
-      h: (compColor.h + 8) % 360,
-    };
-
-    const lightComp = {
-      ...compColor,
-      l: Math.min(LMAX, Math.max(LMIN, compColor.l + 0.13)),
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 1.1)),
-      h: (compColor.h + 20) % 360, // turquoise glow
-    };
-
-    const lightestComp = {
-      ...compColor,
-      l: Math.min(LMAX, Math.max(LMIN, compColor.l + 0.27)),
-      c: Math.min(CMAX, Math.max(CMIN, compColor.c * 1.2)),
-      h: (compColor.h + 30) % 360, // radiant cyan edge
-    };
-
-    // --- Return Full Bioluminescent Complement Palette ---
-    return [
-      { name: "Base-DD", value: darkestBase },
-      { name: "Base-D", value: darkBase },
-      { name: "Base", value: baseColor },
-      { name: "Base-L", value: lightBase },
-      { name: "Base-LL", value: lightestBase },
-      { name: "Comp-LL", value: lightestComp },
-      { name: "Comp-L", value: lightComp },
-      { name: "Comp", value: compColor },
-      { name: "Comp-D", value: darkComp },
-      { name: "Comp-DD", value: darkestComp },
-    ];
-  } else if (compPalType === "AtmosphericComp") {
-    // --- Atmospheric Complement (Scattering Logic) ---
-    // Simulates Rayleigh/Mie scattering principles:
-    // Shadows = warm opposites (180° shift), Highlights = sky-biased cool reflections (~60° shift)
-    // Chroma decreases exponentially with brightness for dusty realism.
-
-    const LMAX = 0.92; // near-sky brightness limit
-    const LMIN = 0.25; // deep shadow base
-    const CMAX = 0.28; // fairly vivid, enough for atmospheric contrast
-    const CMIN = 0.05; // dusty, low-saturation baseline
-
-    const baseColor = oklch;
-
-    // --- BASE FAMILY (Light-Medium Atmospheric Layer) ---
-    const darkestBase = {
-      ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l - 0.26)),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.12)), // rich warm depth
-      h: (baseColor.h - 5 + 360) % 360, // warmer low-end scattering
-    };
-
-    const darkBase = {
-      ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l - 0.14)),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.05)),
-      h: (baseColor.h - 2 + 360) % 360,
-    };
-
-    const lightBase = {
-      ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l + 0.14)),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.88)), // desaturate with altitude
-      h: (baseColor.h + 3) % 360, // slightly cooler in high luminance
-    };
-
-    const lightestBase = {
-      ...baseColor,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l + 0.28)),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.7)), // thin-air fade
-      h: (baseColor.h + 6) % 360,
-    };
-
-    // --- COMPLEMENT FAMILY (Scattering Complement Curve) ---
-    // Hue offset scales with brightness: darks ≈180°, lights ≈60°.
-    const hueOffsetDark = 180;
-    const hueOffsetLight = 60;
-
-    // base hue offset as function of lightness (simulate scattering compression)
-    function scatteringHueShift(lightness) {
-      // linear interpolation between dark (180°) → light (60°)
-      const t = (lightness - LMIN) / (LMAX - LMIN);
-      return hueOffsetDark - t * (hueOffsetDark - hueOffsetLight);
-    }
-
-    // exponential chroma decay function
-    function scatteringChroma(chroma, lightness) {
-      const decay = Math.exp(-2.5 * (lightness - LMIN)); // faster fade as light rises
-      return chroma * (0.6 + 0.4 * decay); // preserves some color structure
-    }
-
-    // define complement hue and chroma
-    const compColor = {
-      ...baseColor,
-      h: (baseColor.h + scatteringHueShift(baseColor.l)) % 360,
-      l: Math.min(LMAX, Math.max(LMIN, baseColor.l * 0.98)),
-      c: Math.min(
-        CMAX,
-        Math.max(CMIN, scatteringChroma(baseColor.c, baseColor.l))
-      ),
-    };
-
-    // Complement tonal family (reflective atmospheric band)
-    const darkestComp = {
-      ...compColor,
-      l: Math.min(LMAX, Math.max(LMIN, compColor.l - 0.25)),
-      c: Math.min(
-        CMAX,
-        Math.max(CMIN, scatteringChroma(compColor.c * 1.1, compColor.l))
-      ),
-      h: (compColor.h - 6 + 360) % 360,
-    };
-
-    const darkComp = {
-      ...compColor,
-      l: Math.min(LMAX, Math.max(LMIN, compColor.l - 0.13)),
-      c: Math.min(
-        CMAX,
-        Math.max(CMIN, scatteringChroma(compColor.c * 1.05, compColor.l))
-      ),
-      h: (compColor.h - 3 + 360) % 360,
-    };
-
-    const lightComp = {
-      ...compColor,
-      l: Math.min(LMAX, Math.max(LMIN, compColor.l + 0.13)),
-      c: Math.min(
-        CMAX,
-        Math.max(CMIN, scatteringChroma(compColor.c * 0.85, compColor.l))
-      ),
-      h: (compColor.h + 3) % 360,
-    };
-
-    const lightestComp = {
-      ...compColor,
-      l: Math.min(LMAX, Math.max(LMIN, compColor.l + 0.27)),
-      c: Math.min(
-        CMAX,
-        Math.max(CMIN, scatteringChroma(compColor.c * 0.7, compColor.l))
-      ),
-      h: (compColor.h + 7) % 360,
-    };
-
-    // --- Return Full Atmospheric Complement Palette ---
-    return [
-      { name: "Base-DD", value: darkestBase },
-      { name: "Base-D", value: darkBase },
-      { name: "Base", value: baseColor },
-      { name: "Base-L", value: lightBase },
-      { name: "Base-LL", value: lightestBase },
-      { name: "Comp-LL", value: lightestComp },
-      { name: "Comp-L", value: lightComp },
-      { name: "Comp", value: compColor },
-      { name: "Comp-D", value: darkComp },
-      { name: "Comp-DD", value: darkestComp },
+      { name: "Base-900", value: base900 },
+      { name: "Base-700", value: base700 },
+      { name: "Base-500", value: base500 },
+      { name: "Base-300", value: base300 },
+      { name: "Base-100", value: base100 },
+      { name: "Neutral", value: neutral },
+      { name: "Neutral-Light", value: neutralLight },
+      { name: "Comp-100", value: comp100 },
+      { name: "Comp-300", value: comp300 },
+      { name: "Comp-500", value: comp500 },
+      { name: "Comp-700", value: comp700 },
+      { name: "Comp-900", value: comp900 },
     ];
   }
+
+  // ============================================================================
+  // VIBRANT - High energy, maximum saturation, playful contrast
+  // ============================================================================
+  else if (compPalType === "vibrant") {
+    // Vibrant: Softly encourage bright L and high C, but respect user input
+    const baseColor = gamutMap({
+      l: softConstrain(oklch.l, 0.55, 0.75, 0.4), // gentle nudge toward vibrant range
+      c: Math.max(oklch.c * 0.8, 0.15), // boost chroma if too low, but use user's if already high
+      h: oklch.h, // always respect hue
+    });
+
+    const base900 = gamutMap({
+      ...baseColor,
+      l: baseColor.l - 0.32,
+      c: baseColor.c * 1.15,
+    });
+    const base700 = gamutMap({
+      ...baseColor,
+      l: baseColor.l - 0.18,
+      c: baseColor.c * 1.08,
+    });
+    const base500 = baseColor;
+    const base300 = gamutMap({
+      ...baseColor,
+      l: baseColor.l + 0.16,
+      c: baseColor.c * 0.95,
+    });
+    const base100 = gamutMap({
+      ...baseColor,
+      l: baseColor.l + 0.28,
+      c: baseColor.c * 0.8,
+    });
+
+    const compColor = gamutMap({
+      l: baseColor.l,
+      c: baseColor.c * 1.05,
+      h: (baseColor.h + 180) % 360,
+    });
+
+    const comp900 = gamutMap({
+      ...compColor,
+      l: compColor.l - 0.32,
+      c: compColor.c * 1.15,
+    });
+    const comp700 = gamutMap({
+      ...compColor,
+      l: compColor.l - 0.18,
+      c: compColor.c * 1.08,
+    });
+    const comp500 = compColor;
+    const comp300 = gamutMap({
+      ...compColor,
+      l: compColor.l + 0.16,
+      c: compColor.c * 0.95,
+    });
+    const comp100 = gamutMap({
+      ...compColor,
+      l: compColor.l + 0.28,
+      c: compColor.c * 0.8,
+    });
+
+    const accent1 = gamutMap({ l: 0.7, c: 0.25, h: (baseColor.h + 30) % 360 });
+    const accent2 = gamutMap({
+      l: 0.68,
+      c: 0.24,
+      h: (compColor.h - 30 + 360) % 360,
+    });
+
+    return [
+      { name: "Base-900", value: base900 },
+      { name: "Base-700", value: base700 },
+      { name: "Base-500", value: base500 },
+      { name: "Base-300", value: base300 },
+      { name: "Base-100", value: base100 },
+      { name: "Accent-1", value: accent1 },
+      { name: "Accent-2", value: accent2 },
+      { name: "Comp-100", value: comp100 },
+      { name: "Comp-300", value: comp300 },
+      { name: "Comp-500", value: comp500 },
+      { name: "Comp-700", value: comp700 },
+      { name: "Comp-900", value: comp900 },
+    ];
+  }
+
+  // ============================================================================
+  // MUTED - Sophisticated, desaturated, elegant restraint
+  // ============================================================================
+  else if (compPalType === "muted") {
+    // Muted: Encourage lower chroma and mid-range lightness
+    const baseColor = gamutMap({
+      l: softConstrain(oklch.l, 0.4, 0.65, 0.5),
+      c: Math.min(oklch.c, 0.16), // cap maximum chroma but allow full range below
+      h: oklch.h,
+    });
+
+    const base900 = gamutMap({
+      l: baseColor.l * 0.65,
+      c: baseColor.c * 1.25,
+      h: (baseColor.h - 6 + 360) % 360,
+    });
+    const base700 = gamutMap({
+      l: baseColor.l * 0.82,
+      c: baseColor.c * 1.12,
+      h: (baseColor.h - 3 + 360) % 360,
+    });
+    const base500 = baseColor;
+    const base300 = gamutMap({
+      l: baseColor.l + (0.72 - baseColor.l) * 0.5,
+      c: baseColor.c * 0.88,
+      h: (baseColor.h + 2) % 360,
+    });
+    const base100 = gamutMap({
+      l: baseColor.l + (0.72 - baseColor.l) * 0.85,
+      c: baseColor.c * 0.65,
+      h: (baseColor.h + 4) % 360,
+    });
+
+    const compColor = gamutMap({
+      l: baseColor.l * 0.94,
+      c: baseColor.c * 0.9,
+      h: (baseColor.h + 170) % 360,
+    });
+
+    const comp900 = gamutMap({
+      l: compColor.l * 0.62,
+      c: compColor.c * 1.28,
+      h: (compColor.h - 8 + 360) % 360,
+    });
+    const comp700 = gamutMap({
+      l: compColor.l * 0.8,
+      c: compColor.c * 1.14,
+      h: (compColor.h - 4 + 360) % 360,
+    });
+    const comp500 = compColor;
+    const comp300 = gamutMap({
+      l: compColor.l + (0.72 - compColor.l) * 0.52,
+      c: compColor.c * 0.86,
+      h: (compColor.h + 3) % 360,
+    });
+    const comp100 = gamutMap({
+      l: compColor.l + (0.72 - compColor.l) * 0.88,
+      c: compColor.c * 0.62,
+      h: (compColor.h + 5) % 360,
+    });
+
+    const warmNeutral = gamutMap({
+      l: 0.56,
+      c: 0.04,
+      h: (baseColor.h - 10 + 360) % 360,
+    });
+    const coolNeutral = gamutMap({
+      l: 0.88,
+      c: 0.03,
+      h: (compColor.h + 10) % 360,
+    });
+
+    return [
+      { name: "Base-900", value: base900 },
+      { name: "Base-700", value: base700 },
+      { name: "Base-500", value: base500 },
+      { name: "Base-300", value: base300 },
+      { name: "Base-100", value: base100 },
+      { name: "Warm-Neutral", value: warmNeutral },
+      { name: "Cool-Neutral", value: coolNeutral },
+      { name: "Comp-100", value: comp100 },
+      { name: "Comp-300", value: comp300 },
+      { name: "Comp-500", value: comp500 },
+      { name: "Comp-700", value: comp700 },
+      { name: "Comp-900", value: comp900 },
+    ];
+  }
+
+  // ============================================================================
+  // PASTEL - Soft, dreamy, high lightness with gentle saturation
+  // ============================================================================
+  else if (compPalType === "pastel") {
+    // Pastel: Strong nudge toward high L, low C (but still allow some movement)
+    const baseColor = gamutMap({
+      l: softConstrain(oklch.l, 0.75, 0.88, 0.6) + 0.1, // add offset + nudge
+      c: Math.min(oklch.c * 0.6, 0.14), // reduce chroma significantly
+      h: oklch.h,
+    });
+
+    const base900 = gamutMap({
+      l: baseColor.l * 0.82,
+      c: baseColor.c * 1.15,
+      h: (baseColor.h - 2 + 360) % 360,
+    });
+    const base700 = gamutMap({
+      l: baseColor.l * 0.91,
+      c: baseColor.c * 1.08,
+      h: (baseColor.h - 1 + 360) % 360,
+    });
+    const base500 = baseColor;
+    const base300 = gamutMap({
+      l: baseColor.l + (0.94 - baseColor.l) * 0.5,
+      c: baseColor.c * 0.92,
+      h: (baseColor.h + 1) % 360,
+    });
+    const base100 = gamutMap({
+      l: baseColor.l + (0.94 - baseColor.l) * 0.85,
+      c: baseColor.c * 0.75,
+      h: (baseColor.h + 2) % 360,
+    });
+
+    const compColor = gamutMap({
+      l: baseColor.l * 0.98,
+      c: baseColor.c * 0.96,
+      h: (baseColor.h + 180) % 360,
+    });
+
+    const comp900 = gamutMap({
+      l: compColor.l * 0.82,
+      c: compColor.c * 1.15,
+      h: (compColor.h - 2 + 360) % 360,
+    });
+    const comp700 = gamutMap({
+      l: compColor.l * 0.91,
+      c: compColor.c * 1.08,
+      h: (compColor.h - 1 + 360) % 360,
+    });
+    const comp500 = compColor;
+    const comp300 = gamutMap({
+      l: compColor.l + (0.94 - compColor.l) * 0.5,
+      c: compColor.c * 0.92,
+      h: (compColor.h + 1) % 360,
+    });
+    const comp100 = gamutMap({
+      l: compColor.l + (0.94 - compColor.l) * 0.85,
+      c: compColor.c * 0.75,
+      h: (compColor.h + 2) % 360,
+    });
+
+    const accent1 = gamutMap({ l: 0.84, c: 0.1, h: (baseColor.h + 60) % 360 });
+    const accent2 = gamutMap({
+      l: 0.82,
+      c: 0.09,
+      h: (compColor.h - 60 + 360) % 360,
+    });
+
+    return [
+      { name: "Base-900", value: base900 },
+      { name: "Base-700", value: base700 },
+      { name: "Base-500", value: base500 },
+      { name: "Base-300", value: base300 },
+      { name: "Base-100", value: base100 },
+      { name: "Accent-1", value: accent1 },
+      { name: "Accent-2", value: accent2 },
+      { name: "Comp-100", value: comp100 },
+      { name: "Comp-300", value: comp300 },
+      { name: "Comp-500", value: comp500 },
+      { name: "Comp-700", value: comp700 },
+      { name: "Comp-900", value: comp900 },
+    ];
+  }
+
+  // ============================================================================
+  // DARK - Dramatic, moody, low-key lighting
+  // ============================================================================
+  else if (compPalType === "dark") {
+    // Dark: Encourage lower lightness but allow chroma variation
+    const baseColor = gamutMap({
+      l: softConstrain(oklch.l, 0.28, 0.5, 0.5),
+      c: Math.min(oklch.c, 0.2), // cap but allow full range below
+      h: oklch.h,
+    });
+
+    const base900 = gamutMap({
+      l: baseColor.l * 0.48,
+      c: baseColor.c * 1.35,
+      h: (baseColor.h - 8 + 360) % 360,
+    });
+    const base700 = gamutMap({
+      l: baseColor.l * 0.72,
+      c: baseColor.c * 1.18,
+      h: (baseColor.h - 4 + 360) % 360,
+    });
+    const base500 = baseColor;
+    const base300 = gamutMap({
+      l: baseColor.l + (0.62 - baseColor.l) * 0.55,
+      c: baseColor.c * 0.88,
+      h: (baseColor.h + 2) % 360,
+    });
+    const base100 = gamutMap({
+      l: baseColor.l + (0.62 - baseColor.l) * 0.9,
+      c: baseColor.c * 0.68,
+      h: (baseColor.h + 4) % 360,
+    });
+
+    const compColor = gamutMap({
+      l: baseColor.l * 0.85,
+      c: baseColor.c * 0.95,
+      h: (baseColor.h + 180) % 360,
+    });
+
+    const comp900 = gamutMap({
+      l: compColor.l * 0.42,
+      c: compColor.c * 1.4,
+      h: (compColor.h - 10 + 360) % 360,
+    });
+    const comp700 = gamutMap({
+      l: compColor.l * 0.68,
+      c: compColor.c * 1.22,
+      h: (compColor.h - 5 + 360) % 360,
+    });
+    const comp500 = compColor;
+    const comp300 = gamutMap({
+      l: compColor.l + (0.62 - compColor.l) * 0.6,
+      c: compColor.c * 0.85,
+      h: (compColor.h + 3) % 360,
+    });
+    const comp100 = gamutMap({
+      l: compColor.l + (0.62 - compColor.l) * 0.95,
+      c: compColor.c * 0.65,
+      h: (compColor.h + 5) % 360,
+    });
+
+    const shadow = gamutMap({
+      l: 0.18,
+      c: 0.04,
+      h: (baseColor.h - 15 + 360) % 360,
+    });
+    const highlight = gamutMap({
+      l: 0.72,
+      c: 0.08,
+      h: (compColor.h + 10) % 360,
+    });
+
+    return [
+      { name: "Base-900", value: base900 },
+      { name: "Base-700", value: base700 },
+      { name: "Base-500", value: base500 },
+      { name: "Base-300", value: base300 },
+      { name: "Base-100", value: base100 },
+      { name: "Shadow", value: shadow },
+      { name: "Highlight", value: highlight },
+      { name: "Comp-100", value: comp100 },
+      { name: "Comp-300", value: comp300 },
+      { name: "Comp-500", value: comp500 },
+      { name: "Comp-700", value: comp700 },
+      { name: "Comp-900", value: comp900 },
+    ];
+  }
+
+  // ============================================================================
+  // NEON - Electric, cyberpunk, maximum saturation
+  // ============================================================================
+  else if (compPalType === "neon") {
+    // Neon: Boost both L and C toward "electric" range
+    const baseColor = gamutMap({
+      l: softConstrain(oklch.l, 0.6, 0.78, 0.4),
+      c: Math.max(oklch.c * 1.2, 0.2), // boost chroma
+      h: oklch.h,
+    });
+
+    const base900 = gamutMap({
+      l: baseColor.l * 0.48,
+      c: baseColor.c * 1.18,
+      h: (baseColor.h - 3 + 360) % 360,
+    });
+    const base700 = gamutMap({
+      l: baseColor.l * 0.72,
+      c: baseColor.c * 1.1,
+      h: (baseColor.h - 1.5 + 360) % 360,
+    });
+    const base500 = baseColor;
+    const base300 = gamutMap({
+      l: baseColor.l + (0.88 - baseColor.l) * 0.5,
+      c: baseColor.c * 0.98,
+      h: (baseColor.h + 1.5) % 360,
+    });
+    const base100 = gamutMap({
+      l: baseColor.l + (0.88 - baseColor.l) * 0.82,
+      c: baseColor.c * 0.88,
+      h: (baseColor.h + 3) % 360,
+    });
+
+    const compColor = gamutMap({
+      l: baseColor.l,
+      c: baseColor.c * 1.08,
+      h: (baseColor.h + 180) % 360,
+    });
+
+    const comp900 = gamutMap({
+      l: compColor.l * 0.48,
+      c: compColor.c * 1.18,
+      h: (compColor.h + 3) % 360,
+    });
+    const comp700 = gamutMap({
+      l: compColor.l * 0.72,
+      c: compColor.c * 1.1,
+      h: (compColor.h + 1.5) % 360,
+    });
+    const comp500 = compColor;
+    const comp300 = gamutMap({
+      l: compColor.l + (0.88 - compColor.l) * 0.5,
+      c: compColor.c * 0.98,
+      h: (compColor.h - 1.5 + 360) % 360,
+    });
+    const comp100 = gamutMap({
+      l: compColor.l + (0.88 - compColor.l) * 0.82,
+      c: compColor.c * 0.88,
+      h: (compColor.h - 3 + 360) % 360,
+    });
+
+    const accent1 = gamutMap({ l: 0.75, c: 0.3, h: (baseColor.h + 25) % 360 });
+    const accent2 = gamutMap({
+      l: 0.73,
+      c: 0.29,
+      h: (compColor.h - 25 + 360) % 360,
+    });
+
+    return [
+      { name: "Base-900", value: base900 },
+      { name: "Base-700", value: base700 },
+      { name: "Base-500", value: base500 },
+      { name: "Base-300", value: base300 },
+      { name: "Base-100", value: base100 },
+      { name: "Accent-1", value: accent1 },
+      { name: "Accent-2", value: accent2 },
+      { name: "Comp-100", value: comp100 },
+      { name: "Comp-300", value: comp300 },
+      { name: "Comp-500", value: comp500 },
+      { name: "Comp-700", value: comp700 },
+      { name: "Comp-900", value: comp900 },
+    ];
+  }
+
+  // ============================================================================
+  // NATURAL - Organic lighting simulation
+  // ============================================================================
+  else if (compPalType === "natural") {
+    // Natural: No L/C constraints, just apply organic lighting transforms
+    const baseColor = gamutMap(oklch);
+
+    const base900 = gamutMap({
+      l: baseColor.l * 0.38,
+      c: baseColor.c * 1.22,
+      h: (baseColor.h - 12 + 360) % 360,
+    });
+    const base700 = gamutMap({
+      l: baseColor.l * 0.68,
+      c: baseColor.c * 1.1,
+      h: (baseColor.h - 6 + 360) % 360,
+    });
+    const base500 = baseColor;
+    const base300 = gamutMap({
+      l: baseColor.l + (0.92 - baseColor.l) * 0.45,
+      c: baseColor.c * 0.88,
+      h: (baseColor.h + 4) % 360,
+    });
+    const base100 = gamutMap({
+      l: baseColor.l + (0.92 - baseColor.l) * 0.78,
+      c: baseColor.c * 0.68,
+      h: (baseColor.h + 8) % 360,
+    });
+
+    const compColor = gamutMap({
+      l: baseColor.l * 0.96,
+      c: baseColor.c * 0.92,
+      h: (baseColor.h + 180) % 360,
+    });
+
+    const comp900 = gamutMap({
+      l: compColor.l * 0.36,
+      c: compColor.c * 1.25,
+      h: (compColor.h - 14 + 360) % 360,
+    });
+    const comp700 = gamutMap({
+      l: compColor.l * 0.66,
+      c: compColor.c * 1.12,
+      h: (compColor.h - 7 + 360) % 360,
+    });
+    const comp500 = compColor;
+    const comp300 = gamutMap({
+      l: compColor.l + (0.92 - compColor.l) * 0.48,
+      c: compColor.c * 0.86,
+      h: (compColor.h + 5) % 360,
+    });
+    const comp100 = gamutMap({
+      l: compColor.l + (0.92 - compColor.l) * 0.8,
+      c: compColor.c * 0.65,
+      h: (compColor.h + 10) % 360,
+    });
+
+    const earthWarm = gamutMap({
+      l: 0.48,
+      c: 0.08,
+      h: (baseColor.h - 25 + 360) % 360,
+    });
+    const earthCool = gamutMap({
+      l: 0.82,
+      c: 0.06,
+      h: (compColor.h + 20) % 360,
+    });
+
+    return [
+      { name: "Base-900", value: base900 },
+      { name: "Base-700", value: base700 },
+      { name: "Base-500", value: base500 },
+      { name: "Base-300", value: base300 },
+      { name: "Base-100", value: base100 },
+      { name: "Earth-Warm", value: earthWarm },
+      { name: "Earth-Cool", value: earthCool },
+      { name: "Comp-100", value: comp100 },
+      { name: "Comp-300", value: comp300 },
+      { name: "Comp-500", value: comp500 },
+      { name: "Comp-700", value: comp700 },
+      { name: "Comp-900", value: comp900 },
+    ];
+  }
+
+  // ============================================================================
+  // CINEMATIC - Film-inspired orange/teal
+  // ============================================================================
+  else if (compPalType === "cinematic") {
+    // Cinematic: Gentle nudge toward mid-range, cap chroma
+    const baseColor = gamutMap({
+      l: softConstrain(oklch.l, 0.45, 0.68, 0.3),
+      c: Math.min(oklch.c, 0.22),
+      h: oklch.h,
+    });
+
+    const base900 = gamutMap({
+      l: baseColor.l * 0.58,
+      c: baseColor.c * 1.15,
+      h: (baseColor.h - 8 + 360) % 360,
+    });
+    const base700 = gamutMap({
+      l: baseColor.l * 0.78,
+      c: baseColor.c * 1.08,
+      h: (baseColor.h - 4 + 360) % 360,
+    });
+    const base500 = baseColor;
+    const base300 = gamutMap({
+      l: baseColor.l + (0.75 - baseColor.l) * 0.5,
+      c: baseColor.c * 0.95,
+      h: (baseColor.h + 3) % 360,
+    });
+    const base100 = gamutMap({
+      l: baseColor.l + (0.75 - baseColor.l) * 0.85,
+      c: baseColor.c * 0.78,
+      h: (baseColor.h + 6) % 360,
+    });
+
+    const compColor = gamutMap({
+      l: baseColor.l * 0.82,
+      c: baseColor.c * 0.88,
+      h: (baseColor.h + 180) % 360,
+    });
+
+    const comp900 = gamutMap({
+      l: compColor.l * 0.52,
+      c: compColor.c * 1.22,
+      h: (compColor.h - 10 + 360) % 360,
+    });
+    const comp700 = gamutMap({
+      l: compColor.l * 0.75,
+      c: compColor.c * 1.12,
+      h: (compColor.h - 5 + 360) % 360,
+    });
+    const comp500 = compColor;
+    const comp300 = gamutMap({
+      l: compColor.l + (0.75 - compColor.l) * 0.55,
+      c: compColor.c * 0.92,
+      h: (compColor.h + 4) % 360,
+    });
+    const comp100 = gamutMap({
+      l: compColor.l + (0.75 - compColor.l) * 0.88,
+      c: compColor.c * 0.75,
+      h: (compColor.h + 7) % 360,
+    });
+
+    const midtone = gamutMap({ l: 0.5, c: 0.03, h: (baseColor.h + 15) % 360 });
+    const highlight = gamutMap({
+      l: 0.88,
+      c: 0.04,
+      h: (baseColor.h + 20) % 360,
+    });
+
+    return [
+      { name: "Base-900", value: base900 },
+      { name: "Base-700", value: base700 },
+      { name: "Base-500", value: base500 },
+      { name: "Base-300", value: base300 },
+      { name: "Base-100", value: base100 },
+      { name: "Midtone", value: midtone },
+      { name: "Highlight", value: highlight },
+      { name: "Comp-100", value: comp100 },
+      { name: "Comp-300", value: comp300 },
+      { name: "Comp-500", value: comp500 },
+      { name: "Comp-700", value: comp700 },
+      { name: "Comp-900", value: comp900 },
+    ];
+  }
+
+  // ============================================================================
+  // NEUTRAL - Near-achromatic with subtle hue bias
+  // ============================================================================
+  else if (compPalType === "neutral") {
+    // Neutral: Force very low chroma, but allow L to vary freely
+    const baseColor = gamutMap({
+      l: oklch.l, // user controls lightness fully
+      c: Math.min(oklch.c * 0.3, 0.08), // drastically reduce chroma
+      h: oklch.h, // preserve hue bias
+    });
+
+    const base900 = gamutMap({
+      l: baseColor.l * 0.3,
+      c: baseColor.c * 1.4,
+      h: (baseColor.h - 4 + 360) % 360,
+    });
+    const base700 = gamutMap({
+      l: baseColor.l * 0.6,
+      c: baseColor.c * 1.2,
+      h: (baseColor.h - 2 + 360) % 360,
+    });
+    const base500 = baseColor;
+    const base300 = gamutMap({
+      l: baseColor.l + (0.96 - baseColor.l) * 0.45,
+      c: baseColor.c * 0.85,
+      h: (baseColor.h + 1) % 360,
+    });
+    const base100 = gamutMap({
+      l: baseColor.l + (0.96 - baseColor.l) * 0.75,
+      c: baseColor.c * 0.6,
+      h: (baseColor.h + 2) % 360,
+    });
+
+    const compColor = gamutMap({
+      l: baseColor.l,
+      c: baseColor.c * 0.92,
+      h: (baseColor.h + 180) % 360,
+    });
+
+    const comp900 = gamutMap({
+      l: compColor.l * 0.3,
+      c: compColor.c * 1.4,
+      h: (compColor.h - 4 + 360) % 360,
+    });
+    const comp700 = gamutMap({
+      l: compColor.l * 0.6,
+      c: compColor.c * 1.2,
+      h: (compColor.h - 2 + 360) % 360,
+    });
+    const comp500 = compColor;
+    const comp300 = gamutMap({
+      l: compColor.l + (0.96 - compColor.l) * 0.45,
+      c: compColor.c * 0.85,
+      h: (compColor.h + 1) % 360,
+    });
+    const comp100 = gamutMap({
+      l: compColor.l + (0.96 - compColor.l) * 0.75,
+      c: compColor.c * 0.6,
+      h: (compColor.h + 2) % 360,
+    });
+
+    const black = gamutMap({ l: 0.18, c: 0.0, h: 0 });
+    const white = gamutMap({ l: 0.98, c: 0.0, h: 0 });
+
+    return [
+      { name: "Black", value: black },
+      { name: "Base-900", value: base900 },
+      { name: "Base-700", value: base700 },
+      { name: "Base-500", value: base500 },
+      { name: "Base-300", value: base300 },
+      { name: "Base-100", value: base100 },
+      { name: "Comp-100", value: comp100 },
+      { name: "Comp-300", value: comp300 },
+      { name: "Comp-500", value: comp500 },
+      { name: "Comp-700", value: comp700 },
+      { name: "Comp-900", value: comp900 },
+      { name: "White", value: white },
+    ];
+  }
+
+  // Default to classic
+  return complementaryPalGen(oklch, "classic");
 }

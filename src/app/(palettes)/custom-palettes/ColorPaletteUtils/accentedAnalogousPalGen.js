@@ -1,87 +1,146 @@
+import { clampToGamut } from "./gamutMapping";
+
+const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
+
+/* ---------------- PERCEPTUAL CHROMA BALANCE ---------------- */
+function getChromaCompensation(h) {
+  const hue = ((h % 360) + 360) % 360;
+  if (hue >= 30 && hue < 90) return 1.15; // Yellow-green needs boost
+  if (hue >= 90 && hue < 150) return 1.0; // Green is naturally vibrant
+  if (hue >= 150 && hue < 210) return 0.85; // Cyan-blue compresses
+  if (hue >= 210 && hue < 270) return 0.95; // Blue needs slight boost
+  if (hue >= 270 && hue < 330) return 1.1; // Purple needs more
+  return 1.05; // Red-orange
+}
+
+/* ---------------- CONTRAST VALIDATION ---------------- */
+function oklchToSrgb(l, c, h) {
+  // Simplified conversion - you'd use your actual converter
+  // This is a placeholder for contrast checking
+  const a = c * Math.cos((h * Math.PI) / 180);
+  const b = c * Math.sin((h * Math.PI) / 180);
+  // Return approximate sRGB for contrast calc (you'd use real conversion)
+  return { r: l, g: l, b: l }; // Placeholder
+}
+
+function getContrastRatio(l1, l2) {
+  // Simplified WCAG contrast - assumes OKLCH lightness approximates relative luminance
+  const lighter = Math.max(l1, l2);
+  const darker = Math.min(l1, l2);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+/* ---------------- ENHANCED CONFIG ---------------- */
+const CONFIG = {
+  lightnessMin: 0.25,
+  lightnessMax: 0.97,
+  chromaMin: 0.05,
+  chromaMax: 0.37, // Increased for punchier colors
+  chromaMultiplier: 1,
+  accentChromaBoost: 1.45, // Stronger accent
+  minContrastRatio: 4.5, // WCAG AA
+};
+
+/* ---------------- ADAPTIVE LIGHTNESS STEPS ---------------- */
+function getAdaptiveLightnessSteps(baseL) {
+  // Larger steps in mid-range, smaller at extremes
+  const distanceFromMid = Math.abs(baseL - 0.6);
+  const stepMultiplier = 1.2 - distanceFromMid;
+
+  return {
+    darkStep: 0.25 * stepMultiplier,
+    lightStep: 0.22 * stepMultiplier,
+  };
+}
+
+/* ---------------- COLOR CREATION WITH VALIDATION ---------------- */
+function createColor(l, c, h, targetContrast = null, contrastAgainst = null) {
+  let clampedL = clamp(l, CONFIG.lightnessMin, CONFIG.lightnessMax);
+  const normalizedC = clamp(c, CONFIG.chromaMin, CONFIG.chromaMax);
+  const compensatedC = normalizedC * getChromaCompensation(h);
+  const gamutSafeC = clampToGamut(clampedL, compensatedC, h);
+
+  // Adjust lightness if contrast requirement exists
+  if (targetContrast && contrastAgainst !== null) {
+    let attempts = 0;
+    while (
+      getContrastRatio(clampedL, contrastAgainst) < targetContrast &&
+      attempts < 10
+    ) {
+      clampedL = clampedL < contrastAgainst ? clampedL - 0.05 : clampedL + 0.05;
+      clampedL = clamp(clampedL, CONFIG.lightnessMin, CONFIG.lightnessMax);
+      attempts++;
+    }
+  }
+
+  return { l: clampedL, c: gamutSafeC, h: (h + 360) % 360 };
+}
+
+/* ---------------- 3-TONE UI SCALE WITH ADAPTIVE STEPS ---------------- */
+function makeTones(l, c, h, isAccent = false) {
+  const steps = getAdaptiveLightnessSteps(l);
+  const chromaBoost = isAccent ? CONFIG.accentChromaBoost : 1.0;
+
+  // Calculate target lightness values
+  const darkL = l - steps.darkStep;
+  const lightL = l + steps.lightStep;
+
+  return {
+    dark: createColor(
+      darkL,
+      c * chromaBoost * 1.1,
+      h + 3,
+      CONFIG.minContrastRatio,
+      0.95, // Contrast against light backgrounds
+    ),
+    base: createColor(l, c * chromaBoost, h),
+    light: createColor(
+      lightL,
+      c * chromaBoost * 0.8,
+      h - 2,
+      CONFIG.minContrastRatio,
+      0.15, // Contrast against dark backgrounds
+    ),
+  };
+}
+
+/* ---------------- MAIN GENERATOR (12 COLORS) ---------------- */
 export default function accentedAnalogousPalGen(oklch) {
-  const LMAX = 0.95;
-  const LMIN = 0.25;
-  const CMAX = 0.25;
-  const CMIN = 0.05;
+  let baseL = clamp(oklch.l, CONFIG.lightnessMin, CONFIG.lightnessMax);
+  let baseC = clamp(
+    oklch.c * CONFIG.chromaMultiplier,
+    CONFIG.chromaMin,
+    CONFIG.chromaMax,
+  );
+  let baseH = oklch.h;
 
-  const baseColor = oklch;
+  /* --- Hue structure (analogous ±30°, accent at 180°) --- */
+  const a1H = (baseH - 30 + 360) % 360;
+  const a2H = (baseH + 30) % 360;
+  const accentH = (baseH + 180) % 360;
 
-  // Analogous neighbors
-  const analog1 = {
-    ...baseColor,
-    h: (baseColor.h - 30 + 360) % 360,
-    c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.95)),
-  };
+  /* --- Generate tone sets --- */
+  const baseT = makeTones(baseL, baseC, baseH, false);
+  const a1T = makeTones(baseL, baseC * 0.92, a1H, false);
+  const a2T = makeTones(baseL, baseC * 0.92, a2H, false);
+  const accentT = makeTones(baseL, baseC, accentH, true); // Accent gets boost
 
-  const analog2 = {
-    ...baseColor,
-    h: (baseColor.h + 30) % 360,
-    c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.95)),
-  };
-
-  // Complementary accent
-  const accent = {
-    ...baseColor,
-    h: (baseColor.h + 180) % 360,
-    c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.15)),
-  };
-
-  // Base variants
-  const baseDark = {
-    ...baseColor,
-    c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 1.1)),
-    l: Math.min(LMAX, Math.max(LMIN, baseColor.l - 0.25)),
-  };
-
-  const baseLight = {
-    ...baseColor,
-    c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.9)),
-    l: Math.min(LMAX, Math.max(LMIN, baseColor.l + 0.25)),
-  };
-
-  // Analog1 variants
-  const analog1Dark = {
-    ...analog1,
-    c: Math.min(CMAX, Math.max(CMIN, analog1.c * 1.1)),
-    l: Math.min(LMAX, Math.max(LMIN, analog1.l - 0.2)),
-  };
-
-  const analog1Light = {
-    ...analog1,
-    c: Math.min(CMAX, Math.max(CMIN, analog1.c * 0.9)),
-    l: Math.min(LMAX, Math.max(LMIN, analog1.l + 0.2)),
-  };
-
-  // Analog2 variants
-  const analog2Dark = {
-    ...analog2,
-    c: Math.min(CMAX, Math.max(CMIN, analog2.c * 1.1)),
-    l: Math.min(LMAX, Math.max(LMIN, analog2.l - 0.2)),
-  };
-
-  const analog2Light = {
-    ...analog2,
-    c: Math.min(CMAX, Math.max(CMIN, analog2.c * 0.9)),
-    l: Math.min(LMAX, Math.max(LMIN, analog2.l + 0.2)),
-  };
-
-  // Accent variant
-  const accentLight = {
-    ...accent,
-    c: Math.min(CMAX, Math.max(CMIN, accent.c * 0.85)),
-    l: Math.min(LMAX, Math.max(LMIN, accent.l + 0.2)),
-  };
-
+  /* --- Return 12 colors --- */
   return [
-    { name: "Base-D", value: baseDark },
-    { name: "Base", value: baseColor },
-    { name: "Base-L", value: baseLight },
-    { name: "Analog1-D", value: analog1Dark },
-    { name: "Analog1", value: analog1 },
-    { name: "Analog1-L", value: analog1Light },
-    { name: "Analog2-D", value: analog2Dark },
-    { name: "Analog2", value: analog2 },
-    { name: "Analog2-L", value: analog2Light },
-    { name: "Accent", value: accent },
+    { name: "Analog-1 Dark", value: a1T.dark },
+    { name: "Analog-1", value: a1T.base },
+    { name: "Analog-1 Light", value: a1T.light },
+
+    { name: "Base Dark", value: baseT.dark },
+    { name: "Base", value: baseT.base },
+    { name: "Base Light", value: baseT.light },
+
+    { name: "Analog-2 Dark", value: a2T.dark },
+    { name: "Analog-2", value: a2T.base },
+    { name: "Analog-2 Light", value: a2T.light },
+
+    { name: "Accent Dark", value: accentT.dark },
+    { name: "Accent", value: accentT.base },
+    { name: "Accent Light", value: accentT.light },
   ];
 }

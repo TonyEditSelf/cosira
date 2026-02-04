@@ -17,6 +17,8 @@ import FlowerPalOptions from "../ColorPaletteUtils/FlowerPalOptions";
 import UIBrandOptions from "../ColorPaletteUtils/UIBrandOptions";
 import ArcPalOptions from "../ColorPaletteUtils/ArcPalOptions";
 import TriadicOptions from "../ColorPaletteUtils/TriadicOptions";
+import ClashpalOptions from "../ColorPaletteUtils/ClashpalOptions";
+import DoubleSplitCompOptions from "../ColorPaletteUtils/DoubleSplitCompOptions";
 
 export default function PalettteProperties() {
   const {
@@ -99,6 +101,7 @@ export default function PalettteProperties() {
       {selectedPaletteType === "complementary" && <ComplementaryOptions />}
       {selectedPaletteType === "analogous" && <AnalogousOptions />}
       {selectedPaletteType === "splitComplementary" && <SplitCompOptions />}
+      {selectedPaletteType === "doubleSplitComp" && <DoubleSplitCompOptions />}
       {selectedPaletteType === "tetradic" && <TetradicOptions />}
       {selectedPaletteType === "triadic" && <TriadicOptions />}
       {selectedPaletteType === "gradient" && <GradientOptions />}
@@ -107,57 +110,7 @@ export default function PalettteProperties() {
       {selectedPaletteType === "flowerPalette" && <FlowerPalOptions />}
       {selectedPaletteType === "uiBrand" && <UIBrandOptions />}
       {selectedPaletteType === "arcPal" && <ArcPalOptions />}
-
-      <div className="flex flex-col gap-2">
-        {(monoPalType === "vintageMono" ||
-          monoPalType === "neutralMono" ||
-          monoPalType === "kidsMono" ||
-          compPalType === "vintageComp" ||
-          compPalType === "80sNeonComp" ||
-          compPalType === "MCMComp" ||
-          compPalType === "neutralComp" ||
-          compPalType === "kidsComp" ||
-          compPalType === "luxuriousComp" ||
-          compPalType === "moodyComp" ||
-          compPalType === "pastelComp" ||
-          compPalType === "neonComp" ||
-          compPalType === "retroComp" ||
-          compPalType === "earthyComp" ||
-          analogPalType === "neutralCenteredAnalog" ||
-          analogPalType === "neutralLeftAnalog" ||
-          analogPalType === "neutralRightAnalog" ||
-          analogPalType === "kidsBrightCentered" ||
-          analogPalType === "kidsBrightLeft" ||
-          analogPalType === "kidsBrightRight" ||
-          analogPalType === "toyLikeCentered" ||
-          analogPalType === "toyLikeLeft" ||
-          analogPalType === "toyLikeRight" ||
-          analogPalType === "pastelKidCentered" ||
-          analogPalType === "pastelKidLeft" ||
-          analogPalType === "pastelKidRight" ||
-          analogPalType === "neoKidCentered" ||
-          analogPalType === "neoKidLeft" ||
-          analogPalType === "neoKidRight") && (
-          <>
-            <div>
-              <div className="flex justify-between">
-                <label htmlFor="lightInput">Lightness</label>
-                <div>
-                  <LandCStepper id="lightInput" type="light" />
-                </div>
-              </div>
-            </div>
-            <div>
-              <div className="flex justify-between">
-                <label htmlFor="chromaInput">Chroma</label>
-                <div>
-                  <LandCStepper id="chromaInput" type="chroma" />
-                </div>
-              </div>
-            </div>
-          </>
-        )}
-      </div>
+      {selectedPaletteType === "clash" && <ClashpalOptions />}
     </div>
   );
 }

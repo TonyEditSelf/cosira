@@ -1,5 +1,6 @@
 import { useColorPaletteContext } from "../../ColorContext";
-import dataVizPalettePalGen from "./dataVizPalettePalGen";
+
+import generateDataVizPalette, { PALETTE_TYPES } from "./dataVizPalettePalGen";
 
 export default function DataVizOptions() {
   const {
@@ -11,18 +12,20 @@ export default function DataVizOptions() {
   } = useColorPaletteContext();
 
   const options = [
-    { id: "dataVizPalOne", label: "Data Visualization 1" },
-    { id: "dataVizPalTwo", label: "Data Visualization 2" },
-    { id: "dataVizPalThree", label: "Data Visualization 3" },
-    { id: "dataVizPalFour", label: "Data Visualization 4" },
-    { id: "dataVizPalFive", label: "Data Visualization 5" },
-    { id: "dataVizPalSix", label: "Data Visualization 6" },
-    { id: "dataVizPalSeven", label: "Data Visualization 7" },
+    { id: "dataVizPalOne", label: PALETTE_TYPES.dataVizPalOne.name },
+    { id: "dataVizPalTwo", label: PALETTE_TYPES.dataVizPalTwo.name },
+    { id: "dataVizPalThree", label: PALETTE_TYPES.dataVizPalThree.name },
+    { id: "dataVizPalFour", label: PALETTE_TYPES.dataVizPalFour.name },
+    { id: "dataVizPalFive", label: PALETTE_TYPES.dataVizPalFive.name },
+    { id: "dataVizPalSix", label: PALETTE_TYPES.dataVizPalSix.name },
+    { id: "dataVizPalSeven", label: PALETTE_TYPES.dataVizPalSeven.name },
+    { id: "dataVizPalEight", label: PALETTE_TYPES.dataVizPalEight.name },
+    { id: "dataVizPalNine", label: PALETTE_TYPES.dataVizPalNine.name },
   ];
 
   const handleChange = (value) => {
     setDataVizPalType(value);
-    const pal = dataVizPalettePalGen(oklch, value);
+    const pal = generateDataVizPalette(oklch, value);
     setPalette(pal);
     setDuplicatePalette(pal);
   };

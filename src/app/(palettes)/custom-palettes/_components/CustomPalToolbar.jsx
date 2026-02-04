@@ -140,7 +140,7 @@ export default function CustomPalToolbar() {
         ></button>
       </section>
       <FaAnglesLeft
-        className="size-9 cursor-pointer border border-(--navBorder) py-2 px-2 rounded-md hover:border-muted-foreground"
+        className="size-9 cursor-pointer py-2 px-2 rounded-md border border-(--navBorder) hover:border-muted-foreground"
         onClick={goBackPalHistory}
       />
 

@@ -11,19 +11,15 @@ export default function ComplementaryOptions() {
   } = useColorPaletteContext();
 
   const compTypes = [
-    { id: "classicComp", label: "Classic Comp" },
-    { id: "BioLumComp", label: "Bioluminescent Comp" },
-    { id: "AtmosphericComp", label: "Atmospheric Comp" },
-    { id: "vintageComp", label: "Vintage Comp" },
-    { id: "MCMComp", label: "Mid-Century Modern" },
-    { id: "retroComp", label: "Retro Comp" },
-    { id: "moodyComp", label: "Moody Comp" },
-    { id: "earthyComp", label: "Earthy/Muted Comp" },
-    { id: "neutralComp", label: "Neutral Comp" },
-    { id: "kidsComp", label: "Kids Comp" },
-    { id: "pastelComp", label: "Pastel Comp" },
-    { id: "neonComp", label: "Neon Comp" },
-    { id: "luxuriousComp", label: "Luxurious Comp" },
+    { id: "classic", label: "Classic" },
+    { id: "vibrant", label: "Vibrant" },
+    { id: "muted", label: "Muted" },
+    { id: "pastel", label: "Pastel" },
+    { id: "dark", label: "Dark" },
+    { id: "neon", label: "Neon" },
+    { id: "natural", label: "Natural" },
+    { id: "cinematic", label: "Cinematic" },
+    { id: "neutral", label: "Neutral" },
   ];
 
   const handleTypeChange = (value) => {

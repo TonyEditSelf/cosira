@@ -1,82 +1,57 @@
 export default function chromaticNeutralPalGen(oklch) {
-  const LMAX = 0.95;
-  const LMIN = 0.25;
-  const CMAX = 0.08; // Very low saturation for neutrals
-  const CMIN = 0.01;
+  const baseHue = oklch.h;
+  const baseLightness = oklch.l;
+  const baseChroma = oklch.c;
 
-  const baseColor = oklch;
+  // Determine chroma bias based on input color's saturation
+  // More saturated input = more tinted grays
+  // Less saturated input = purer grays
+  const chromaBias = Math.min(0.035, baseChroma * 0.15);
 
-  // Very desaturated versions at different lightness levels
-  const darkest = {
-    ...baseColor,
-    c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.15)),
-    l: Math.min(LMAX, Math.max(LMIN, 0.3)),
-  };
-
-  const darker = {
-    ...baseColor,
-    c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.18)),
-    l: Math.min(LMAX, Math.max(LMIN, 0.4)),
-  };
-
-  const dark = {
-    ...baseColor,
-    c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.2)),
-    l: Math.min(LMAX, Math.max(LMIN, 0.5)),
-  };
-
-  const mediumDark = {
-    ...baseColor,
-    c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.22)),
-    l: Math.min(LMAX, Math.max(LMIN, 0.6)),
-  };
-
-  const medium = {
-    ...baseColor,
-    c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.25)),
-    l: Math.min(LMAX, Math.max(LMIN, 0.65)),
-  };
-
-  const mediumLight = {
-    ...baseColor,
-    c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.22)),
-    l: Math.min(LMAX, Math.max(LMIN, 0.72)),
-  };
-
-  const light = {
-    ...baseColor,
-    c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.2)),
-    l: Math.min(LMAX, Math.max(LMIN, 0.8)),
-  };
-
-  const lighter = {
-    ...baseColor,
-    c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.18)),
-    l: Math.min(LMAX, Math.max(LMIN, 0.87)),
-  };
-
-  const lightest = {
-    ...baseColor,
-    c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.15)),
-    l: Math.min(LMAX, Math.max(LMIN, 0.93)),
-  };
-
-  const nearWhite = {
-    ...baseColor,
-    c: Math.min(CMAX, Math.max(CMIN, baseColor.c * 0.12)),
-    l: Math.min(LMAX, Math.max(LMIN, 0.97)),
-  };
-
-  return [
-    { name: "Darkest", value: darkest },
-    { name: "Darker", value: darker },
-    { name: "Dark", value: dark },
-    { name: "Medium-Dark", value: mediumDark },
-    { name: "Medium", value: medium },
-    { name: "Medium-Light", value: mediumLight },
-    { name: "Light", value: light },
-    { name: "Lighter", value: lighter },
-    { name: "Lightest", value: lightest },
-    { name: "Near-White", value: nearWhite },
+  // Define the neutral scale with intentional chroma curve
+  // Chroma peaks in mid-tones where color perception is strongest
+  const steps = [
+    { name: "975", l: 0.06, chromaMultiplier: 0.5 }, // Deepest black for dark mode
+    { name: "950", l: 0.12, chromaMultiplier: 0.65 }, // Dark mode backgrounds
+    { name: "900", l: 0.2, chromaMultiplier: 0.8 }, // Very dark text
+    { name: "800", l: 0.3, chromaMultiplier: 0.9 }, // Dark text, headings
+    { name: "700", l: 0.42, chromaMultiplier: 1.0 }, // Body text (peak chroma)
+    { name: "600", l: 0.54, chromaMultiplier: 1.0 }, // Muted text (peak chroma)
+    { name: "500", l: 0.65, chromaMultiplier: 0.95 }, // Borders, icons
+    { name: "400", l: 0.75, chromaMultiplier: 0.85 }, // Disabled states
+    { name: "300", l: 0.83, chromaMultiplier: 0.7 }, // Subtle borders
+    { name: "200", l: 0.89, chromaMultiplier: 0.6 }, // Hover backgrounds
+    { name: "100", l: 0.94, chromaMultiplier: 0.5 }, // Card backgrounds
+    { name: "50", l: 0.98, chromaMultiplier: 0.4 }, // Lightest backgrounds
   ];
+
+  // For very light input colors (pastel brands), shift the whole scale darker
+  // For very dark input colors, shift the whole scale lighter
+  const lightnessAdjustment =
+    baseLightness > 0.75
+      ? -0.03 // Light input: darken slightly
+      : baseLightness < 0.35
+        ? 0.03 // Dark input: lighten slightly
+        : 0; // Mid-tone input: no adjustment
+
+  return steps.map(({ name, l, chromaMultiplier }) => {
+    // Apply lightness adjustment
+    const adjustedL = Math.max(0.04, Math.min(0.99, l + lightnessAdjustment));
+
+    // Calculate chroma with perceptual curve
+    // Mid-tones get more chroma, extremes get less
+    const finalChroma = Math.max(
+      0.005,
+      Math.min(0.04, chromaBias * chromaMultiplier),
+    );
+
+    return {
+      name,
+      value: {
+        h: baseHue,
+        c: finalChroma,
+        l: adjustedL,
+      },
+    };
+  });
 }

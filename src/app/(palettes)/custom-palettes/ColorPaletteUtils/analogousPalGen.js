@@ -1,36 +1,257 @@
-const getChromaCompensation = (hue) => {
-  // Normalize hue to 0-360
+import { clampToGamut, clampColorToGamut } from "./gamutMapping";
+
+const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+/**
+ * Chroma compensation for perceptual uniformity across hues
+ * Applied ONCE per color creation
+ */
+function getChromaCompensation(hue) {
   const h = ((hue % 360) + 360) % 360;
 
-  // Yellow (45-75): tends to be more saturated, reduce chroma slightly
-  if (h >= 45 && h < 75) {
-    return 0.85;
-  }
-
-  // Green (75-165): naturally vibrant, reduce chroma moderately
-  if (h >= 75 && h < 165) {
-    return 0.9;
-  }
-
-  // Cyan (165-195): very saturated, reduce more
-  if (h >= 165 && h < 195) {
-    return 0.8;
-  }
-
-  // Blue (195-270): less saturated, boost slightly
-  if (h >= 195 && h < 270) {
-    return 1.1;
-  }
-
-  // Magenta (270-330): less saturated, boost
-  if (h >= 270 && h < 330) {
-    return 1.15;
-  }
-
-  // Red (330-45): varies, slight boost
+  // Yellow (30-90): NEEDS more chroma to look vibrant in OKLCH
+  if (h >= 30 && h < 90) return 1.15;
+  // Green (90-150): Already appears saturated
+  if (h >= 90 && h < 150) return 1.0;
+  // Cyan (150-210): Very saturated, reduce slightly
+  if (h >= 150 && h < 210) return 0.85;
+  // Blue (210-270): Naturally saturated in OKLCH
+  if (h >= 210 && h < 270) return 0.95;
+  // Magenta (270-330): Needs boost
+  if (h >= 270 && h < 330) return 1.1;
+  // Red (330-30): Slight boost
   return 1.05;
+}
+
+/**
+ * Get palette-specific default angles
+ */
+export function getBaseAngles(palType) {
+  if (palType.includes("vintage")) return 20;
+  if (palType.includes("neutral")) return 15;
+  if (palType.includes("pastel")) return 30;
+  return 35; // classic
+}
+
+/**
+ * Palette type configurations
+ */
+const PALETTE_CONFIGS = {
+  classic: {
+    chromaMultiplier: 1.0,
+    lightnessMin: 0,
+    lightnessMax: 1,
+    chromaMin: 0,
+    chromaMax: 0.4, // Will be overridden by gamut mapping
+    hueShift: 0,
+    // Variant multipliers to ensure distinction
+    darkerL: 0.6,
+    darkerC: 1.2,
+    darkL: 0.8,
+    darkC: 1.1,
+    lightL: 0.3, // Additive strength
+    lightC: 0.85,
+  },
+  vintage: {
+    chromaMultiplier: 0.55,
+    lightnessMin: 0.3,
+    lightnessMax: 0.9,
+    chromaMin: 0.04,
+    chromaMax: 0.25,
+    hueShift: 8,
+    // Tighter range but still distinct
+    darkerL: 0.7,
+    darkerC: 1.2,
+    darkL: 0.85,
+    darkC: 1.1,
+    lightL: 0.25,
+    lightC: 0.8,
+  },
+  neutral: {
+    chromaMultiplier: 0.4,
+    lightnessMin: 0.15,
+    lightnessMax: 0.98,
+    chromaMin: 0.01,
+    chromaMax: 0.12,
+    hueShift: 0,
+    // Wider lightness range for low chroma
+    darkerL: 0.5,
+    darkerC: 1.15,
+    darkL: 0.7,
+    darkC: 1.08,
+    lightL: 0.4,
+    lightC: 0.85,
+  },
+  pastel: {
+    chromaMultiplier: 0.6,
+    lightnessMultiplier: 1.15,
+    lightnessMin: 0.7,
+    lightnessMax: 0.95,
+    chromaMin: 0.08,
+    chromaMax: 0.22,
+    hueShift: 0,
+    // Subtle but distinct variations
+    darkerL: 0.88, // Stay very light
+    darkerC: 1.12,
+    darkL: 0.94,
+    darkC: 1.05,
+    lightL: 0.4, // Small steps in tight range
+    lightC: 0.92,
+  },
 };
 
+/**
+ * Create a color with chroma compensation and gamut mapping applied ONCE
+ * This is the ONLY place where compensation happens
+ */
+function createColor(l, c, h, config) {
+  // Apply chroma compensation ONCE
+  const compensatedC = c * getChromaCompensation(h);
+
+  // Clamp to config limits
+  const clampedL = clamp(l, config.lightnessMin, config.lightnessMax);
+  const clampedC = clamp(compensatedC, config.chromaMin, config.chromaMax);
+
+  // Apply gamut mapping (this is the REAL ceiling, not 0.4)
+  const gamutSafeC = clampToGamut(clampedL, clampedC, h);
+
+  return {
+    l: clampedL,
+    c: gamutSafeC,
+    h: (h + 360) % 360,
+  };
+}
+
+/**
+ * Generate 4 DISTINCT tonal variants for a base color
+ * FIXED: Each variant uses different multipliers to ensure distinction
+ */
+function generateVariants(baseL, baseC, baseH, config, paletteType) {
+  // Hue shifts for depth (warmer darks, cooler lights)
+  const hueShifts = {
+    classic: { darker: 5, dark: 3, light: -2 },
+    vintage: { darker: 6, dark: 4, light: -3 },
+    neutral: { darker: 2, dark: 1, light: -1 },
+    pastel: { darker: 3, dark: 2, light: -1 },
+  };
+
+  const shifts = hueShifts[paletteType] || hueShifts.classic;
+
+  // CRITICAL: Use config-specific multipliers for each variant
+  return {
+    darker: createColor(
+      baseL * config.darkerL,
+      baseC * config.darkerC,
+      baseH + shifts.darker,
+      config,
+    ),
+    dark: createColor(
+      baseL * config.darkL,
+      baseC * config.darkC,
+      baseH + shifts.dark,
+      config,
+    ),
+    base: createColor(baseL, baseC, baseH, config),
+    light: createColor(
+      baseL + (config.lightnessMax - baseL) * config.lightL,
+      baseC * config.lightC,
+      baseH + shifts.light,
+      config,
+    ),
+  };
+}
+
+/**
+ * Get palette type from analogPalType string
+ */
+function getPaletteType(analogPalType) {
+  if (analogPalType.includes("vintage")) return "vintage";
+  if (analogPalType.includes("neutral")) return "neutral";
+  if (analogPalType.includes("pastel")) return "pastel";
+  return "classic";
+}
+
+/**
+ * Get layout type from analogPalType string
+ */
+function getLayoutType(analogPalType) {
+  if (analogPalType.includes("Left")) return "left";
+  if (analogPalType.includes("Right")) return "right";
+  return "centered";
+}
+
+/**
+ * Calculate analogous color angles based on layout
+ */
+function getAnalogousAngles(layout, angle1, angle2) {
+  const absAngle1 = Math.abs(angle1);
+  const absAngle2 = Math.abs(angle2);
+
+  switch (layout) {
+    case "left":
+      return {
+        a1: -absAngle1 * 2, // Far left
+        a2: -absAngle1, // Mid left
+      };
+    case "right":
+      return {
+        a1: absAngle2, // Mid right
+        a2: absAngle2 * 2, // Far right
+      };
+    case "centered":
+    default:
+      return {
+        a1: angle1, // Left of base
+        a2: angle2, // Right of base
+      };
+  }
+}
+
+/**
+ * Assemble final palette in correct order based on layout
+ * 12 colors total (4 variants × 3 hues)
+ */
+function assemblePalette(
+  baseVariants,
+  a1Variants,
+  a2Variants,
+  layout,
+  prefix = "",
+) {
+  const createGroup = (variants, name) => [
+    { name: `${prefix}${name}-DD`, value: variants.darker },
+    { name: `${prefix}${name}-D`, value: variants.dark },
+    { name: `${prefix}${name}`, value: variants.base },
+    { name: `${prefix}${name}-L`, value: variants.light },
+  ];
+
+  switch (layout) {
+    case "left":
+      return [
+        ...createGroup(a1Variants, "A1"),
+        ...createGroup(a2Variants, "A2"),
+        ...createGroup(baseVariants, "Base"),
+      ];
+    case "right":
+      return [
+        ...createGroup(baseVariants, "Base"),
+        ...createGroup(a1Variants, "A1"),
+        ...createGroup(a2Variants, "A2"),
+      ];
+    case "centered":
+    default:
+      return [
+        ...createGroup(a1Variants, "A1"),
+        ...createGroup(baseVariants, "Base"),
+        ...createGroup(a2Variants, "A2"),
+      ];
+  }
+}
+
+/**
+ * MAIN GENERATOR - Single unified algorithm
+ * Generates 12 DISTINCT colors
+ */
 export default function analogousPalGen(
   oklch,
   analogOptions,
@@ -38,848 +259,52 @@ export default function analogousPalGen(
   sliderLightValue = 0,
   sliderChromaValue = 0,
 ) {
-  if (analogPalType === "classicCenteredAnalog") {
-    const L_DARK_SHIFT = 0.25;
-    const L_LIGHT_SHIFT = 0.25;
-    const C_DARK_BOOST = 1.15;
-    const C_LIGHT_REDUCE = 0.85;
-
-    const baseColor = oklch;
-
-    // Apply chroma compensation to base color
-    const baseChromaCompensated =
-      baseColor.c * getChromaCompensation(baseColor.h);
-
-    const darkBase = {
-      ...baseColor,
-      l: Math.max(0, Math.min(1, baseColor.l - L_DARK_SHIFT)),
-      c: Math.min(0.4, baseChromaCompensated * C_DARK_BOOST),
-    };
-
-    const lightBase = {
-      ...baseColor,
-      l: Math.max(0, Math.min(1, baseColor.l + L_LIGHT_SHIFT)),
-      c: Math.max(0, baseChromaCompensated * C_LIGHT_REDUCE),
-    };
-
-    const createColorVariant = (hue, baseLightness, baseChroma) => {
-      const adjustedHue = (baseColor.h + hue + 360) % 360;
-      const chromaCompensation = getChromaCompensation(adjustedHue);
-      const compensatedChroma = baseChroma * chromaCompensation;
-
-      return {
-        base: {
-          ...baseColor,
-          h: adjustedHue,
-          l: baseLightness,
-          c: compensatedChroma,
-        },
-        dark: {
-          ...baseColor,
-          h: adjustedHue,
-          l: Math.max(0, Math.min(1, baseLightness - L_DARK_SHIFT)),
-          c: Math.min(0.4, compensatedChroma * C_DARK_BOOST),
-        },
-        light: {
-          ...baseColor,
-          h: adjustedHue,
-          l: Math.max(0, Math.min(1, baseLightness + L_LIGHT_SHIFT)),
-          c: Math.max(0, compensatedChroma * C_LIGHT_REDUCE),
-        },
-      };
-    };
-
-    const a1 = createColorVariant(-30, baseColor.l, baseChromaCompensated);
-    const a2 = createColorVariant(50, baseColor.l, baseChromaCompensated);
-
-    return [
-      { name: "A1-D", value: a1.dark },
-      { name: "A1", value: a1.base },
-      { name: "A1-L", value: a1.light },
-      { name: "Base-D", value: darkBase },
-      { name: "Base", value: baseColor },
-      { name: "Base-L", value: lightBase },
-      { name: "A2-D", value: a2.dark },
-      { name: "A2", value: a2.base },
-      { name: "A2-L", value: a2.light },
-    ];
-  } else if (analogPalType === "classicLeftAnalog") {
-    const L_DARK_SHIFT = 0.25;
-    const L_LIGHT_SHIFT = 0.25;
-    const C_DARK_BOOST = 1.15;
-    const C_LIGHT_REDUCE = 0.85;
-
-    const baseColor = oklch;
-    const baseChromaCompensated =
-      baseColor.c * getChromaCompensation(baseColor.h);
-
-    const darkBase = {
-      ...baseColor,
-      l: Math.max(0, Math.min(1, baseColor.l - L_DARK_SHIFT)),
-      c: Math.min(0.4, baseChromaCompensated * C_DARK_BOOST),
-    };
-
-    const lightBase = {
-      ...baseColor,
-      l: Math.max(0, Math.min(1, baseColor.l + L_LIGHT_SHIFT)),
-      c: Math.max(0, baseChromaCompensated * C_LIGHT_REDUCE),
-    };
-
-    const createColorVariant = (hue, baseLightness, baseChroma) => {
-      const adjustedHue = (baseColor.h + hue + 360) % 360;
-      const chromaCompensation = getChromaCompensation(adjustedHue);
-      const compensatedChroma = baseChroma * chromaCompensation;
-
-      return {
-        base: {
-          ...baseColor,
-          h: adjustedHue,
-          l: baseLightness,
-          c: compensatedChroma,
-        },
-        dark: {
-          ...baseColor,
-          h: adjustedHue,
-          l: Math.max(0, Math.min(1, baseLightness - L_DARK_SHIFT)),
-          c: Math.min(0.4, compensatedChroma * C_DARK_BOOST),
-        },
-        light: {
-          ...baseColor,
-          h: adjustedHue,
-          l: Math.max(0, Math.min(1, baseLightness + L_LIGHT_SHIFT)),
-          c: Math.max(0, compensatedChroma * C_LIGHT_REDUCE),
-        },
-      };
-    };
-
-    const a1 = createColorVariant(
-      analogOptions.analogousAngle1,
-      baseColor.l,
-      baseChromaCompensated,
-    );
-    const a2 = createColorVariant(
-      analogOptions.analogousAngle2,
-      baseColor.l,
-      baseChromaCompensated,
-    );
-
-    return [
-      { name: "A2-D", value: a2.dark },
-      { name: "A2", value: a2.base },
-      { name: "A2-L", value: a2.light },
-      { name: "A1-D", value: a1.dark },
-      { name: "A1", value: a1.base },
-      { name: "A1-L", value: a1.light },
-      { name: "Base-D", value: darkBase },
-      { name: "Base", value: baseColor },
-      { name: "Base-L", value: lightBase },
-    ];
-  } else if (analogPalType === "classicRightAnalog") {
-    const L_DARK_SHIFT = 0.25;
-    const L_LIGHT_SHIFT = 0.25;
-    const C_DARK_BOOST = 1.15;
-    const C_LIGHT_REDUCE = 0.85;
-
-    const baseColor = oklch;
-    const baseChromaCompensated =
-      baseColor.c * getChromaCompensation(baseColor.h);
-
-    const darkBase = {
-      ...baseColor,
-      l: Math.max(0, Math.min(1, baseColor.l - L_DARK_SHIFT)),
-      c: Math.min(0.4, baseChromaCompensated * C_DARK_BOOST),
-    };
-
-    const lightBase = {
-      ...baseColor,
-      l: Math.max(0, Math.min(1, baseColor.l + L_LIGHT_SHIFT)),
-      c: Math.max(0, baseChromaCompensated * C_LIGHT_REDUCE),
-    };
-
-    const createColorVariant = (hue, baseLightness, baseChroma) => {
-      const adjustedHue = (baseColor.h + hue + 360) % 360;
-      const chromaCompensation = getChromaCompensation(adjustedHue);
-      const compensatedChroma = baseChroma * chromaCompensation;
-
-      return {
-        base: {
-          ...baseColor,
-          h: adjustedHue,
-          l: baseLightness,
-          c: compensatedChroma,
-        },
-        dark: {
-          ...baseColor,
-          h: adjustedHue,
-          l: Math.max(0, Math.min(1, baseLightness - L_DARK_SHIFT)),
-          c: Math.min(0.4, compensatedChroma * C_DARK_BOOST),
-        },
-        light: {
-          ...baseColor,
-          h: adjustedHue,
-          l: Math.max(0, Math.min(1, baseLightness + L_LIGHT_SHIFT)),
-          c: Math.max(0, compensatedChroma * C_LIGHT_REDUCE),
-        },
-      };
-    };
-
-    const a1 = createColorVariant(
-      analogOptions.analogousAngle1,
-      baseColor.l,
-      baseChromaCompensated,
-    );
-    const a2 = createColorVariant(
-      analogOptions.analogousAngle2,
-      baseColor.l,
-      baseChromaCompensated,
-    );
-
-    return [
-      { name: "Base-D", value: darkBase },
-      { name: "Base", value: baseColor },
-      { name: "Base-L", value: lightBase },
-      { name: "A1-D", value: a1.dark },
-      { name: "A1", value: a1.base },
-      { name: "A1-L", value: a1.light },
-      { name: "A2-D", value: a2.dark },
-      { name: "A2", value: a2.base },
-      { name: "A2-L", value: a2.light },
-    ];
-  } else if (analogPalType === "vintageCenteredAnalog") {
-    const VINTAGE_HUE_SHIFT = 15; // Warm yellow-red bias (Hues shift toward warmer tones)
-    const VINTAGE_CHROMA_FACTOR = 0.5; // Overall desaturation factor (50% of original Chroma)
-    const VINTAGE_CHROMA_MAX = 0.2; // Max Chroma for the whole palette (keeps colors muted)
-    const L_MIN = 0.3; // Conservative minimum lightness for muted contrast
-    const L_MAX = 0.9; // Conservative maximum lightness for muted contrast
-
-    // -----------------------------------------------------------
-    // --- Vintage Base Color Calculation ---
-    // We calculate the *intended* vintage chroma using the factor first,
-    // then clamp it, so the original color's saturation contributes.
-
-    const vintageChromaBase = Math.min(
-      VINTAGE_CHROMA_MAX,
-      Math.max(0.02, oklch.c * VINTAGE_CHROMA_FACTOR),
-    );
-
-    const baseColor = {
-      ...oklch,
-      // 1. Lightness is consistently clamped to a muted range
-      l: Math.min(L_MAX, Math.max(L_MIN, oklch.l)),
-      // 2. Chroma uses the calculated, globally desaturated value
-      c: vintageChromaBase,
-      // 3. Hue is shifted to a warm tone
-      h: (oklch.h + VINTAGE_HUE_SHIFT) % 360,
-    };
-
-    const darkBase = {
-      ...baseColor,
-
-      l: Math.min(L_MAX, Math.max(L_MIN, baseColor.l * 0.85)),
-
-      c: Math.min(VINTAGE_CHROMA_MAX, Math.max(0.02, baseColor.c * 1.1)),
-    };
-
-    const lightBase = {
-      ...baseColor,
-
-      l: Math.min(L_MAX, Math.max(L_MIN, baseColor.l * 1.15)),
-
-      c: Math.min(VINTAGE_CHROMA_MAX, Math.max(0.02, baseColor.c * 0.8)),
-    };
-
-    const analogousOne = {
-      ...baseColor,
-
-      h: (baseColor.h + analogOptions.analogousAngle1 + 360) % 360,
-    };
-
-    const analogousOneDark = {
-      ...analogousOne,
-      // Apply the same proportional L/C changes as darkBase
-      l: Math.min(L_MAX, Math.max(L_MIN, analogousOne.l * 0.85)),
-      c: Math.min(VINTAGE_CHROMA_MAX, Math.max(0.02, analogousOne.c * 1.1)),
-    };
-
-    const analogousOneLight = {
-      ...analogousOne,
-      // Apply the same proportional L/C changes as lightBase
-      l: Math.min(L_MAX, Math.max(L_MIN, analogousOne.l * 1.15)),
-      c: Math.min(VINTAGE_CHROMA_MAX, Math.max(0.02, analogousOne.c * 0.8)),
-    };
-
-    const analogousTwo = {
-      ...baseColor,
-      h: (baseColor.h + analogOptions.analogousAngle2 + 360) % 360,
-    };
-
-    const analogousTwoDark = {
-      ...analogousTwo,
-      l: Math.min(L_MAX, Math.max(L_MIN, analogousTwo.l * 0.85)),
-      c: Math.min(VINTAGE_CHROMA_MAX, Math.max(0.02, analogousTwo.c * 1.1)),
-    };
-
-    const analogousTwoLight = {
-      ...analogousTwo,
-      l: Math.min(L_MAX, Math.max(L_MIN, analogousTwo.l * 1.15)),
-      c: Math.min(VINTAGE_CHROMA_MAX, Math.max(0.02, analogousTwo.c * 0.8)),
-    };
-    return [
-      { name: "A1-D", value: analogousOneDark },
-      { name: "A1", value: analogousOne },
-      { name: "A1-L", value: analogousOneLight },
-      { name: "Base-D", value: darkBase },
-      { name: "Base", value: baseColor },
-      { name: "Base-L", value: lightBase },
-      { name: "A2-D", value: analogousTwoDark },
-      { name: "A2", value: analogousTwo },
-      { name: "A2-L", value: analogousTwoLight },
-    ];
-  } else if (analogPalType === "vintageLeftAnalog") {
-    const VINTAGE_HUE_SHIFT = 15; // Warm yellow-red bias (Hues shift toward warmer tones)
-    const VINTAGE_CHROMA_FACTOR = 0.5; // Overall desaturation factor (50% of original Chroma)
-    const VINTAGE_CHROMA_MAX = 0.2; // Max Chroma for the whole palette (keeps colors muted)
-    const L_MIN = 0.3; // Conservative minimum lightness for muted contrast
-    const L_MAX = 0.9; // Conservative maximum lightness for muted contrast
-
-    // -----------------------------------------------------------
-    // --- Vintage Base Color Calculation ---
-    // We calculate the *intended* vintage chroma using the factor first,
-    // then clamp it, so the original color's saturation contributes.
-
-    const vintageChromaBase = Math.min(
-      VINTAGE_CHROMA_MAX,
-      Math.max(0.02, oklch.c * VINTAGE_CHROMA_FACTOR),
-    );
-
-    const baseColor = {
-      ...oklch,
-      // 1. Lightness is consistently clamped to a muted range
-      l: Math.min(L_MAX, Math.max(L_MIN, oklch.l)),
-      // 2. Chroma uses the calculated, globally desaturated value
-      c: vintageChromaBase,
-      // 3. Hue is shifted to a warm tone
-      h: (oklch.h + VINTAGE_HUE_SHIFT) % 360,
-    };
-
-    const darkBase = {
-      ...baseColor,
-
-      l: Math.min(L_MAX, Math.max(L_MIN, baseColor.l * 0.85)),
-
-      c: Math.min(VINTAGE_CHROMA_MAX, Math.max(0.02, baseColor.c * 1.1)),
-    };
-
-    const lightBase = {
-      ...baseColor,
-
-      l: Math.min(L_MAX, Math.max(L_MIN, baseColor.l * 1.15)),
-
-      c: Math.min(VINTAGE_CHROMA_MAX, Math.max(0.02, baseColor.c * 0.8)),
-    };
-
-    const analogousOne = {
-      ...baseColor,
-
-      h: (baseColor.h + analogOptions.analogousAngle1 + 360) % 360,
-    };
-
-    const analogousOneDark = {
-      ...analogousOne,
-      // Apply the same proportional L/C changes as darkBase
-      l: Math.min(L_MAX, Math.max(L_MIN, analogousOne.l * 0.85)),
-      c: Math.min(VINTAGE_CHROMA_MAX, Math.max(0.02, analogousOne.c * 1.1)),
-    };
-
-    const analogousOneLight = {
-      ...analogousOne,
-      // Apply the same proportional L/C changes as lightBase
-      l: Math.min(L_MAX, Math.max(L_MIN, analogousOne.l * 1.15)),
-      c: Math.min(VINTAGE_CHROMA_MAX, Math.max(0.02, analogousOne.c * 0.8)),
-    };
-
-    const analogousTwo = {
-      ...baseColor,
-      h: (baseColor.h + analogOptions.analogousAngle1 * 2 + 360) % 360,
-    };
-
-    const analogousTwoDark = {
-      ...analogousTwo,
-      l: Math.min(L_MAX, Math.max(L_MIN, analogousTwo.l * 0.85)),
-      c: Math.min(VINTAGE_CHROMA_MAX, Math.max(0.02, analogousTwo.c * 1.1)),
-    };
-
-    const analogousTwoLight = {
-      ...analogousTwo,
-      l: Math.min(L_MAX, Math.max(L_MIN, analogousTwo.l * 1.15)),
-      c: Math.min(VINTAGE_CHROMA_MAX, Math.max(0.02, analogousTwo.c * 0.8)),
-    };
-    return [
-      { name: "A2-D", value: analogousTwoDark },
-      { name: "A2", value: analogousTwo },
-      { name: "A2-L", value: analogousTwoLight },
-      { name: "A1-D", value: analogousOneDark },
-      { name: "A1", value: analogousOne },
-      { name: "A1-L", value: analogousOneLight },
-      { name: "Base-D", value: darkBase },
-      { name: "Base", value: baseColor },
-      { name: "Base-L", value: lightBase },
-    ];
-  } else if (analogPalType === "vintageRightAnalog") {
-    const VINTAGE_HUE_SHIFT = 15; // Warm yellow-red bias (Hues shift toward warmer tones)
-    const VINTAGE_CHROMA_FACTOR = 0.5; // Overall desaturation factor (50% of original Chroma)
-    const VINTAGE_CHROMA_MAX = 0.2; // Max Chroma for the whole palette (keeps colors muted)
-    const L_MIN = 0.3; // Conservative minimum lightness for muted contrast
-    const L_MAX = 0.9; // Conservative maximum lightness for muted contrast
-
-    // -----------------------------------------------------------
-    // --- Vintage Base Color Calculation ---
-    // We calculate the *intended* vintage chroma using the factor first,
-    // then clamp it, so the original color's saturation contributes.
-
-    const vintageChromaBase = Math.min(
-      VINTAGE_CHROMA_MAX,
-      Math.max(0.02, oklch.c * VINTAGE_CHROMA_FACTOR),
-    );
-
-    const baseColor = {
-      ...oklch,
-      // 1. Lightness is consistently clamped to a muted range
-      l: Math.min(L_MAX, Math.max(L_MIN, oklch.l)),
-      // 2. Chroma uses the calculated, globally desaturated value
-      c: vintageChromaBase,
-      // 3. Hue is shifted to a warm tone
-      h: (oklch.h + VINTAGE_HUE_SHIFT) % 360,
-    };
-
-    const darkBase = {
-      ...baseColor,
-
-      l: Math.min(L_MAX, Math.max(L_MIN, baseColor.l * 0.85)),
-
-      c: Math.min(VINTAGE_CHROMA_MAX, Math.max(0.02, baseColor.c * 1.1)),
-    };
-
-    const lightBase = {
-      ...baseColor,
-
-      l: Math.min(L_MAX, Math.max(L_MIN, baseColor.l * 1.15)),
-
-      c: Math.min(VINTAGE_CHROMA_MAX, Math.max(0.02, baseColor.c * 0.8)),
-    };
-
-    const analogousOne = {
-      ...baseColor,
-
-      h: (baseColor.h + analogOptions.analogousAngle2 + 360) % 360,
-    };
-
-    const analogousOneDark = {
-      ...analogousOne,
-      // Apply the same proportional L/C changes as darkBase
-      l: Math.min(L_MAX, Math.max(L_MIN, analogousOne.l * 0.85)),
-      c: Math.min(VINTAGE_CHROMA_MAX, Math.max(0.02, analogousOne.c * 1.1)),
-    };
-
-    const analogousOneLight = {
-      ...analogousOne,
-      // Apply the same proportional L/C changes as lightBase
-      l: Math.min(L_MAX, Math.max(L_MIN, analogousOne.l * 1.15)),
-      c: Math.min(VINTAGE_CHROMA_MAX, Math.max(0.02, analogousOne.c * 0.8)),
-    };
-
-    const analogousTwo = {
-      ...baseColor,
-      h: (baseColor.h + analogOptions.analogousAngle2 * 2 + 360) % 360,
-    };
-
-    const analogousTwoDark = {
-      ...analogousTwo,
-      l: Math.min(L_MAX, Math.max(L_MIN, analogousTwo.l * 0.85)),
-      c: Math.min(VINTAGE_CHROMA_MAX, Math.max(0.02, analogousTwo.c * 1.1)),
-    };
-
-    const analogousTwoLight = {
-      ...analogousTwo,
-      l: Math.min(L_MAX, Math.max(L_MIN, analogousTwo.l * 1.15)),
-      c: Math.min(VINTAGE_CHROMA_MAX, Math.max(0.02, analogousTwo.c * 0.8)),
-    };
-    return [
-      { name: "Base-D", value: darkBase },
-      { name: "Base", value: baseColor },
-      { name: "Base-L", value: lightBase },
-      { name: "A1-D", value: analogousOneDark },
-      { name: "A1", value: analogousOne },
-      { name: "A1-L", value: analogousOneLight },
-      { name: "A2-D", value: analogousTwoDark },
-      { name: "A2", value: analogousTwo },
-      { name: "A2-L", value: analogousTwoLight },
-    ];
-  } else if (analogPalType === "neutralCenteredAnalog") {
-    const LMAX = 0.96;
-    const LMIN = 0.18;
-    const CMAX = 0.08;
-    const CMIN = 0.02;
-    const L_DARK_SHIFT = 0.22;
-    const L_LIGHT_SHIFT = 0.35;
-    const C_DARK_BOOST = 1.15;
-    const C_LIGHT_REDUCE = 0.85;
-
-    const baseColor = {
-      ...oklch,
-      l: Math.min(LMAX, Math.max(LMIN, 0.57 + sliderLightValue)),
-      c: Math.min(CMAX, Math.max(CMIN, 0.05 + sliderChromaValue)),
-    };
-
-    const darkBase = {
-      ...baseColor,
-      l: Math.max(LMIN, Math.min(LMAX, baseColor.l - L_DARK_SHIFT)),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * C_DARK_BOOST)),
-    };
-
-    const lightBase = {
-      ...baseColor,
-      l: Math.max(LMIN, Math.min(LMAX, baseColor.l + L_LIGHT_SHIFT)),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * C_LIGHT_REDUCE)),
-    };
-
-    const createNeutralVariant = (hue, baseLightness, baseChroma) => ({
-      base: {
-        ...baseColor,
-        h: (baseColor.h + hue + 360) % 360,
-        l: baseLightness,
-        c: Math.min(CMAX, Math.max(CMIN, baseChroma * 0.95)),
-      },
-      dark: {
-        ...baseColor,
-        h: (baseColor.h + hue + 360) % 360,
-        l: Math.max(LMIN, Math.min(LMAX, baseLightness - L_DARK_SHIFT)),
-        c: Math.min(CMAX, Math.max(CMIN, baseChroma * 0.95 * C_DARK_BOOST)),
-      },
-      light: {
-        ...baseColor,
-        h: (baseColor.h + hue + 360) % 360,
-        l: Math.max(LMIN, Math.min(LMAX, baseLightness + L_LIGHT_SHIFT)),
-        c: Math.min(CMAX, Math.max(CMIN, baseChroma * 0.95 * C_LIGHT_REDUCE)),
-      },
-    });
-
-    const a1 = createNeutralVariant(
-      analogOptions.analogousAngle1,
-      baseColor.l,
-      baseColor.c,
-    );
-    const a2 = createNeutralVariant(
-      analogOptions.analogousAngle2,
-      baseColor.l,
-      baseColor.c,
-    );
-
-    return [
-      { name: "A1-D", value: a1.dark },
-      { name: "A1", value: a1.base },
-      { name: "A1-L", value: a1.light },
-      { name: "Base-D", value: darkBase },
-      { name: "Base", value: baseColor },
-      { name: "Base-L", value: lightBase },
-      { name: "A2-D", value: a2.dark },
-      { name: "A2", value: a2.base },
-      { name: "A2-L", value: a2.light },
-    ];
-  } else if (analogPalType === "neutralLeftAnalog") {
-    const LMAX = 0.96;
-    const LMIN = 0.18;
-    const CMAX = 0.08;
-    const CMIN = 0.02;
-    const L_DARK_SHIFT = 0.22;
-    const L_LIGHT_SHIFT = 0.35;
-    const C_DARK_BOOST = 1.15;
-    const C_LIGHT_REDUCE = 0.85;
-
-    const baseColor = {
-      ...oklch,
-      l: Math.min(LMAX, Math.max(LMIN, 0.57 + sliderLightValue)),
-      c: Math.min(CMAX, Math.max(CMIN, 0.05 + sliderChromaValue)),
-    };
-
-    const darkBase = {
-      ...baseColor,
-      l: Math.max(LMIN, Math.min(LMAX, baseColor.l - L_DARK_SHIFT)),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * C_DARK_BOOST)),
-    };
-
-    const lightBase = {
-      ...baseColor,
-      l: Math.max(LMIN, Math.min(LMAX, baseColor.l + L_LIGHT_SHIFT)),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * C_LIGHT_REDUCE)),
-    };
-
-    const createNeutralVariant = (hue, baseLightness, baseChroma) => ({
-      base: {
-        ...baseColor,
-        h: (baseColor.h + hue + 360) % 360,
-        l: baseLightness,
-        c: Math.min(CMAX, Math.max(CMIN, baseChroma * 0.95)),
-      },
-      dark: {
-        ...baseColor,
-        h: (baseColor.h + hue + 360) % 360,
-        l: Math.max(LMIN, Math.min(LMAX, baseLightness - L_DARK_SHIFT)),
-        c: Math.min(CMAX, Math.max(CMIN, baseChroma * 0.95 * C_DARK_BOOST)),
-      },
-      light: {
-        ...baseColor,
-        h: (baseColor.h + hue + 360) % 360,
-        l: Math.max(LMIN, Math.min(LMAX, baseLightness + L_LIGHT_SHIFT)),
-        c: Math.min(CMAX, Math.max(CMIN, baseChroma * 0.95 * C_LIGHT_REDUCE)),
-      },
-    });
-
-    const a1 = createNeutralVariant(
-      analogOptions.analogousAngle1,
-      baseColor.l,
-      baseColor.c,
-    );
-    const a2 = createNeutralVariant(
-      analogOptions.analogousAngle1 * 2,
-      baseColor.l,
-      baseColor.c,
-    );
-
-    return [
-      { name: "A2-D", value: a2.dark },
-      { name: "A2", value: a2.base },
-      { name: "A2-L", value: a2.light },
-      { name: "A1-D", value: a1.dark },
-      { name: "A1", value: a1.base },
-      { name: "A1-L", value: a1.light },
-      { name: "Base-D", value: darkBase },
-      { name: "Base", value: baseColor },
-      { name: "Base-L", value: lightBase },
-    ];
-  } else if (analogPalType === "neutralRightAnalog") {
-    const LMAX = 0.96;
-    const LMIN = 0.18;
-    const CMAX = 0.08;
-    const CMIN = 0.02;
-    const L_DARK_SHIFT = 0.22;
-    const L_LIGHT_SHIFT = 0.35;
-    const C_DARK_BOOST = 1.15;
-    const C_LIGHT_REDUCE = 0.85;
-
-    const baseColor = {
-      ...oklch,
-      l: Math.min(LMAX, Math.max(LMIN, 0.57 + sliderLightValue)),
-      c: Math.min(CMAX, Math.max(CMIN, 0.05 + sliderChromaValue)),
-    };
-
-    const darkBase = {
-      ...baseColor,
-      l: Math.max(LMIN, Math.min(LMAX, baseColor.l - L_DARK_SHIFT)),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * C_DARK_BOOST)),
-    };
-
-    const lightBase = {
-      ...baseColor,
-      l: Math.max(LMIN, Math.min(LMAX, baseColor.l + L_LIGHT_SHIFT)),
-      c: Math.min(CMAX, Math.max(CMIN, baseColor.c * C_LIGHT_REDUCE)),
-    };
-
-    const createNeutralVariant = (hue, baseLightness, baseChroma) => ({
-      base: {
-        ...baseColor,
-        h: (baseColor.h + hue + 360) % 360,
-        l: baseLightness,
-        c: Math.min(CMAX, Math.max(CMIN, baseChroma * 0.95)),
-      },
-      dark: {
-        ...baseColor,
-        h: (baseColor.h + hue + 360) % 360,
-        l: Math.max(LMIN, Math.min(LMAX, baseLightness - L_DARK_SHIFT)),
-        c: Math.min(CMAX, Math.max(CMIN, baseChroma * 0.95 * C_DARK_BOOST)),
-      },
-      light: {
-        ...baseColor,
-        h: (baseColor.h + hue + 360) % 360,
-        l: Math.max(LMIN, Math.min(LMAX, baseLightness + L_LIGHT_SHIFT)),
-        c: Math.min(CMAX, Math.max(CMIN, baseChroma * 0.95 * C_LIGHT_REDUCE)),
-      },
-    });
-
-    const a1 = createNeutralVariant(
-      analogOptions.analogousAngle2,
-      baseColor.l,
-      baseColor.c,
-    );
-    const a2 = createNeutralVariant(
-      analogOptions.analogousAngle2 * 2,
-      baseColor.l,
-      baseColor.c,
-    );
-
-    return [
-      { name: "Base-D", value: darkBase },
-      { name: "Base", value: baseColor },
-      { name: "Base-L", value: lightBase },
-      { name: "A1-D", value: a1.dark },
-      { name: "A1", value: a1.base },
-      { name: "A1-L", value: a1.light },
-      { name: "A2-D", value: a2.dark },
-      { name: "A2", value: a2.base },
-      { name: "A2-L", value: a2.light },
-    ];
-  } else if (analogPalType === "pastelKidCentered") {
-    const pastelLMIN = 0.72;
-    const pastelLMAX = 0.92;
-    const pastelCMIN = 0.1;
-    const pastelCMAX = 0.2;
-
-    const basePastel = {
-      ...oklch,
-      l: Math.min(pastelLMAX, Math.max(pastelLMIN, 0.78 + sliderLightValue)),
-      c: Math.min(pastelCMAX, Math.max(pastelCMIN, 0.15 + sliderChromaValue)),
-    };
-
-    const darkPastel = {
-      ...basePastel,
-      l: basePastel.l - 0.1,
-      c: basePastel.c * 1.12,
-    };
-    const lightPastel = {
-      ...basePastel,
-      l: basePastel.l + 0.08,
-      c: basePastel.c * 0.9,
-    };
-
-    const A1Pastel = {
-      ...basePastel,
-      h: (basePastel.h + analogOptions.analogousAngle1 + 360) % 360,
-    };
-    const A2Pastel = {
-      ...basePastel,
-      h: (basePastel.h + analogOptions.analogousAngle2 + 360) % 360,
-    };
-
-    const A1PastelDark = { ...A1Pastel, l: darkPastel.l, c: darkPastel.c };
-    const A1PastelLight = { ...A1Pastel, l: lightPastel.l, c: lightPastel.c };
-
-    const A2PastelDark = { ...A2Pastel, l: darkPastel.l, c: darkPastel.c };
-    const A2PastelLight = { ...A2Pastel, l: lightPastel.l, c: lightPastel.c };
-
-    return [
-      { name: "Pastel-A1-D", value: A1PastelDark },
-      { name: "Pastel-A1", value: A1Pastel },
-      { name: "Pastel-A1-L", value: A1PastelLight },
-
-      { name: "Pastel-Base-D", value: darkPastel },
-      { name: "Pastel-Base", value: basePastel },
-      { name: "Pastel-Base-L", value: lightPastel },
-
-      { name: "Pastel-A2-D", value: A2PastelDark },
-      { name: "Pastel-A2", value: A2Pastel },
-      { name: "Pastel-A2-L", value: A2PastelLight },
-    ];
-  } else if (analogPalType === "pastelKidLeft") {
-    const pastelLMIN = 0.72;
-    const pastelLMAX = 0.92;
-    const pastelCMIN = 0.1;
-    const pastelCMAX = 0.2;
-
-    const basePastel = {
-      ...oklch,
-      l: Math.min(pastelLMAX, Math.max(pastelLMIN, 0.78 + sliderLightValue)),
-      c: Math.min(pastelCMAX, Math.max(pastelCMIN, 0.15 + sliderChromaValue)),
-    };
-
-    const darkPastel = {
-      ...basePastel,
-      l: basePastel.l - 0.1,
-      c: basePastel.c * 1.12,
-    };
-    const lightPastel = {
-      ...basePastel,
-      l: basePastel.l + 0.08,
-      c: basePastel.c * 0.9,
-    };
-
-    const A1Pastel = {
-      ...basePastel,
-      h: (basePastel.h + analogOptions.analogousAngle1 + 360) % 360,
-    };
-    const A2Pastel = {
-      ...basePastel,
-      h: (basePastel.h + analogOptions.analogousAngle1 * 2 + 360) % 360,
-    };
-
-    const A1PastelDark = { ...A1Pastel, l: darkPastel.l, c: darkPastel.c };
-    const A1PastelLight = { ...A1Pastel, l: lightPastel.l, c: lightPastel.c };
-
-    const A2PastelDark = { ...A2Pastel, l: darkPastel.l, c: darkPastel.c };
-    const A2PastelLight = { ...A2Pastel, l: lightPastel.l, c: lightPastel.c };
-
-    return [
-      { name: "Pastel-A2-D", value: A2PastelDark },
-      { name: "Pastel-A2", value: A2Pastel },
-      { name: "Pastel-A2-L", value: A2PastelLight },
-
-      { name: "Pastel-A1-D", value: A1PastelDark },
-      { name: "Pastel-A1", value: A1Pastel },
-      { name: "Pastel-A1-L", value: A1PastelLight },
-
-      { name: "Pastel-Base-D", value: darkPastel },
-      { name: "Pastel-Base", value: basePastel },
-      { name: "Pastel-Base-L", value: lightPastel },
-    ];
-  } else if (analogPalType === "pastelKidRight") {
-    const pastelLMIN = 0.72;
-    const pastelLMAX = 0.92;
-    const pastelCMIN = 0.1;
-    const pastelCMAX = 0.2;
-
-    const basePastel = {
-      ...oklch,
-      l: Math.min(pastelLMAX, Math.max(pastelLMIN, 0.78 + sliderLightValue)),
-      c: Math.min(pastelCMAX, Math.max(pastelCMIN, 0.15 + sliderChromaValue)),
-    };
-
-    const darkPastel = {
-      ...basePastel,
-      l: basePastel.l - 0.1,
-      c: basePastel.c * 1.12,
-    };
-    const lightPastel = {
-      ...basePastel,
-      l: basePastel.l + 0.08,
-      c: basePastel.c * 0.9,
-    };
-
-    const A1Pastel = {
-      ...basePastel,
-      h: (basePastel.h + analogOptions.analogousAngle2 + 360) % 360,
-    };
-    const A2Pastel = {
-      ...basePastel,
-      h: (basePastel.h + analogOptions.analogousAngle2 * 2 + 360) % 360,
-    };
-
-    const A1PastelDark = { ...A1Pastel, l: darkPastel.l, c: darkPastel.c };
-    const A1PastelLight = { ...A1Pastel, l: lightPastel.l, c: lightPastel.c };
-
-    const A2PastelDark = { ...A2Pastel, l: darkPastel.l, c: darkPastel.c };
-    const A2PastelLight = { ...A2Pastel, l: lightPastel.l, c: lightPastel.c };
-
-    return [
-      { name: "Pastel-Base-D", value: darkPastel },
-      { name: "Pastel-Base", value: basePastel },
-      { name: "Pastel-Base-L", value: lightPastel },
-
-      { name: "Pastel-A1-D", value: A1PastelDark },
-      { name: "Pastel-A1", value: A1Pastel },
-      { name: "Pastel-A1-L", value: A1PastelLight },
-
-      { name: "Pastel-A2-D", value: A2PastelDark },
-      { name: "Pastel-A2", value: A2Pastel },
-      { name: "Pastel-A2-L", value: A2PastelLight },
-    ];
+  // Extract palette type and layout
+  const paletteType = getPaletteType(analogPalType);
+  const layout = getLayoutType(analogPalType);
+  const config = PALETTE_CONFIGS[paletteType];
+
+  // Get angles (use defaults if not provided)
+  const baseAngle = getBaseAngles(analogPalType);
+  const angle1 = analogOptions?.analogousAngle1 ?? -baseAngle;
+  const angle2 = analogOptions?.analogousAngle2 ?? baseAngle;
+  const angles = getAnalogousAngles(layout, angle1, angle2);
+
+  // Calculate base color with palette-specific modifications
+  let baseL = oklch.l + sliderLightValue;
+  let baseC = oklch.c + sliderChromaValue;
+  let baseH = oklch.h;
+
+  // Apply palette-specific modifications to input
+  if (paletteType === "pastel") {
+    baseL = baseL * (config.lightnessMultiplier || 1);
   }
+
+  baseC = baseC * config.chromaMultiplier;
+  baseH = (baseH + config.hueShift) % 360;
+
+  // Clamp to palette limits before creating colors
+  baseL = clamp(baseL, config.lightnessMin, config.lightnessMax);
+  baseC = clamp(baseC, config.chromaMin, config.chromaMax);
+
+  // Generate variants for base color
+  const baseVariants = generateVariants(
+    baseL,
+    baseC,
+    baseH,
+    config,
+    paletteType,
+  );
+
+  // Generate variants for analogous color 1
+  const a1H = (baseH + angles.a1 + 360) % 360;
+  const a1Variants = generateVariants(baseL, baseC, a1H, config, paletteType);
+
+  // Generate variants for analogous color 2
+  const a2H = (baseH + angles.a2 + 360) % 360;
+  const a2Variants = generateVariants(baseL, baseC, a2H, config, paletteType);
+
+  // Assemble palette with correct layout
+  const prefix = paletteType === "pastel" ? "Pastel-" : "";
+  return assemblePalette(baseVariants, a1Variants, a2Variants, layout, prefix);
 }

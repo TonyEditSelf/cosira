@@ -170,9 +170,35 @@ export function ColorPaletteContextProvider({ children }) {
   }, []);
 
   const [analogOptions, setAnalogOptions] = useState({
-    analogousAngle1: -35,
-    analogousAngle2: 35,
+    analogousAngle1: null, // null = use palette-specific defaults
+    analogousAngle2: null,
   });
+
+  // When user changes palette type, reset angles to null
+  const handlePaletteTypeChange = (newType) => {
+    setAnalogPalType(newType);
+    setAnalogOptions({
+      analogousAngle1: null,
+      analogousAngle2: null,
+    });
+  };
+
+  // Only set angles when user actually moves the sliders
+  const handleAngleChange = (newAngle1, newAngle2) => {
+    setAnalogOptions({
+      analogousAngle1: newAngle1,
+      analogousAngle2: newAngle2,
+    });
+  };
+
+  // Helper to get current effective angles (for display in UI)
+  const getCurrentAngles = () => {
+    const baseAngle = getBaseAngles(analogPalType);
+    return {
+      angle1: analogOptions.analogousAngle1 ?? -baseAngle,
+      angle2: analogOptions.analogousAngle2 ?? baseAngle,
+    };
+  };
 
   const [splitCompOptions, setSplitCompOptions] = useState({
     splitCompAngle1: -30,
@@ -371,12 +397,12 @@ export function ColorPaletteContextProvider({ children }) {
 
   const [selectedPaletteType, setSelectedPaletteType] = useState("");
 
-  const [compPalType, setCompPalType] = useState("classicComp");
+  const [compPalType, setCompPalType] = useState("classic");
   const [monoPalType, setMonoPalType] = useState("classicMono");
   const [analogPalType, setAnalogPalType] = useState("classicCenteredAnalog");
-  const [doubleSplitCompPalType, setDoubleSplitCompPalType] = useState(
-    "leftDoubleSplitComp",
-  );
+  const [doubleSplitCompPalType, setDoubleSplitCompPalType] =
+    useState("balanced");
+
   const [triadicPalType, setTriadicPalType] = useState("classicTriad");
   const [tetradicPalType, setTetradicPalType] = useState("classicTetra");
   const [gradientPalType, setGradientPalType] = useState("leftGradient");
@@ -384,7 +410,7 @@ export function ColorPaletteContextProvider({ children }) {
   const [dataVizPalType, setDataVizPalType] = useState("dataVizPalOne");
   const [flowerPalType, setFlowerPalType] = useState("sunflower");
   const [uiBrandPalType, setUiBrandPalType] = useState("light");
-  const [arcPalType, setArcPalType] = useState("arcBottomUp");
+  const [arcPalType, setArcPalType] = useState("hues");
 
   const [paletteState, setPaletteState] = useState([]);
 
