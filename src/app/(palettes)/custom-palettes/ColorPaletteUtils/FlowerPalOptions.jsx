@@ -23,7 +23,6 @@ export default function FlowerPalOptions() {
     { id: "lotus", label: "Lotus", oklch: { l: 0.9, c: 0.12, h: 350 } },
     { id: "bluebell", label: "Bluebell", oklch: { l: 0.72, c: 0.18, h: 260 } },
     { id: "marigold", label: "Marigold", oklch: { l: 0.82, c: 0.26, h: 65 } },
-    { id: "hibiscus", label: "Hibiscus", oklch: { l: 0.7, c: 0.3, h: 40 } },
     {
       id: "morning-glory",
       label: "Morning Glory",
@@ -43,11 +42,6 @@ export default function FlowerPalOptions() {
       id: "chocolateCosmos",
       label: "Chocolate Cosmos",
       oklch: { l: 0.3, c: 0.18, h: 15 },
-    },
-    {
-      id: "gardenCosmos",
-      label: "Garden Cosmos",
-      oklch: { l: 0.78, c: 0.28, h: 320 },
     },
     {
       id: "birdOfParadise",
@@ -88,12 +82,21 @@ export default function FlowerPalOptions() {
       oklch: { l: 0.65, c: 0.28, h: 240 },
     },
     { id: "foliage", label: "Foliage", oklch: { l: 0.82, c: 0.12, h: 150 } },
+    // ===== NEW FLOWERS =====
+    { id: "peony", label: "Peony", oklch: { l: 0.58, c: 0.35, h: 10 } },
+    { id: "daffodil", label: "Daffodil", oklch: { l: 0.85, c: 0.25, h: 95 } },
+    { id: "magnolia", label: "Magnolia", oklch: { l: 0.96, c: 0.04, h: 100 } },
+    {
+      id: "ranunculus",
+      label: "Ranunculus",
+      oklch: { l: 0.75, c: 0.22, h: 25 },
+    },
   ];
 
   const handleChange = (opt) => {
     setOklch(opt.oklch);
     setFlowerPalType(opt.id);
-    const pal = flowerPalGen(oklch, opt.id);
+    const pal = flowerPalGen(opt.oklch, opt.id); // Fixed: use opt.oklch instead of oklch
     setPalette(pal);
     setDuplicatePalette(pal);
   };

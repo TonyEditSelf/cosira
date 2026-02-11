@@ -1,12 +1,12 @@
 "use client";
 
 import PageWrapper from "@/components/ui/PageWrapper";
-import ColorAdjust from "./ColorAdjust";
+import GradientGen from "./GradientGen";
 
-export default function ColorAdjustTool() {
+export default function GradientTool() {
   return (
     <PageWrapper>
-      <ColorAdjust />
+      <GradientGen />
     </PageWrapper>
   );
 }

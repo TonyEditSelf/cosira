@@ -14,7 +14,6 @@ import nearCompPalGen from "./nearCompPalGen";
 import clashPalGen from "./clashPalGen";
 import achromaticPalGen from "./achromaticPalGen";
 import brandPalGen from "./brandPalGen";
-import gradientPalGen from "./gradientPalGen";
 import seasonalPalGen from "./seasonalPalGen";
 import uiPalettePalGen from "./uiPalettePalGen";
 import dataVizPalettePalGen from "./dataVizPalettePalGen";
@@ -35,7 +34,6 @@ export default function paletteDecider(
   monoPalType,
   analogPalType,
   doubleSplitCompPalType,
-  gradientPalType,
   seasonalPalType,
   dataVizPalType,
   flowerPalType,
@@ -76,8 +74,6 @@ export default function paletteDecider(
     return achromaticPalGen(oklch);
   } else if (selectedPaletteType === "brandPalette") {
     return brandPalGen(oklch);
-  } else if (selectedPaletteType === "gradient") {
-    return gradientPalGen(oklch, gradientPalType);
   } else if (selectedPaletteType === "seasonal") {
     return seasonalPalGen(oklch, seasonalPalType);
   } else if (selectedPaletteType === "uiPalette") {

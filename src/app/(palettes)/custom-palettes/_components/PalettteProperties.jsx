@@ -9,7 +9,7 @@ import { useColorPaletteContext } from "../../ColorContext";
 import TetradicOptions from "../ColorPaletteUtils/TetradicOptions";
 import ComplementaryOptions from "../ColorPaletteUtils/ComplementaryOptions";
 import MonochromaticOptions from "../ColorPaletteUtils/MonochromaticOptions";
-import GradientOptions from "../ColorPaletteUtils/GradientOptions";
+
 import LandCStepper from "./Pickers/components/LandCStepper";
 import SeasonalOptions from "../ColorPaletteUtils/SeasonalOptions";
 import DataVizOptions from "../ColorPaletteUtils/DataVizOptions";
@@ -104,7 +104,6 @@ export default function PalettteProperties() {
       {selectedPaletteType === "doubleSplitComp" && <DoubleSplitCompOptions />}
       {selectedPaletteType === "tetradic" && <TetradicOptions />}
       {selectedPaletteType === "triadic" && <TriadicOptions />}
-      {selectedPaletteType === "gradient" && <GradientOptions />}
       {selectedPaletteType === "seasonal" && <SeasonalOptions />}
       {selectedPaletteType === "dataVizPalette" && <DataVizOptions />}
       {selectedPaletteType === "flowerPalette" && <FlowerPalOptions />}

@@ -11,14 +11,16 @@ export const navDesktopElements = [
       { label: "Tonalist", path: "/tonalist" },
       { label: "Bezier Blend", path: "/bezier-blend" },
       { label: "Color Adjust", path: "/color-adjust" },
-      { label: "Dark Mode Generator", path: "/dark-mode-gen" },
+      { label: "Gradient Generator", path: "/gradient-tool" },
     ],
   },
   {
     label: "Font Playground",
     submenu: [
       // Add your font playground items here
-      { label: "Choose Fonts", path: "/choose-fonts" },
+      // { label: "Spacing Generator", path: "/spacing-system" },
+      // { label: "Spacing Generator", path: "/new-spacing" },
+      { label: "Spacing Gen", path: "/ultimate-space" },
       { label: "Preview Fonts and Palette", path: "/preview-fonts-palette" },
     ],
   },

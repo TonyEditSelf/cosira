@@ -32,7 +32,6 @@ import dataVizPalettePalGen from "./custom-palettes/ColorPaletteUtils/dataVizPal
 import designsystemPalGen from "./custom-palettes/ColorPaletteUtils/designsystemPalGen";
 import doubleSplitCompPalGen from "./custom-palettes/ColorPaletteUtils/doubleSplitCompPalGen";
 import flowerPalGen from "./custom-palettes/ColorPaletteUtils/flowerPalGen";
-import gradientPalGen from "./custom-palettes/ColorPaletteUtils/gradientPalGen";
 import monochromaticPalGen from "./custom-palettes/ColorPaletteUtils/monochromaticPalGen";
 import nearCompPalGen from "./custom-palettes/ColorPaletteUtils/nearCompPalGen";
 import seasonalPalGen from "./custom-palettes/ColorPaletteUtils/seasonalPalGen";
@@ -405,7 +404,6 @@ export function ColorPaletteContextProvider({ children }) {
 
   const [triadicPalType, setTriadicPalType] = useState("classicTriad");
   const [tetradicPalType, setTetradicPalType] = useState("classicTetra");
-  const [gradientPalType, setGradientPalType] = useState("leftGradient");
   const [seasonalPalType, setSeasonalPalType] = useState("seasonalCombined");
   const [dataVizPalType, setDataVizPalType] = useState("dataVizPalOne");
   const [flowerPalType, setFlowerPalType] = useState("sunflower");
@@ -514,7 +512,6 @@ export function ColorPaletteContextProvider({ children }) {
       monoPalType,
       analogPalType,
       doubleSplitCompPalType,
-      gradientPalType,
       seasonalPalType,
       dataVizPalType,
       flowerPalType,
@@ -548,7 +545,7 @@ export function ColorPaletteContextProvider({ children }) {
     monoPalType,
     analogPalType,
     doubleSplitCompPalType,
-    gradientPalType,
+
     seasonalPalType,
     dataVizPalType,
     flowerPalType,
@@ -620,8 +617,7 @@ export function ColorPaletteContextProvider({ children }) {
     setAnalogPalType,
     doubleSplitCompPalType,
     setDoubleSplitCompPalType,
-    gradientPalType,
-    setGradientPalType,
+
     seasonalPalType,
     setSeasonalPalType,
     dataVizPalType,

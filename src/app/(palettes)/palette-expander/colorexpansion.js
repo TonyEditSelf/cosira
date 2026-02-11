@@ -1,5 +1,5 @@
 // utils/colorExpansion.js
-// Requires palette colors in OKLCH format: { l, c, h, a? }
+// Enhanced version with adjustable dark mode and better semantic derivation
 
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
@@ -46,7 +46,6 @@ function validatePalette(palette) {
 }
 
 // Adaptive chroma scaling based on lightness
-// Lighter colors can handle less chroma, darker colors need reduction too
 function adaptiveChroma(baseC, targetL, mode) {
   let scale = 1;
 
@@ -70,21 +69,20 @@ function adaptiveChroma(baseC, targetL, mode) {
 
   let adjustedC = baseC * scale;
 
-  // Reduce chroma for very light colors (avoid pastels looking washed out)
+  // Reduce chroma for very light colors
   if (targetL > 0.85) {
     adjustedC *= 0.7;
   } else if (targetL > 0.75) {
     adjustedC *= 0.85;
   }
 
-  // Reduce chroma for very dark colors (avoid over-saturation)
+  // Reduce chroma for very dark colors
   if (targetL < 0.25) {
     adjustedC *= 0.75;
   } else if (targetL < 0.35) {
     adjustedC *= 0.9;
   }
 
-  // Keep chroma within reasonable bounds
   return clamp(adjustedC, 0.01, 0.37);
 }
 
@@ -102,39 +100,33 @@ function makeShade(base, targetL, chromaMode) {
   return shade;
 }
 
-function invertLightness(l) {
-  // Ottosson's perceptual inversion with gentle curve
-  // MODIFIED: Add slight compression to prevent pure black backgrounds
+// IMPROVED: Adjustable dark mode floor
+function invertLightness(l, darkModeFloor = 0.12) {
   const inverted = 1 - Math.pow(l, 0.8);
-
-  // Ensure dark mode backgrounds aren't too dark (minimum 20% lightness)
-  return Math.max(inverted, 0.2);
+  return Math.max(inverted, darkModeFloor);
 }
 
 function darkModeChroma(c, targetL) {
-  // More aggressive reduction for softer dark mode
-  const chromaScale = targetL < 0.3 ? 0.6 : 0.75; // Increased reduction
-
-  return clamp(c * chromaScale, 0.01, 0.35); // Lower ceiling
+  const chromaScale = targetL < 0.3 ? 0.6 : 0.75;
+  return clamp(c * chromaScale, 0.01, 0.35);
 }
 
 function darkModeHueShift(h, l) {
-  // Add subtle warmth to prevent cold, harsh appearance
   if (h >= 180 && h <= 270) {
-    // Blues/cyans
-    return (h + 5) % 360; // Shift slightly warmer
+    return (h + 5) % 360;
   }
   return h;
 }
 
-// Invert a shade for dark mode with proper curve and chroma adjustment
+// IMPROVED: Accepts darkModeFloor option
 export function invertForDarkMode(color, options = {}) {
   validateColor(color);
   const { l, c, h, a } = color;
+  const { darkModeFloor = 0.12 } = options;
 
-  const newL = invertLightness(l);
+  const newL = invertLightness(l, darkModeFloor);
   const newC = darkModeChroma(c, newL);
-  const newH = darkModeHueShift(h, newL); // ← Changed from just `h`
+  const newH = darkModeHueShift(h, newL);
 
   const inverted = { l: newL, c: newC, h: newH };
   if (a !== undefined) inverted.a = a;
@@ -145,31 +137,28 @@ export function invertForDarkMode(color, options = {}) {
 export function generateScale(base) {
   validateColor(base);
 
-  // Create MUCH wider lightness range for better contrast
   return {
-    50: makeShade(base, 0.98, "low"), // Near white
-    100: makeShade(base, 0.95, "low"), // Very light
-    200: makeShade(base, 0.9, "soft"), // Light
-    300: makeShade(base, 0.8, "soft"), // Medium-light
-    400: makeShade(base, 0.7, "reduce"), // Medium
-    500: base, // Base (unchanged)
-    600: makeShade(base, 0.4, "boost"), // Medium-dark
-    700: makeShade(base, 0.3, "boost"), // Dark
-    800: makeShade(base, 0.2, "reduce"), // Very dark
-    900: makeShade(base, 0.12, "soft"), // Near black
+    50: makeShade(base, 0.98, "low"),
+    100: makeShade(base, 0.95, "low"),
+    200: makeShade(base, 0.9, "soft"),
+    300: makeShade(base, 0.8, "soft"),
+    400: makeShade(base, 0.7, "reduce"),
+    500: base,
+    600: makeShade(base, 0.4, "boost"),
+    700: makeShade(base, 0.3, "boost"),
+    800: makeShade(base, 0.2, "reduce"),
+    900: makeShade(base, 0.12, "soft"),
   };
 }
 
-// OKLCH to sRGB conversion for contrast calculation
+// OKLCH to sRGB conversion
 function oklchToRgb(color) {
   const { l, c, h } = color;
 
-  // Convert OKLCH to Oklab
   const hRad = (h * Math.PI) / 180;
   const a = c * Math.cos(hRad);
   const b = c * Math.sin(hRad);
 
-  // Oklab to linear RGB
   const l_ = l + 0.3963377774 * a + 0.2158037573 * b;
   const m_ = l - 0.1055613458 * a - 0.0638541728 * b;
   const s_ = l - 0.0894841775 * a - 1.291485548 * b;
@@ -182,7 +171,6 @@ function oklchToRgb(color) {
   let g = -1.2684380046 * l3 + 2.6097574011 * m3 - 0.3413193965 * s3;
   let b_ = -0.0041960863 * l3 - 0.7034186147 * m3 + 1.707614701 * s3;
 
-  // Gamma correction
   const toSrgb = (val) => {
     val = Math.max(0, Math.min(1, val));
     return val <= 0.0031308
@@ -197,13 +185,11 @@ function oklchToRgb(color) {
   };
 }
 
-// Calculate relative luminance for contrast ratio
 function relativeLuminance(rgb) {
   const { r, g, b } = rgb;
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
-// Calculate WCAG contrast ratio between two colors
 export function getContrastRatio(color1, color2) {
   validateColor(color1);
   validateColor(color2);
@@ -220,18 +206,15 @@ export function getContrastRatio(color1, color2) {
   return (lighter + 0.05) / (darker + 0.05);
 }
 
-// Check if color combination meets WCAG standards
 export function meetsWCAG(color1, color2, level = "AA", size = "normal") {
   const ratio = getContrastRatio(color1, color2);
 
   if (level === "AAA") {
     return size === "large" ? ratio >= 4.5 : ratio >= 7;
   }
-  // AA level
   return size === "large" ? ratio >= 3 : ratio >= 4.5;
 }
 
-// Generate accessibility report for a scale
 export function getAccessibilityReport(scale) {
   const white = { l: 1, c: 0, h: 0 };
   const black = { l: 0, c: 0, h: 0 };
@@ -255,54 +238,83 @@ export function getAccessibilityReport(scale) {
   return report;
 }
 
-// Generate proper semantic colors from scratch
-export function generateSemanticColor(role) {
-  const semanticDefaults = {
-    success: { l: 0.55, c: 0.15, h: 142 }, // Green
-    warning: { l: 0.65, c: 0.17, h: 85 }, // Yellow-orange
-    error: { l: 0.55, c: 0.2, h: 25 }, // Red-orange
-    info: { l: 0.6, c: 0.16, h: 240 }, // Blue
-    neutral: { l: 0.5, c: 0.02, h: 260 }, // Desaturated blue-gray
-  };
+// IMPROVED: Shift existing palette colors toward semantic targets instead of injecting new hues
+function shiftHueToward(currentHue, targetHue, amount = 0.3) {
+  // Calculate shortest distance on color wheel
+  let diff = targetHue - currentHue;
+  if (diff > 180) diff -= 360;
+  if (diff < -180) diff += 360;
 
-  return semanticDefaults[role] || semanticDefaults.neutral;
+  // Shift by percentage of distance
+  const newHue = (currentHue + diff * amount + 360) % 360;
+  return newHue;
 }
 
-// Assign semantic roles from palette with proper fallbacks
+// NEW: Better semantic derivation - shifts palette colors instead of injecting
+export function deriveSemanticColor(paletteColor, semanticRole) {
+  const semanticTargets = {
+    success: 142, // Green
+    warning: 85, // Yellow-orange
+    error: 25, // Red-orange
+    info: 240, // Blue
+  };
+
+  const targetHue = semanticTargets[semanticRole];
+  if (!targetHue) return paletteColor;
+
+  // Shift the palette color toward the semantic target
+  const shiftedHue = shiftHueToward(paletteColor.h, targetHue, 0.4);
+
+  // Boost chroma slightly for semantic clarity
+  const boostedChroma = Math.max(paletteColor.c, 0.12);
+
+  return {
+    ...paletteColor,
+    h: shiftedHue,
+    c: Math.min(boostedChroma, 0.2), // Cap at reasonable level
+  };
+}
+
+// IMPROVED: Find closest palette color and shift it toward semantic target
 export function assignSemanticRoles(palette) {
   validatePalette(palette);
 
-  // Find best matches or generate from scratch
-  const findOrGenerate = (hueMin, hueMax, role) => {
-    const match = palette.find((c) => {
-      const h = c.value.h;
-      // Handle wrap-around for reds
-      if (hueMin > hueMax) {
-        return h >= hueMin || h <= hueMax;
-      }
-      return h >= hueMin && h <= hueMax;
+  const findClosestAndShift = (targetHue, role) => {
+    // Find palette color closest to target hue
+    const closest = palette.reduce((best, current) => {
+      const currentDist = Math.min(
+        Math.abs(current.value.h - targetHue),
+        360 - Math.abs(current.value.h - targetHue),
+      );
+      const bestDist = Math.min(
+        Math.abs(best.value.h - targetHue),
+        360 - Math.abs(best.value.h - targetHue),
+      );
+      return currentDist < bestDist ? current : best;
     });
-    return match?.value || generateSemanticColor(role);
+
+    // Shift it toward the semantic target
+    return deriveSemanticColor(closest.value, role);
   };
 
-  // Find highest chroma color for primary
   const primary = palette.reduce((a, b) =>
     b.value.c > a.value.c ? b : a,
   ).value;
 
   return {
     primary,
-    success: findOrGenerate(110, 160, "success"),
-    warning: findOrGenerate(40, 90, "warning"),
-    error: findOrGenerate(0, 35, "error") || findOrGenerate(345, 360, "error"),
-    info: findOrGenerate(210, 260, "info"),
-    neutral: generateSemanticColor("neutral"),
+    success: findClosestAndShift(142, "success"),
+    warning: findClosestAndShift(85, "warning"),
+    error: findClosestAndShift(25, "error"),
+    info: findClosestAndShift(240, "info"),
+    neutral: { ...primary, c: Math.min(primary.c, 0.012) },
   };
 }
 
-// Generate expanded palette (light + dark) with validation
+// IMPROVED: Generate expanded palette with options
 export function generateExpandedPalette(palette, options = {}) {
   validatePalette(palette);
+  const { darkModeFloor = 0.12 } = options;
 
   return palette.map((colorObj, idx) => {
     const base = colorObj.value;
@@ -312,7 +324,7 @@ export function generateExpandedPalette(palette, options = {}) {
       const darkScale = {};
 
       Object.entries(scale).forEach(([token, shade]) => {
-        darkScale[token] = invertForDarkMode(shade, options);
+        darkScale[token] = invertForDarkMode(shade, { darkModeFloor });
       });
 
       return {

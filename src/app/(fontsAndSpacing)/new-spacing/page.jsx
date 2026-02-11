@@ -1,12 +1,11 @@
 "use client";
 
 import PageWrapper from "@/components/ui/PageWrapper";
-import DarkMode from "./DarkMode";
-
-export default function PaletteExpander() {
+import FullSpacingSystem from "./FullSpacingSystem";
+export default function NewSpacing() {
   return (
     <PageWrapper>
-      <DarkMode />
+      <FullSpacingSystem />
     </PageWrapper>
   );
 }

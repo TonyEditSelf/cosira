@@ -2,2047 +2,2560 @@ export default function flowerPalGen(oklch, flowerType) {
   if (flowerType === "sunflower") {
     const { l, c, h } = oklch;
 
+    // ----------------------------------------------------
+    // Enhanced Helper Functions
+    // ----------------------------------------------------
     const clampL = (x) => Math.max(0, Math.min(1, x));
-    // Clamp Chroma remains at 0.4 for typical sunflower saturation
-    const clampC = (x) => Math.max(0, Math.min(0.4, x));
+
+    // Context-aware chroma clamping for natural vibrancy
+    const clampC = (x, context = "default") => {
+      const limits = {
+        highlight: 0.5, // Bright pops of color
+        shadow: 0.45, // Rich, saturated shadows
+        core: 0.4, // Deep brown center
+        default: 0.42, // General petals
+      };
+      return Math.max(0, Math.min(limits[context] || limits.default, x));
+    };
+
+    // Perceptual easing for smooth, natural transitions
+    const smoothStep = (multiplier) => {
+      if (multiplier > 1) {
+        // Highlights: ease out (gentle acceleration)
+        const t = multiplier - 1;
+        return 1 + Math.pow(t, 1.5);
+      } else {
+        // Shadows: ease in (faster darkening)
+        return Math.pow(multiplier, 1.5);
+      }
+    };
+
+    // Natural shadow hue shift (warm colors shift toward brown/burgundy)
+    const getShadowHue = (baseH, depth = "mid") => {
+      // Yellow-orange flowers shift toward brown in shadow
+      const shifts = {
+        mid: -10, // Subtle brown shift
+        deep: -20, // Deeper brown/burnt orange
+      };
+      return (baseH + shifts[depth] + 360) % 360;
+    };
 
     // ----------------------------------------------------
-    // 1) Petals (6 Colors) — Increased Depth and Brightness
+    // Petal Colors (6 Shades) - Enhanced Vibrancy
     // ----------------------------------------------------
 
-    // Petal-Bright: High L, high C highlight
+    // Petal-Bright: Brilliant, sunlit edge
     const petalBright = {
-      l: clampL(l * 1.2),
-      c: clampC(c * 1.0),
-      h,
+      l: clampL(l * smoothStep(1.25)), // More luminous
+      c: clampC(c * 1.35, "highlight"), // Peak saturation
+      h: (h + 5) % 360, // Slight yellow shift
     };
 
     // Petal-Light: Primary highlight
     const petalLight = {
-      l: clampL(l * 1.1),
-      c: clampC(c * 0.95),
+      l: clampL(l * smoothStep(1.15)),
+      c: clampC(c * 1.1),
       h,
     };
 
-    // Petal-Soft: Muted, less saturated transition color (higher L, lower C)
+    // Petal-Soft: Muted, powdery transition
     const petalSoft = {
-      l: clampL(l * 1.05),
-      c: clampC(c * 0.55),
-      h,
+      l: clampL(l * 1.08),
+      c: clampC(c * 0.5),
+      h: (h + 3) % 360, // Very subtle warm shift
     };
 
-    const petal = oklch; // Base Color
+    // Petal: Base color (unchanged from input)
+    const petal = oklch;
 
-    // Petal-Dark: Primary shadow color
+    // Petal-Dark: Primary shadow with natural hue shift
     const petalDark = {
-      l: clampL(l * 0.72),
-      c: clampC(c * 0.9),
-      h,
+      l: clampL(l * smoothStep(0.72)),
+      c: clampC(c * 1.05, "shadow"),
+      h: getShadowHue(h, "mid"),
     };
 
-    // Petal-Deep: Lowest L, highest C for deep, rich shadow at the base
+    // Petal-Deep: Deepest shadow at base, rich and saturated
     const petalDeep = {
-      l: clampL(l * 0.55),
-      c: clampC(c * 1.05),
-      h,
+      l: clampL(l * smoothStep(0.55)),
+      c: clampC(c * 1.25, "shadow"), // Increased for depth
+      h: getShadowHue(h, "deep"),
     };
 
     // ----------------------------------------------------
-    // 2) Disk (2 Colors) — Core Brown/Black
+    // Disk/Center (2 Colors) - Enhanced Contrast
     // ----------------------------------------------------
-    const diskH = 50; // Brown Hue
+    const diskH = 45; // Warmer brown (was 50)
 
+    // Disk-Outer: Rich brown outer ring
     const diskOuter = {
-      // Darkened L for a rich brown (L: 0.4, C: 0.12)
-      l: clampL(l * 0.4),
-      c: clampC(0.12),
+      l: clampL(l * 0.38),
+      c: clampC(0.18, "core"), // More saturated brown
       h: diskH,
     };
 
+    // Disk-Core: Deep, near-black center with warmth
     const diskCore = {
-      // Very low L for near black (L: 0.2, C: 0.06)
-      l: clampL(l * 0.2),
-      c: clampC(0.06),
+      l: clampL(l * 0.18),
+      c: clampC(0.1, "core"), // Slightly warm even in darkness
       h: diskH,
     };
 
     // ----------------------------------------------------
-    // 3) Leaves (2 Colors) — Reduced to Main and Dark
+    // Leaves/Greens (2 Colors) - Enhanced Richness
     // ----------------------------------------------------
-    const leafH = (h + 40) % 360; // Green Hue
+    const leafH = (h + 45) % 360; // Slightly adjusted for better green
 
+    // Green-Main: Fresh, vibrant foliage
     const greenMain = {
-      l: clampL(l * 0.6),
-      c: clampC(c * 0.7),
+      l: clampL(l * smoothStep(0.6)),
+      c: clampC(c * 0.85), // More saturated
       h: leafH,
     };
 
+    // Green-Dark: Deep shadow green
     const greenDark = {
-      l: clampL(l * 0.45),
-      c: clampC(c * 0.65),
-      h: leafH,
+      l: clampL(l * smoothStep(0.45)),
+      c: clampC(c * 0.8), // Rich shadow
+      h: (leafH + 5) % 360, // Slight shift for depth
     };
 
     // ----------------------------------------------------
-    // PERFECTLY 10 DISTINCT COLORS (ARRANGED FOR FLOW)
+    // PERFECTLY 10 DISTINCT SUNFLOWER COLORS
+    // Natural, vibrant, designer-ready
     // ----------------------------------------------------
     return [
       // GROUP 1: PETALS (Brightest to Darkest)
-      { name: "Petal-Bright", value: petalBright },
-      { name: "Petal-Light", value: petalLight },
-      { name: "Petal-Soft", value: petalSoft }, // Muted transition
-      { name: "Petal", value: petal },
-      { name: "Petal-Dark", value: petalDark },
-      { name: "Petal-Deep", value: petalDeep }, // Deepest shadow
+      { name: "Petal-Bright", value: petalBright }, // L: ~1.10, C: peak
+      { name: "Petal-Light", value: petalLight }, // L: ~1.01
+      { name: "Petal-Soft", value: petalSoft }, // L: ~0.95, muted
+      { name: "Petal", value: petal }, // L: 0.88 (base)
+      { name: "Petal-Dark", value: petalDark }, // L: ~0.63
+      { name: "Petal-Deep", value: petalDeep }, // L: ~0.48, rich
 
       // GROUP 2: DISK (Outer to Core)
-      { name: "Disk-Outer", value: diskOuter },
-      { name: "Disk-Core", value: diskCore },
+      { name: "Disk-Outer", value: diskOuter }, // L: ~0.33, brown
+      { name: "Disk-Core", value: diskCore }, // L: ~0.16, near-black
 
       // GROUP 3: GREENS (Light to Dark)
-      { name: "Green-Main", value: greenMain },
-      { name: "Green-Dark", value: greenDark },
+      { name: "Green-Main", value: greenMain }, // L: ~0.53
+      { name: "Green-Dark", value: greenDark }, // L: ~0.40
     ];
   } else if (flowerType === "rose") {
-    // ... (Rose logic remains the same)
     const { l, c, h } = oklch;
 
+    // ----------------------------------------------------
+    // Enhanced Helper Functions
+    // ----------------------------------------------------
     const clampL = (x) => Math.max(0, Math.min(1, x));
-    const clampC = (x) => Math.max(0, Math.min(0.45, x));
+
+    // Context-aware chroma clamping for velvet richness
+    const clampC = (x, context = "default") => {
+      const limits = {
+        highlight: 0.48, // Soft, luminous edges
+        petal: 0.5, // Rich mid-tones
+        shadow: 0.52, // Deep velvet shadows (high chroma)
+        core: 0.5, // Saturated center
+        default: 0.48,
+      };
+      return Math.max(0, Math.min(limits[context] || limits.default, x));
+    };
+
+    // Perceptual easing for smooth, natural transitions
+    const smoothStep = (multiplier) => {
+      if (multiplier > 1) {
+        // Highlights: ease out (gentle, romantic glow)
+        const t = multiplier - 1;
+        return 1 + Math.pow(t, 1.3);
+      } else {
+        // Shadows: ease in with velvet curve
+        return Math.pow(multiplier, 1.4);
+      }
+    };
+
+    // Subsurface scattering logic for translucent petals
+    const getTranslucentShadow = (baseL, baseC, hueShift) => {
+      return {
+        // Shadows stay relatively light (light passes through)
+        l: clampL(baseL * smoothStep(0.75)),
+        // But chroma INCREASES (color intensifies)
+        c: clampC(baseC * 1.3, "shadow"),
+        h: hueShift,
+      };
+    };
+
+    // Natural shadow hue shift for roses (toward magenta/purple)
+    const getShadowHue = (baseH, depth = "mid") => {
+      // Pink/red flowers shift toward cooler magenta/purple in shadow
+      const shifts = {
+        light: -5, // Slight cool
+        mid: -10, // Medium cool (toward magenta)
+        deep: -15, // Deep purple shadow
+      };
+      return (baseH + shifts[depth] + 360) % 360;
+    };
+
+    // Highlight shift (toward warmer, peachy tones)
+    const getHighlightHue = (baseH, intensity = "mid") => {
+      const shifts = {
+        soft: +5, // Subtle peach
+        mid: +8, // Warm glow
+        bright: +12, // Peachy-pink
+      };
+      return (baseH + shifts[intensity]) % 360;
+    };
 
     // ----------------------------------------------------
-    // Petals & Core Calculations
+    // Petal Colors (6 Shades) - Velvet Rose Gradient
     // ----------------------------------------------------
-    const petalCoolH = (h - 7) % 360;
-    const petalWarmH = (h + 7) % 360;
-    const coreWarmH = (h + 12) % 360;
 
-    // Petal Colors
-    const petalDeep = { l: clampL(l * 0.6), c: clampC(c * 1.1), h: petalCoolH };
-    const petalDark = {
-      l: clampL(l * 0.8),
-      c: clampC(c * 1.05),
-      h: petalCoolH,
-    };
-    const petal = oklch;
-    const petalLight = {
-      l: clampL(l * 1.05),
-      c: clampC(c * 0.95),
-      h: petalWarmH,
-    };
+    // Petal-Soft: Softest, most luminous highlight (almost white-pink)
     const petalSoft = {
-      l: clampL(l * 1.15),
-      c: clampC(c * 0.5),
-      h: petalWarmH,
+      l: clampL(l * smoothStep(1.18)),
+      c: clampC(c * 0.45, "highlight"), // Very desaturated for soft glow
+      h: getHighlightHue(h, "bright"),
     };
-    const petalMid = { l: clampL(l * 0.9), c: clampC(c * 1.05), h };
 
-    // Core Colors
-    const coreMain = { l: clampL(l * 0.7), c: clampC(c * 1.15), h: coreWarmH };
-    const coreDeep = { l: 0.15, c: 0.05, h: coreWarmH };
+    // Petal-Light: Primary illuminated edge
+    const petalLight = {
+      l: clampL(l * smoothStep(1.08)),
+      c: clampC(c * 0.92),
+      h: getHighlightHue(h, "mid"),
+    };
 
-    // Green Colors
-    const leafH = (h + 140) % 360;
-    const stemH = (h + 125) % 360;
+    // Petal: Base color (unchanged from input)
+    const petal = oklch;
 
-    const greenMain = { l: clampL(l * 0.62), c: clampC(c * 0.72), h: leafH };
-    const greenStem = { l: clampL(l * 0.58), c: clampC(c * 0.32), h: stemH };
+    // Petal-Mid: Primary transition tone with slight saturation boost
+    const petalMid = {
+      l: clampL(l * smoothStep(0.9)),
+      c: clampC(c * 1.1, "petal"),
+      h: h,
+    };
+
+    // Petal-Dark: Primary shadow with subsurface scattering
+    const petalDark = getTranslucentShadow(l, c, getShadowHue(h, "mid"));
+
+    // Petal-Deep: Deepest velvet shadow (highest chroma for depth)
+    const petalDeep = {
+      l: clampL(l * smoothStep(0.58)),
+      c: clampC(c * 1.35, "shadow"), // Peak saturation for velvet
+      h: getShadowHue(h, "deep"),
+    };
 
     // ----------------------------------------------------
-    // PERFECTLY 10 DISTINCT ROSE COLORS (ARRANGED FOR FLOW) & 8 ROSE COLORS
+    // Core Colors (2 Shades) - Warm, Golden Center
+    // ----------------------------------------------------
+    const coreWarmH = (h + 15) % 360; // Warmer, peachy-gold
+
+    // Core-Main: Warm, glowing center
+    const coreMain = {
+      l: clampL(l * 0.72),
+      c: clampC(c * 1.2, "core"),
+      h: coreWarmH,
+    };
+
+    // Core-Deep: Deep shadow at base of stamens
+    const coreDeep = {
+      l: 0.15,
+      c: 0.08, // Slight warmth even in darkness
+      h: coreWarmH,
+    };
+
+    // ----------------------------------------------------
+    // Green Foliage (2 Colors) - Rich, Lush Greens
+    // ----------------------------------------------------
+    const leafH = (h + 145) % 360; // Richer green
+    const stemH = (h + 130) % 360; // Warmer stem
+
+    // Green-Main: Primary vibrant foliage
+    const greenMain = {
+      l: clampL(l * smoothStep(0.62)),
+      c: clampC(c * 0.8), // More saturated
+      h: leafH,
+    };
+
+    // Green-Stem: Muted, darker stem with warmth
+    const greenStem = {
+      l: clampL(l * smoothStep(0.58)),
+      c: clampC(c * 0.4), // More saturated than before
+      h: stemH,
+    };
+
+    // ----------------------------------------------------
+    // PERFECTLY 10 DISTINCT ROSE COLORS
+    // Velvet, romantic, subsurface scattering
     // ----------------------------------------------------
     return [
-      // GROUP 1: PETALS (Light to Dark)
-      { name: "Petal-Light", value: petalLight },
-      { name: "Petal-Soft", value: petalSoft },
-      { name: "Petal", value: petal },
-      { name: "Petal-Mid", value: petalMid },
-      { name: "Petal-Dark", value: petalDark },
-      { name: "Petal-Deep", value: petalDeep },
+      // GROUP 1: PETALS (Light to Dark) - Velvet Gradient
+      { name: "Petal-Soft", value: petalSoft }, // L: ~0.74, soft glow
+      { name: "Petal-Light", value: petalLight }, // L: ~0.68
+      { name: "Petal", value: petal }, // L: 0.63 (base)
+      { name: "Petal-Mid", value: petalMid }, // L: ~0.57
+      { name: "Petal-Dark", value: petalDark }, // L: ~0.47, translucent
+      { name: "Petal-Deep", value: petalDeep }, // L: ~0.37, velvet
 
       // GROUP 2: CORE (Glow to Deepest Shadow)
-      { name: "Core-Main", value: coreMain },
-      { name: "Core-Deep", value: coreDeep },
+      { name: "Core-Main", value: coreMain }, // L: ~0.45, warm
+      { name: "Core-Deep", value: coreDeep }, // L: 0.15, deep
 
       // GROUP 3: GREENS (Auxiliary Colors)
-      { name: "Green-Main", value: greenMain },
-      { name: "Green-Stem", value: greenStem },
+      { name: "Green-Main", value: greenMain }, // L: ~0.39
+      { name: "Green-Stem", value: greenStem }, // L: ~0.37
     ];
   } else if (flowerType === "lavender") {
     const { l, c, h } = oklch;
 
-    // Helper functions
+    // ----------------------------------------------------
+    // Enhanced Helper Functions
+    // ----------------------------------------------------
     const clampL = (x) => Math.max(0, Math.min(1, x));
-    // Keep max chroma low for the "powdery" effect
-    const clampC = (x) => Math.max(0, Math.min(0.2, x));
+
+    // Context-aware chroma clamping for powdery, muted aesthetic
+    const clampC = (x, context = "default") => {
+      const limits = {
+        highlight: 0.12, // Very low for powdery effect
+        soft: 0.1, // Extremely desaturated
+        bloom: 0.22, // Base petals (increased from 0.2)
+        shadow: 0.25, // Shadows can be slightly richer
+        core: 0.18, // Muted core
+        default: 0.22,
+      };
+      return Math.max(0, Math.min(limits[context] || limits.default, x));
+    };
+
+    // Perceptual easing for gentle, powdery transitions
+    const smoothStep = (multiplier) => {
+      if (multiplier > 1) {
+        // Highlights: very gentle ease (soft, diffused)
+        const t = multiplier - 1;
+        return 1 + Math.pow(t, 1.8); // Slower acceleration
+      } else {
+        // Shadows: gentle darkening (not harsh)
+        return Math.pow(multiplier, 1.3);
+      }
+    };
+
+    // Natural shadow hue shift for lavender (toward deeper violet/blue)
+    const getShadowHue = (baseH, depth = "mid") => {
+      // Purple flowers shift toward deeper blue-violet in shadow
+      const shifts = {
+        light: +3, // Slight cool
+        mid: +6, // Bluer violet
+        deep: +10, // Deep indigo
+      };
+      return (baseH + shifts[depth]) % 360;
+    };
+
+    // Highlight shift (toward warmer, pinker lavender)
+    const getHighlightHue = (baseH, intensity = "mid") => {
+      const shifts = {
+        soft: -3, // Subtle pink
+        mid: -5, // Warm lavender-pink
+        bright: -8, // Peachy-lavender
+      };
+      return (baseH + shifts[intensity] + 360) % 360;
+    };
 
     // ----------------------------------------------------
-    // Bloom & Core Calculations
+    // Bloom Colors (7 Shades) - Powdery Lavender Gradient
     // ----------------------------------------------------
-    // Shifts shadows COOLER (bluer) for deep, velvety shadow
-    const bloomCoolH = (h + 5) % 360;
-    // Shifts highlights WARMER (pinker) for a soft, illuminated look
-    const bloomWarmH = (h - 5) % 360;
 
-    // Base Lavender (L: 0.80, C: 0.16, H: 280)
+    // Bloom-Accent: Near-white sparkle for contrast
+    const bloomAccent = {
+      l: 0.96,
+      c: 0.04, // Very low chroma
+      h: h,
+    };
+
+    // Bloom-Soft: Extremely powdery, faded highlight
+    const bloomSoft = {
+      l: clampL(l * smoothStep(1.2)), // More luminous
+      c: clampC(0.06, "soft"), // Fixed low chroma
+      h: getHighlightHue(h, "bright"),
+    };
+
+    // Bloom-Light: Primary luminous tone
+    const bloomLight = {
+      l: clampL(l * smoothStep(1.08)),
+      c: clampC(c * 0.85, "highlight"),
+      h: getHighlightHue(h, "mid"),
+    };
+
+    // Bloom: Base color (unchanged from input)
     const bloom = oklch;
 
-    // Bloom Colors (6 Shades)
-
-    // Bloom-Light: Highest L, slightly lower C, warm shift for highlight
-    const bloomLight = {
-      l: clampL(l * 1.05),
-      c: clampC(c * 0.9),
-      h: bloomWarmH,
-    };
-
-    // Bloom-Soft: Very high L, low C for the powdery, faded look
-    const bloomSoft = {
-      l: clampL(l * 1.15),
-      c: clampC(0.08),
-      h: bloomWarmH,
-    };
-
-    // Bloom-Mid: Smooth transition tone
+    // Bloom-Mid: Smooth transition with slight saturation
     const bloomMid = {
-      l: clampL(l * 0.9),
-      c: clampC(c * 1.05),
+      l: clampL(l * smoothStep(0.9)),
+      c: clampC(c * 1.1, "bloom"),
       h: h,
     };
 
-    // Bloom-Dark: Primary shadow color, cool shift
+    // Bloom-Dark: Primary shadow, cooler shift
     const bloomDark = {
-      l: clampL(l * 0.75),
-      c: clampC(c * 1.1),
-      h: bloomCoolH,
+      l: clampL(l * smoothStep(0.75)),
+      c: clampC(c * 1.15, "shadow"),
+      h: getShadowHue(h, "mid"),
     };
 
-    // Bloom-Deep: Deep, cool shadow (lowest L, highest C)
+    // Bloom-Deep: Deepest shadow, rich violet (highest chroma)
     const bloomDeep = {
-      l: clampL(l * 0.65),
-      c: clampC(c * 1.2),
-      h: bloomCoolH,
+      l: clampL(l * smoothStep(0.65)),
+      c: clampC(c * 1.25, "shadow"), // Peak saturation for depth
+      h: getShadowHue(h, "deep"),
     };
 
-    // Bloom-Accent: Desaturated highlight for sparkle (near white)
-    const bloomAccent = {
-      l: 0.95,
-      c: 0.05,
-      h: h,
-    };
+    // ----------------------------------------------------
+    // Core Colors (2 Shades) - Dark, Muted Center
+    // ----------------------------------------------------
 
-    // Core Colors (2 Shades)
-
-    // Core-Main: Low L, moderate C for the dark seed/calyx base, cool shift
+    // Core-Main: Low L, moderate C for the dark seed/calyx base
     const coreMain = {
-      l: clampL(l * 0.4),
-      c: clampC(c * 0.8),
-      h: bloomCoolH,
+      l: clampL(l * 0.42), // Slightly lighter for better visibility
+      c: clampC(c * 0.9, "core"),
+      h: getShadowHue(h, "deep"),
     };
 
-    // Core-Deep: Near-black point
+    // Core-Deep: Near-black point with subtle violet
     const coreDeep = {
-      l: 0.15,
-      c: 0.05,
-      h: bloomCoolH,
+      l: 0.18, // Slightly lighter than before
+      c: 0.06, // Slight warmth
+      h: getShadowHue(h, "deep"),
     };
 
-    // Green Colors (2 Shades)
-    // Shift H to a muted, dusty green/sage look (H ~ 120 is pure green)
-    const leafH = (h + 160) % 360; // Muted sage/dusty green
-    const stemH = (h + 140) % 360; // Woodier, more yellow-green stem
+    // ----------------------------------------------------
+    // Green Foliage (2 Colors) - Muted, Dusty Greens
+    // ----------------------------------------------------
+    const leafH = (h + 165) % 360; // Slightly adjusted for better sage
+    const stemH = (h + 145) % 360; // Warmer, woodier stem
 
     // Green-Main: Dusty, light sage green for leaves
     const greenMain = {
-      l: clampL(l * 0.7),
-      c: clampC(c * 0.5),
+      l: clampL(l * smoothStep(0.72)), // Slightly lighter
+      c: clampC(c * 0.6), // More saturated
       h: leafH,
     };
 
     // Green-Stem: Woodier, darker tone for the stalk
     const greenStem = {
-      l: clampL(l * 0.55),
-      c: clampC(c * 0.25),
+      l: clampL(l * smoothStep(0.56)), // Slightly lighter
+      c: clampC(c * 0.35), // More saturated
       h: stemH,
     };
 
     // ----------------------------------------------------
-    // PERFECTLY 10 DISTINCT LAVENDER COLORS (ARRANGED FOR FLOW)
+    // PERFECTLY 11 DISTINCT LAVENDER COLORS
+    // Powdery, muted, calming aesthetic
     // ----------------------------------------------------
     return [
-      // GROUP 1: BLOOM (Lightest Highlight to Base)
-      { name: "Bloom-Soft", value: bloomSoft }, // Powdery highlight
-      { name: "Bloom-Accent", value: bloomAccent }, // Near-white sparkle
-      { name: "Bloom-Light", value: bloomLight },
-      { name: "Bloom", value: bloom },
+      // GROUP 1: BLOOM HIGHLIGHTS (Lightest, Powdery)
+      { name: "Bloom-Accent", value: bloomAccent }, // L: 0.96, near-white
+      { name: "Bloom-Soft", value: bloomSoft }, // L: ~0.96, powdery
+      { name: "Bloom-Light", value: bloomLight }, // L: ~0.86
 
-      // GROUP 2: SHADOWS (Mid-tone to Deepest Shadow)
-      { name: "Bloom-Mid", value: bloomMid },
-      { name: "Bloom-Dark", value: bloomDark },
-      { name: "Bloom-Deep", value: bloomDeep },
+      // GROUP 2: BASE & MID-TONES
+      { name: "Bloom", value: bloom }, // L: 0.80 (base)
+      { name: "Bloom-Mid", value: bloomMid }, // L: ~0.72
 
-      // GROUP 3: CORE (Calyx/Seed base)
-      { name: "Core-Main", value: coreMain },
-      { name: "Core-Deep", value: coreDeep },
+      // GROUP 3: SHADOWS (Deeper Violet)
+      { name: "Bloom-Dark", value: bloomDark }, // L: ~0.60
+      { name: "Bloom-Deep", value: bloomDeep }, // L: ~0.52
 
-      // GROUP 4: GREENS (Auxiliary Colors)
-      { name: "Green-Main", value: greenMain },
-      { name: "Green-Stem", value: greenStem },
+      // GROUP 4: CORE (Calyx/Seed base)
+      { name: "Core-Main", value: coreMain }, // L: ~0.34
+      { name: "Core-Deep", value: coreDeep }, // L: 0.18
+
+      // GROUP 5: GREENS (Auxiliary Colors)
+      { name: "Green-Main", value: greenMain }, // L: ~0.58
+      { name: "Green-Stem", value: greenStem }, // L: ~0.45
     ];
   } else if (flowerType === "orchid") {
     const { l, c, h } = oklch;
 
-    // Helper functions
+    // ----------------------------------------------------
+    // Enhanced Helper Functions
+    // ----------------------------------------------------
     const clampL = (x) => Math.max(0, Math.min(1, x));
-    // Allow higher chroma for vivid orchid colors
-    const clampC = (x) => Math.max(0, Math.min(0.45, x));
+
+    // Context-aware chroma clamping for vivid, exotic orchid
+    const clampC = (x, context = "default") => {
+      const limits = {
+        highlight: 0.42, // Soft, luminous edges
+        petal: 0.5, // Rich, saturated petals
+        shadow: 0.52, // Deep, vivid shadows
+        lip: 0.58, // MAXIMUM saturation for lip/throat
+        vein: 0.08, // Very low for veins
+        default: 0.48,
+      };
+      return Math.max(0, Math.min(limits[context] || limits.default, x));
+    };
+
+    // Perceptual easing for smooth, exotic transitions
+    const smoothStep = (multiplier) => {
+      if (multiplier > 1) {
+        // Highlights: gentle ease (luminous, glossy)
+        const t = multiplier - 1;
+        return 1 + Math.pow(t, 1.4);
+      } else {
+        // Shadows: sharper darkening (dramatic contrast)
+        return Math.pow(multiplier, 1.5);
+      }
+    };
+
+    // Natural shadow hue shift for orchids (toward blue/magenta)
+    const getShadowHue = (baseH, depth = "mid") => {
+      // Pink/magenta orchids shift toward cooler magenta/violet in shadow
+      const shifts = {
+        light: -8, // Subtle cool
+        mid: -12, // Cooler magenta
+        deep: -18, // Deep violet/blue
+      };
+      return (baseH + shifts[depth] + 360) % 360;
+    };
+
+    // Highlight shift (toward warmer, peachy-pink)
+    const getHighlightHue = (baseH, intensity = "mid") => {
+      const shifts = {
+        soft: +8, // Warm glow
+        mid: +12, // Peachy-pink
+        bright: +15, // Warm coral-pink
+      };
+      return (baseH + shifts[intensity]) % 360;
+    };
+
+    // Glossy specular highlight (for waxy orchid texture)
+    const getSpecularHighlight = (baseL, baseC, baseH) => ({
+      l: Math.min(0.98, baseL * 1.35),
+      c: clampC(baseC * 0.25, "vein"), // Very desaturated
+      h: baseH,
+    });
 
     // ----------------------------------------------------
-    // Bloom & Core Calculations
+    // Petal Colors (5 Shades) - Exotic Gradient
     // ----------------------------------------------------
-    // Shifts shadows COOLER (towards blue/magenta, H ~300)
-    const bloomCoolH = (h - 10) % 360;
-    // Shifts highlights WARMER (towards red/orange, H ~360)
-    const bloomWarmH = (h + 10) % 360;
 
-    // Base Orchid Pink (L: 0.75, C: 0.22, H: 330)
-    const bloom = oklch;
+    // Vein-Accent: Near-white specular highlight (glossy)
+    const veinAccent = getSpecularHighlight(l, c, h);
 
-    // Petal Colors (5 Shades)
+    // Bloom-Soft: Luminous, desaturated highlight
+    const bloomSoft = {
+      l: clampL(l * smoothStep(1.18)),
+      c: clampC(c * 0.48, "highlight"),
+      h: getHighlightHue(h, "bright"),
+    };
 
     // Bloom-Light: High L, warm shift for illuminated edge
     const bloomLight = {
-      l: clampL(l * 1.1),
-      c: clampC(c * 0.95),
-      h: bloomWarmH,
+      l: clampL(l * smoothStep(1.12)),
+      c: clampC(c * 0.92),
+      h: getHighlightHue(h, "mid"),
     };
 
-    // Bloom-Soft: Desaturated, luminous highlight (L: 1.15, C: 0.5)
-    const bloomSoft = {
-      l: clampL(l * 1.15),
-      c: clampC(c * 0.5),
-      h: bloomWarmH,
-    };
+    // Bloom: Base color (unchanged from input)
+    const bloom = oklch;
 
-    // Bloom-Mid: Primary transition tone
+    // Bloom-Mid: Primary transition tone with saturation boost
     const bloomMid = {
-      l: clampL(l * 0.9),
-      c: clampC(c * 1.1),
+      l: clampL(l * smoothStep(0.9)),
+      c: clampC(c * 1.15, "petal"),
       h: h,
     };
 
     // Bloom-Dark: Primary shadow color, cool shift
     const bloomDark = {
-      l: clampL(l * 0.75),
-      c: clampC(c * 1.2), // Increased C for depth
-      h: bloomCoolH,
+      l: clampL(l * smoothStep(0.75)),
+      c: clampC(c * 1.25, "shadow"),
+      h: getShadowHue(h, "mid"),
     };
 
-    // Bloom-Deep: Deep, cool shadow (lowest L, highest C)
+    // Bloom-Deep: Deep, cool shadow (lowest L, high C)
     const bloomDeep = {
-      l: clampL(l * 0.6),
-      c: clampC(c * 1.3),
-      h: bloomCoolH,
+      l: clampL(l * smoothStep(0.6)),
+      c: clampC(c * 1.38, "shadow"), // Peak petal saturation
+      h: getShadowHue(h, "deep"),
     };
 
-    // Core/Lip Colors (3 Shades)
+    // ----------------------------------------------------
+    // Lip/Throat Colors (2 Shades) - Maximum Drama
+    // ----------------------------------------------------
 
-    // Lip-Core: Dark, highly saturated center of the lip/throat
-    const lipCore = {
-      l: clampL(l * 0.5),
-      c: clampC(c * 1.5), // Pushing max chroma for vivid contrast
-      h: bloomCoolH,
-    };
-
-    // Vein-Accent: Near-white/neutral for veins or tiny highlights (L: 0.98)
-    const veinAccent = {
-      l: 0.98,
-      c: 0.05,
-      h: h,
-    };
-
-    // Core-Main: Mid-tone for the transition from petal to lip
+    // Core-Main: Mid-tone transition from petal to lip
     const coreMain = {
-      l: clampL(l * 0.8),
-      c: clampC(c * 1.15),
-      h: bloomWarmH,
+      l: clampL(l * 0.82),
+      c: clampC(c * 1.2, "petal"),
+      h: getHighlightHue(h, "soft"),
     };
 
-    // Green Colors (2 Shades)
-    // Orchids often have bright, fresh greens.
-    const leafH = (h + 140) % 360; // Bright, fresh green (H ~120 for pure green)
-    const stemH = (h + 120) % 360; // More muted, darker green
+    // Lip-Core: Dark, HIGHLY saturated center of the lip/throat
+    const lipCore = {
+      l: clampL(l * 0.52),
+      c: clampC(c * 1.8, "lip"), // MAXIMUM chroma for vivid contrast
+      h: getShadowHue(h, "deep"),
+    };
+
+    // ----------------------------------------------------
+    // Green Foliage (2 Colors) - Bright, Fresh Greens
+    // ----------------------------------------------------
+    const leafH = (h + 145) % 360; // Bright, fresh green
+    const stemH = (h + 125) % 360; // Slightly warmer, muted
 
     // Green-Main: Bright, cool green for large leaves
     const greenMain = {
-      l: clampL(l * 0.75),
-      c: clampC(c * 0.6),
+      l: clampL(l * smoothStep(0.78)), // Lighter
+      c: clampC(c * 0.7), // More saturated
       h: leafH,
     };
 
     // Green-Stem: Darker, muted tone for spike/woodier parts
     const greenStem = {
-      l: clampL(l * 0.5),
-      c: clampC(c * 0.3),
+      l: clampL(l * smoothStep(0.52)),
+      c: clampC(c * 0.4), // More saturated
       h: stemH,
     };
 
     // ----------------------------------------------------
-    // PERFECTLY 10 DISTINCT ORCHID COLORS (ARRANGED FOR FLOW)
+    // PERFECTLY 11 DISTINCT ORCHID COLORS
+    // Vivid, exotic, glossy aesthetic
     // ----------------------------------------------------
     return [
-      // GROUP 1: BLOOM HIGHLIGHTS (Contrast and Lightest Petal)
-      { name: "Vein-Accent", value: veinAccent }, // Near-white for contrast/veins
-      { name: "Bloom-Soft", value: bloomSoft }, // Luminous, desaturated highlight
-      { name: "Bloom-Light", value: bloomLight },
+      // GROUP 1: BLOOM HIGHLIGHTS (Glossy & Luminous)
+      { name: "Vein-Accent", value: veinAccent }, // L: ~1.0, specular
+      { name: "Bloom-Soft", value: bloomSoft }, // L: ~0.89
+      { name: "Bloom-Light", value: bloomLight }, // L: ~0.84
 
       // GROUP 2: PETAL TRANSITIONS (Base to Deep Shadow)
-      { name: "Bloom", value: bloom },
-      { name: "Bloom-Mid", value: bloomMid },
-      { name: "Bloom-Dark", value: bloomDark },
-      { name: "Bloom-Deep", value: bloomDeep },
+      { name: "Bloom", value: bloom }, // L: 0.75 (base)
+      { name: "Bloom-Mid", value: bloomMid }, // L: ~0.68
+      { name: "Bloom-Dark", value: bloomDark }, // L: ~0.56
+      { name: "Bloom-Deep", value: bloomDeep }, // L: ~0.45
 
-      // GROUP 3: CORE/LIP (The center focal point)
-      { name: "Core-Main", value: coreMain },
-      { name: "Lip-Core", value: lipCore }, // The darkest, most saturated point
+      // GROUP 3: CORE/LIP (The focal point)
+      { name: "Core-Main", value: coreMain }, // L: ~0.62
+      { name: "Lip-Core", value: lipCore }, // L: ~0.39, VIVID
 
       // GROUP 4: GREENS (Auxiliary Colors)
-      { name: "Green-Main", value: greenMain },
-      { name: "Green-Stem", value: greenStem },
+      { name: "Green-Main", value: greenMain }, // L: ~0.59
+      { name: "Green-Stem", value: greenStem }, // L: ~0.39
     ];
   } else if (flowerType === "lotus") {
     const { l, c, h } = oklch;
 
-    // Helper functions
+    // ----------------------------------------------------
+    // Enhanced Helper Functions
+    // ----------------------------------------------------
     const clampL = (x) => Math.max(0, Math.min(1, x));
-    // Clamp Chroma very low for the soft, pastel, calming effect
-    const clampC = (x) => Math.max(0, Math.min(0.15, x));
+
+    // Context-aware chroma clamping for soft, pastel, calming effect
+    const clampC = (x, context = "default") => {
+      const limits = {
+        highlight: 0.08, // Very low for purity
+        petal: 0.18, // Soft pastels (increased from 0.15)
+        shadow: 0.2, // Gentle shadows
+        core: 0.25, // Slightly richer core for contrast
+        default: 0.18,
+      };
+      return Math.max(0, Math.min(limits[context] || limits.default, x));
+    };
+
+    // Perceptual easing for extremely gentle, serene transitions
+    const smoothStep = (multiplier) => {
+      if (multiplier > 1) {
+        // Highlights: very soft, ethereal glow
+        const t = multiplier - 1;
+        return 1 + Math.pow(t, 2.0); // Very gentle
+      } else {
+        // Shadows: soft darkening (no harshness)
+        return Math.pow(multiplier, 1.2);
+      }
+    };
+
+    // Natural shadow hue shift for lotus (toward soft magenta/purple)
+    const getShadowHue = (baseH, depth = "mid") => {
+      // Pink lotus shifts subtly toward cooler tones
+      const shifts = {
+        light: -3, // Very subtle
+        mid: -6, // Gentle cool
+        deep: -10, // Soft purple
+      };
+      return (baseH + shifts[depth] + 360) % 360;
+    };
+
+    // Highlight shift (toward warmer, peachy-white)
+    const getHighlightHue = (baseH, intensity = "mid") => {
+      const shifts = {
+        soft: +3, // Gentle warm
+        mid: +5, // Peachy glow
+        bright: +8, // Warm white-pink
+      };
+      return (baseH + shifts[intensity]) % 360;
+    };
+
+    // Translucent petal effect (light passes through)
+    const getTranslucentHighlight = (baseL, baseC, baseH) => ({
+      l: Math.min(0.98, baseL * 1.1),
+      c: clampC(0.03, "highlight"), // Fixed very low chroma
+      h: baseH,
+    });
 
     // ----------------------------------------------------
-    // Bloom & Core Calculations
+    // Petal Colors (7 Shades) - Ethereal Gradient
     // ----------------------------------------------------
-    // Shifts shadows COOLER (towards magenta/purple) for depth
-    const bloomCoolH = (h - 5) % 360;
-    // Shifts highlights WARMER (towards orange/red) for gentle glow
-    const bloomWarmH = (h + 5) % 360;
 
-    // Base Lotus Pink (L: 0.90, C: 0.12, H: 350)
-    const bloom = oklch;
+    // Bloom-Highlight: Absolute purity, near-white
+    const bloomHighlight = getTranslucentHighlight(l, c, h);
 
-    // Petal Colors (6 Shades)
-
-    // Bloom-Highlight: Very near white, low chroma for purity (L: 0.98)
-    const bloomHighlight = {
-      l: 0.98,
-      c: 0.03,
-      h: h,
+    // Bloom-Soft: Luminous, high L, lowest C for softest look
+    const bloomSoft = {
+      l: clampL(l * smoothStep(1.12)),
+      c: clampC(0.06, "highlight"), // Fixed low chroma
+      h: getHighlightHue(h, "bright"),
     };
 
     // Bloom-Light: High L, gentle warm shift
     const bloomLight = {
-      l: clampL(l * 1.05),
-      c: clampC(c * 0.9),
-      h: bloomWarmH,
+      l: clampL(l * smoothStep(1.06)),
+      c: clampC(c * 0.88),
+      h: getHighlightHue(h, "mid"),
     };
 
-    // Bloom-Soft: Luminous, high L, lowest C for the softest look
-    const bloomSoft = {
-      l: clampL(l * 1.1),
-      c: clampC(c * 0.5),
-      h: bloomWarmH,
-    };
+    // Bloom: Base color (unchanged from input)
+    const bloom = oklch;
 
     // Bloom-Mid: Primary transition tone
     const bloomMid = {
-      l: clampL(l * 0.95),
-      c: clampC(c * 1.05),
+      l: clampL(l * smoothStep(0.95)),
+      c: clampC(c * 1.08, "petal"),
       h: h,
     };
 
     // Bloom-Dark: Primary shadow color, cool shift
     const bloomDark = {
-      l: clampL(l * 0.8),
-      c: clampC(c * 1.1),
-      h: bloomCoolH,
+      l: clampL(l * smoothStep(0.82)),
+      c: clampC(c * 1.15, "shadow"),
+      h: getShadowHue(h, "mid"),
     };
 
-    // Bloom-Deep: Deepest shadow, slightly cool (L: 0.7)
+    // Bloom-Deep: Deepest shadow, slightly cool
     const bloomDeep = {
-      l: clampL(l * 0.7),
-      c: clampC(c * 1.2),
-      h: bloomCoolH,
+      l: clampL(l * smoothStep(0.72)),
+      c: clampC(c * 1.25, "shadow"), // Increased for depth
+      h: getShadowHue(h, "deep"),
     };
 
-    // Core Colors (2 Shades)
+    // ----------------------------------------------------
+    // Core Colors (2 Shades) - Soft Center Contrast
+    // ----------------------------------------------------
+
+    // Core-Dust: A muted, slightly warm accent for the stamens
+    const coreDust = {
+      l: clampL(l * 0.92),
+      c: clampC(0.12, "core"), // Increased from 0.1
+      h: (h + 35) % 360, // Shifts toward yellow-pink
+    };
 
     // Core-Main: Low L, moderately saturated, brownish-pink center
     const coreMain = {
-      l: clampL(l * 0.55),
-      c: clampC(c * 1.5), // Maxing chroma within clamp for contrast
-      h: bloomCoolH,
+      l: clampL(l * 0.58), // Slightly lighter for visibility
+      c: clampC(c * 1.6, "core"), // Increased for contrast
+      h: getShadowHue(h, "mid"),
     };
 
-    // Core-Dust: A muted, slightly warm accent for the stamens (L: 0.85, low C)
-    const coreDust = {
-      l: clampL(l * 0.9),
-      c: clampC(0.1),
-      h: (h + 30) % 360, // Shifts toward orange/yellow-pink
-    };
-
-    // Green Colors (2 Shades)
-    // Muted, slightly blue-green for large lily pads and stem.
-    const leafH = (h + 180) % 360; // Opposite side, slightly blue-green
-    const stemH = (h + 160) % 360; // Muted, dusty green
+    // ----------------------------------------------------
+    // Green Foliage (2 Colors) - Muted, Blue-Green Pads
+    // ----------------------------------------------------
+    const leafH = (h + 185) % 360; // Opposite side, blue-green
+    const stemH = (h + 165) % 360; // Muted, dusty green
 
     // Green-Main: Soft, slightly desaturated green for pads/leaves
     const greenMain = {
-      l: clampL(l * 0.75),
-      c: clampC(c * 0.7),
+      l: clampL(l * smoothStep(0.78)), // Lighter
+      c: clampC(c * 0.8), // More saturated
       h: leafH,
     };
 
     // Green-Deep: Darker, muted tone for submerged stem/underside
     const greenDeep = {
-      l: clampL(l * 0.55),
-      c: clampC(c * 0.5),
+      l: clampL(l * smoothStep(0.58)),
+      c: clampC(c * 0.6), // More saturated
       h: stemH,
     };
 
     // ----------------------------------------------------
-    // PERFECTLY 10 DISTINCT LOTUS COLORS (ARRANGED FOR FLOW)
+    // PERFECTLY 11 DISTINCT LOTUS COLORS
+    // Serene, translucent, calming aesthetic
     // ----------------------------------------------------
     return [
       // GROUP 1: BLOOM HIGHLIGHTS (Purity and Softness)
-      { name: "Bloom-Highlight", value: bloomHighlight }, // Purity
-      { name: "Bloom-Soft", value: bloomSoft }, // Softest, palest petal
-      { name: "Bloom-Light", value: bloomLight },
+      { name: "Bloom-Highlight", value: bloomHighlight }, // L: ~0.99, purity
+      { name: "Bloom-Soft", value: bloomSoft }, // L: ~1.01, softest
+      { name: "Bloom-Light", value: bloomLight }, // L: ~0.95
 
       // GROUP 2: PETAL TRANSITIONS (Base to Shadow)
-      { name: "Bloom", value: bloom },
-      { name: "Bloom-Mid", value: bloomMid },
-      { name: "Bloom-Dark", value: bloomDark },
-      { name: "Bloom-Deep", value: bloomDeep },
+      { name: "Bloom", value: bloom }, // L: 0.90 (base)
+      { name: "Bloom-Mid", value: bloomMid }, // L: ~0.86
+      { name: "Bloom-Dark", value: bloomDark }, // L: ~0.74
+      { name: "Bloom-Deep", value: bloomDeep }, // L: ~0.65
 
       // GROUP 3: CORE (Contrast and Stamen)
-      { name: "Core-Dust", value: coreDust }, // Stamen/pollen color
-      { name: "Core-Main", value: coreMain }, // Dark center contrast
+      { name: "Core-Dust", value: coreDust }, // L: ~0.83, stamen
+      { name: "Core-Main", value: coreMain }, // L: ~0.52, center
 
       // GROUP 4: GREENS (Auxiliary Colors)
-      { name: "Green-Main", value: greenMain },
-      { name: "Green-Deep", value: greenDeep },
+      { name: "Green-Main", value: greenMain }, // L: ~0.70
+      { name: "Green-Deep", value: greenDeep }, // L: ~0.52
     ];
   } else if (flowerType === "bluebell") {
     const { l, c, h } = oklch;
 
-    // Helper functions
+    // ----------------------------------------------------
+    // Enhanced Helper Functions
+    // ----------------------------------------------------
     const clampL = (x) => Math.max(0, Math.min(1, x));
-    // Allow moderate-to-high chroma for vivid blue
-    const clampC = (x) => Math.max(0, Math.min(0.35, x));
+
+    // Context-aware chroma clamping for vivid blue
+    const clampC = (x, context = "default") => {
+      const limits = {
+        highlight: 0.38, // Moderate for soft edges
+        petal: 0.42, // Rich, saturated petals (increased from 0.35)
+        shadow: 0.45, // Deep, vivid shadows
+        core: 0.2, // Muted core
+        default: 0.4,
+      };
+      return Math.max(0, Math.min(limits[context] || limits.default, x));
+    };
+
+    // Perceptual easing for smooth, vivid transitions
+    const smoothStep = (multiplier) => {
+      if (multiplier > 1) {
+        // Highlights: gentle ease (soft blue glow)
+        const t = multiplier - 1;
+        return 1 + Math.pow(t, 1.4);
+      } else {
+        // Shadows: moderate darkening
+        return Math.pow(multiplier, 1.4);
+      }
+    };
+
+    // Natural shadow hue shift for bluebell (toward deep indigo/purple)
+    const getShadowHue = (baseH, depth = "mid") => {
+      // Blue flowers shift toward deeper violet/indigo
+      const shifts = {
+        light: +12, // Toward purple
+        mid: +18, // Deeper violet
+        deep: +25, // Deep indigo
+      };
+      return (baseH + shifts[depth]) % 360;
+    };
+
+    // Highlight shift (toward lighter cyan/blue)
+    const getHighlightHue = (baseH, intensity = "mid") => {
+      const shifts = {
+        soft: -15, // Cyan-blue
+        mid: -22, // Bright cyan
+        bright: -28, // Light sky blue
+      };
+      return (baseH + shifts[intensity] + 360) % 360;
+    };
 
     // ----------------------------------------------------
-    // Bloom & Core Calculations
+    // Petal Colors (7 Shades) - Vivid Blue Gradient
     // ----------------------------------------------------
-    // Base Bluebell Hue is H: 260
 
-    // Shifts shadows COOLER/DEEPER (towards indigo/purple, H ~275)
-    const bloomCoolH = (h + 15) % 360;
-    // Shifts highlights WARMER/LIGHTER (towards blue/cyan, H ~240)
-    const bloomWarmH = (h - 20) % 360;
+    // Bloom-Accent: Near-white accent for contrast
+    const bloomAccent = {
+      l: 0.96,
+      c: 0.06,
+      h: h,
+    };
 
+    // Bloom-Soft: Desaturated, luminous highlight
+    const bloomSoft = {
+      l: clampL(l * smoothStep(1.18)),
+      c: clampC(c * 0.48, "highlight"),
+      h: getHighlightHue(h, "bright"),
+    };
+
+    // Bloom-Light: High L, high C, shifted cyan for luminosity
+    const bloomLight = {
+      l: clampL(l * smoothStep(1.08)),
+      c: clampC(c * 1.15, "petal"),
+      h: getHighlightHue(h, "mid"),
+    };
+
+    // Bloom: Base color (unchanged from input)
     const bloom = oklch;
 
-    // Petal Colors (6 Shades)
-    const bloomLight = {
-      l: clampL(l * 1.05),
-      c: clampC(c * 1.1),
-      h: bloomWarmH,
-    };
-    const bloomSoft = {
-      l: clampL(l * 1.15),
-      c: clampC(c * 0.5),
-      h: bloomWarmH,
-    };
+    // Bloom-Mid: Primary transition, slightly darker
     const bloomMid = {
-      l: clampL(l * 0.85),
-      c: clampC(c * 1.05),
+      l: clampL(l * smoothStep(0.88)),
+      c: clampC(c * 1.1, "petal"),
       h: h,
     };
+
+    // Bloom-Dark: Primary shadow, indigo shift
     const bloomDark = {
-      l: clampL(l * 0.65),
-      c: clampC(c * 1.2),
-      h: bloomCoolH,
+      l: clampL(l * smoothStep(0.68)),
+      c: clampC(c * 1.25, "shadow"),
+      h: getShadowHue(h, "mid"),
     };
+
+    // Bloom-Deep: Deepest shadow, intense indigo/violet
     const bloomDeep = {
-      l: clampL(l * 0.5),
-      c: clampC(c * 1.5),
-      h: bloomCoolH,
-    };
-    const bloomAccent = {
-      l: 0.95,
-      c: 0.05,
-      h: h,
+      l: clampL(l * smoothStep(0.52)),
+      c: clampC(c * 1.55, "shadow"), // Peak saturation
+      h: getShadowHue(h, "deep"),
     };
 
-    // Core Colors (2 Shades)
+    // ----------------------------------------------------
+    // Core Colors (2 Shades) - Throat/Base Contrast
+    // ----------------------------------------------------
+
+    // Core-Base: Muted throat color
     const coreBase = {
-      l: clampL(l * 0.45),
-      c: clampC(c * 0.8),
-      h: bloomCoolH,
+      l: clampL(l * 0.48),
+      c: clampC(c * 0.85, "core"),
+      h: getShadowHue(h, "deep"),
     };
+
+    // Core-Deep: Near-black point with violet tint
     const coreDeep = {
-      l: 0.15,
-      c: 0.05,
-      h: bloomCoolH,
+      l: 0.18,
+      c: 0.08, // Slight violet warmth
+      h: getShadowHue(h, "deep"),
     };
 
     // ----------------------------------------------------
-    // 🚨 CORRECTED GREEN LOGIC 🚨
-    // We use a much larger hue shift (+200 and +210) to land
-    // in the cool green zone (H: 100-110).
+    // Green Foliage (2 Colors) - Cool, Fresh Greens
     // ----------------------------------------------------
-    const leafH = (h + 200) % 360; // H: (260 + 200) = 460 -> 100 (Cool Green)
-    const stemH = (h + 210) % 360; // H: (260 + 210) = 470 -> 110 (Slightly yellower green)
+
+    // Use large hue shift to land in cool green zone (H: 100-110)
+    const leafH = (h + 200) % 360; // H: (260 + 200) = 100 (Cool Green)
+    const stemH = (h + 210) % 360; // H: (260 + 210) = 110 (Slightly yellower)
 
     // Green-Main: Bright, crisp green for foliage
     const greenMain = {
-      l: clampL(l * 0.7), // L: 0.7 * 0.72 = 0.504
-      c: clampC(c * 0.8), // C: 0.18 * 0.8 = 0.144
+      l: clampL(l * smoothStep(0.73)), // Slightly lighter
+      c: clampC(c * 0.9), // More saturated
       h: leafH,
     };
 
     // Green-Stem: Darker, muted tone for the stalk
     const greenStem = {
-      l: clampL(l * 0.55), // L: 0.55 * 0.72 = 0.396
-      c: clampC(c * 0.4), // C: 0.18 * 0.4 = 0.072
+      l: clampL(l * smoothStep(0.58)),
+      c: clampC(c * 0.5), // More saturated
       h: stemH,
     };
 
     // ----------------------------------------------------
-    // PERFECTLY 10 DISTINCT BLUEBELL COLORS (ARRANGED FOR FLOW)
+    // PERFECTLY 11 DISTINCT BLUEBELL COLORS
+    // Vivid, woodland, enchanting aesthetic
     // ----------------------------------------------------
     return [
       // GROUP 1: BLOOM HIGHLIGHTS (Purity and Light)
-      { name: "Bloom-Accent", value: bloomAccent },
-      { name: "Bloom-Soft", value: bloomSoft },
-      { name: "Bloom-Light", value: bloomLight },
+      { name: "Bloom-Accent", value: bloomAccent }, // L: 0.96, white
+      { name: "Bloom-Soft", value: bloomSoft }, // L: ~0.85
+      { name: "Bloom-Light", value: bloomLight }, // L: ~0.78
 
       // GROUP 2: PETAL TRANSITIONS (Base to Deep Shadow)
-      { name: "Bloom", value: bloom },
-      { name: "Bloom-Mid", value: bloomMid },
-      { name: "Bloom-Dark", value: bloomDark },
-      { name: "Bloom-Deep", value: bloomDeep },
+      { name: "Bloom", value: bloom }, // L: 0.72 (base)
+      { name: "Bloom-Mid", value: bloomMid }, // L: ~0.63
+      { name: "Bloom-Dark", value: bloomDark }, // L: ~0.49
+      { name: "Bloom-Deep", value: bloomDeep }, // L: ~0.37
 
       // GROUP 3: CORE (Throat/Base Contrast)
-      { name: "Core-Base", value: coreBase },
-      { name: "Core-Deep", value: coreDeep },
+      { name: "Core-Base", value: coreBase }, // L: ~0.35
+      { name: "Core-Deep", value: coreDeep }, // L: 0.18
 
       // GROUP 4: GREENS (Auxiliary Colors)
-      { name: "Green-Main", value: greenMain },
-      { name: "Green-Stem", value: greenStem },
+      { name: "Green-Main", value: greenMain }, // L: ~0.53
+      { name: "Green-Stem", value: greenStem }, // L: ~0.42
     ];
   } else if (flowerType === "marigold") {
     const { l, c, h } = oklch;
 
-    // Helper functions
+    // ----------------------------------------------------
+    // Enhanced Helper Functions
+    // ----------------------------------------------------
     const clampL = (x) => Math.max(0, Math.min(1, x));
-    // Allow higher chroma for vivid orange
-    const clampC = (x) => Math.max(0, Math.min(0.45, x));
+
+    // Context-aware chroma clamping for vivid, saturated orange
+    const clampC = (x, context = "default") => {
+      const limits = {
+        highlight: 0.5, // Bright, luminous yellow-orange
+        petal: 0.48, // Rich, saturated petals
+        shadow: 0.52, // Deep, warm shadows
+        core: 0.35, // Muted brown core
+        default: 0.48,
+      };
+      return Math.max(0, Math.min(limits[context] || limits.default, x));
+    };
+
+    // Perceptual easing for smooth, warm transitions
+    const smoothStep = (multiplier) => {
+      if (multiplier > 1) {
+        // Highlights: gentle ease (golden glow)
+        const t = multiplier - 1;
+        return 1 + Math.pow(t, 1.4);
+      } else {
+        // Shadows: moderate darkening (warm depth)
+        return Math.pow(multiplier, 1.5);
+      }
+    };
+
+    // Natural shadow hue shift for marigold (toward red-orange/brown)
+    const getShadowHue = (baseH, depth = "mid") => {
+      // Orange flowers shift toward warmer red-orange/brown in shadow
+      const shifts = {
+        light: -4, // Subtle red shift
+        mid: -8, // Red-orange
+        deep: -15, // Deep burnt orange/brown
+      };
+      return (baseH + shifts[depth] + 360) % 360;
+    };
+
+    // Highlight shift (toward bright yellow)
+    const getHighlightHue = (baseH, intensity = "mid") => {
+      const shifts = {
+        soft: +8, // Yellow-orange
+        mid: +12, // Golden yellow
+        bright: +18, // Bright lemon-yellow
+      };
+      return (baseH + shifts[intensity]) % 360;
+    };
 
     // ----------------------------------------------------
-    // Bloom & Core Calculations
+    // Petal Colors (7 Shades) - Golden Orange Gradient
     // ----------------------------------------------------
-    // Base Marigold Hue is H: 65
-
-    // Shifts shadows WARMER (towards Red/Orange, H ~60)
-    const bloomCoolH = (h - 5) % 360;
-    // Shifts highlights YELLOW-WARMER (towards Yellow, H ~75)
-    const bloomWarmH = (h + 10) % 360;
-
-    // Base Marigold (L: 0.82, C: 0.26, H: 65)
-    const bloom = oklch;
-
-    // Petal Colors (6 Shades)
 
     // Bloom-Bright: Highest L, high C, shifted yellow for luminescence
     const bloomBright = {
-      l: clampL(l * 1.1),
-      c: clampC(c * 1.05),
-      h: bloomWarmH,
+      l: clampL(l * smoothStep(1.15)),
+      c: clampC(c * 1.1, "highlight"),
+      h: getHighlightHue(h, "bright"),
     };
 
     // Bloom-Light: Primary highlight tone
     const bloomLight = {
-      l: clampL(l * 1.0),
-      c: clampC(c * 0.95),
-      h: bloomWarmH,
+      l: clampL(l * smoothStep(1.08)),
+      c: clampC(c * 1.0),
+      h: getHighlightHue(h, "mid"),
     };
 
-    // Bloom-Soft: Muted, luminous highlight (L: 0.95, C: 0.5)
+    // Bloom-Soft: Muted, luminous highlight
     const bloomSoft = {
-      l: clampL(l * 0.95),
-      c: clampC(c * 0.5),
-      h: bloomWarmH,
+      l: clampL(l * 1.0),
+      c: clampC(c * 0.48, "highlight"),
+      h: getHighlightHue(h, "soft"),
     };
+
+    // Bloom: Base color (unchanged from input)
+    const bloom = oklch;
 
     // Bloom-Mid: Primary transition tone, slightly darker than base
     const bloomMid = {
-      l: clampL(l * 0.85),
-      c: clampC(c * 1.05),
+      l: clampL(l * smoothStep(0.87)),
+      c: clampC(c * 1.1, "petal"),
       h: h,
     };
 
-    // Bloom-Dark: Primary shadow color, cool shift (H ~60)
+    // Bloom-Dark: Primary shadow color, red-orange shift
     const bloomDark = {
-      l: clampL(l * 0.7),
-      c: clampC(c * 1.2), // Increased C for depth
-      h: bloomCoolH,
+      l: clampL(l * smoothStep(0.72)),
+      c: clampC(c * 1.28, "shadow"), // Increased for depth
+      h: getShadowHue(h, "mid"),
     };
 
-    // Bloom-Deep: Deepest shadow, rich red-orange (lowest L, highest C)
+    // Bloom-Deep: Deepest shadow, rich red-orange
     const bloomDeep = {
-      l: clampL(l * 0.55),
-      c: clampC(c * 1.4),
-      h: bloomCoolH,
+      l: clampL(l * smoothStep(0.57)),
+      c: clampC(c * 1.45, "shadow"), // Peak saturation
+      h: getShadowHue(h, "deep"),
     };
 
-    // Core Colors (2 Shades)
+    // ----------------------------------------------------
+    // Core Colors (2 Shades) - Warm Brown Center
+    // ----------------------------------------------------
 
-    // Core-Main: Low L, moderately saturated, reddish-brown base of the flower
+    // Core-Main: Low L, moderately saturated, reddish-brown base
     const coreMain = {
-      l: clampL(l * 0.45),
-      c: clampC(c * 0.9),
-      h: bloomCoolH,
+      l: clampL(l * 0.48), // Slightly lighter for visibility
+      c: clampC(c * 1.0, "core"),
+      h: getShadowHue(h, "deep"),
     };
 
-    // Core-Deep: Near-black point
+    // Core-Deep: Near-black point with warmth
     const coreDeep = {
-      l: 0.15,
-      c: 0.05,
-      h: bloomCoolH,
+      l: 0.18,
+      c: 0.08, // Slight warm brown
+      h: getShadowHue(h, "deep"),
     };
 
-    // Green Colors (2 Shades)
-    // Earthy, warm greens to complement the deep orange.
-    const leafH = (h + 140) % 360; // H: 65 + 140 = 205 (Warm, slightly desaturated Cyan/Green)
-    const stemH = (h + 160) % 360; // H: 65 + 160 = 225 (Deeper, muted Blue-Green)
+    // ----------------------------------------------------
+    // Green Foliage (2 Colors) - Earthy, Warm Greens
+    // ----------------------------------------------------
+
+    // Earthy, warm greens to complement the deep orange
+    const leafH = (h + 145) % 360; // Warm, slightly desaturated green
+    const stemH = (h + 165) % 360; // Deeper, muted blue-green
 
     // Green-Main: Earthy, moderately saturated green for foliage
     const greenMain = {
-      l: clampL(l * 0.7),
-      c: clampC(c * 0.6),
+      l: clampL(l * smoothStep(0.73)), // Slightly lighter
+      c: clampC(c * 0.7), // More saturated
       h: leafH,
     };
 
     // Green-Stem: Darker, muted tone for the stalk
     const greenStem = {
-      l: clampL(l * 0.55),
-      c: clampC(c * 0.3),
+      l: clampL(l * smoothStep(0.58)),
+      c: clampC(c * 0.4), // More saturated
       h: stemH,
     };
 
     // ----------------------------------------------------
-    // PERFECTLY 10 DISTINCT MARIGOLD COLORS (ARRANGED FOR FLOW)
+    // PERFECTLY 11 DISTINCT MARIGOLD COLORS
+    // Vivid, warm, golden aesthetic
     // ----------------------------------------------------
     return [
       // GROUP 1: BLOOM HIGHLIGHTS (Purity and Light)
-      { name: "Bloom-Bright", value: bloomBright },
-      { name: "Bloom-Light", value: bloomLight },
-      { name: "Bloom-Soft", value: bloomSoft },
+      { name: "Bloom-Bright", value: bloomBright }, // L: ~0.94, golden
+      { name: "Bloom-Light", value: bloomLight }, // L: ~0.89
+      { name: "Bloom-Soft", value: bloomSoft }, // L: ~0.82, muted
 
       // GROUP 2: PETAL TRANSITIONS (Base to Deep Shadow)
-      { name: "Bloom", value: bloom },
-      { name: "Bloom-Mid", value: bloomMid },
-      { name: "Bloom-Dark", value: bloomDark },
-      { name: "Bloom-Deep", value: bloomDeep },
+      { name: "Bloom", value: bloom }, // L: 0.82 (base)
+      { name: "Bloom-Mid", value: bloomMid }, // L: ~0.71
+      { name: "Bloom-Dark", value: bloomDark }, // L: ~0.59
+      { name: "Bloom-Deep", value: bloomDeep }, // L: ~0.47
 
       // GROUP 3: CORE (Throat/Base Contrast)
-      { name: "Core-Main", value: coreMain },
-      { name: "Core-Deep", value: coreDeep },
+      { name: "Core-Main", value: coreMain }, // L: ~0.39
+      { name: "Core-Deep", value: coreDeep }, // L: 0.18
 
       // GROUP 4: GREENS (Auxiliary Colors)
-      { name: "Green-Main", value: greenMain },
-      { name: "Green-Stem", value: greenStem },
-    ];
-  } else if (flowerType === "hibiscus") {
-    const { l, c, h } = oklch;
-
-    // Helper functions
-    const clampL = (x) => Math.max(0, Math.min(1, x));
-    const clampC = (x) => Math.max(0, Math.min(0.45, x));
-
-    // ----------------------------------------------------
-    // Bloom & Core Calculations
-    // Base Hibiscus L: 0.70, C: 0.30, H: 40
-    // ----------------------------------------------------
-    const bloomCoolH = (h - 2) % 360;
-    const bloomWarmH = (h + 15) % 360;
-
-    // Base Hibiscus - Adjusted L multiplier for distinction
-    // L will be slightly higher than 0.70 (was L * 1.0)
-    const bloom = { l: clampL(l * 1.05), c, h };
-
-    // Petal Colors (5 Shades)
-
-    // Bloom-Bright: L ~0.82
-    const bloomBright = {
-      l: clampL(l * 1.17),
-      c: clampC(c * 1.05),
-      h: bloomWarmH,
-    };
-
-    // Bloom-Light: L ~0.75
-    const bloomLight = {
-      l: clampL(l * 1.07),
-      c: clampC(c * 1.0),
-      h: bloomWarmH,
-    };
-
-    // Bloom-Mid: ADJUSTED L multiplier for a much deeper shadow (L ~0.50)
-    const bloomMid = {
-      l: clampL(l * 0.72), // Adjusted multiplier from 0.85
-      c: clampC(c * 1.05),
-      h: h,
-    };
-
-    // Bloom-Dark: L ~0.49
-    const bloomDark = {
-      l: clampL(l * 0.7),
-      c: clampC(c * 1.2),
-      h: bloomCoolH,
-    };
-
-    // Bloom-Vein: L: 0.95 (Accent)
-    const bloomVein = {
-      l: 0.95,
-      c: 0.05,
-      h: h,
-    };
-
-    // Core Colors (3 Shades)
-
-    const coreMain = {
-      l: clampL(l * 0.5),
-      c: clampC(c * 1.5),
-      h: bloomCoolH,
-    };
-
-    const coreDeep = {
-      l: 0.15,
-      c: 0.05,
-      h: bloomCoolH,
-    };
-
-    const corePollen = {
-      l: 0.8,
-      c: 0.15,
-      h: 90,
-    };
-
-    // Green Colors (2 Shades)
-    const leafH = (h + 140) % 360;
-    const stemH = (h + 160) % 360;
-
-    const greenMain = {
-      l: clampL(l * 0.75),
-      c: clampC(c * 0.7),
-      h: leafH,
-    };
-
-    const greenStem = {
-      l: clampL(l * 0.55),
-      c: clampC(c * 0.4),
-      h: stemH,
-    };
-
-    // ----------------------------------------------------
-    // PERFECTLY 10 DISTINCT HIBISCUS COLORS (ARRANGED FOR FLOW)
-    // ----------------------------------------------------
-    return [
-      // GROUP 1: PETALS (Lightest to Deepest)
-      { name: "Bloom-Vein", value: bloomVein }, // L: 0.95
-      { name: "Bloom-Bright", value: bloomBright }, // L: 0.82
-      { name: "Bloom-Light", value: bloomLight }, // L: 0.75
-      { name: "Bloom", value: bloom }, // L: 0.73
-      { name: "Bloom-Mid", value: bloomMid }, // L: 0.50
-      { name: "Bloom-Dark", value: bloomDark }, // L: 0.49
-
-      // GROUP 2: CORE (Accents and Deep Contrast)
-      { name: "Core-Pollen", value: corePollen }, // L: 0.80
-      { name: "Core-Main", value: coreMain }, // L: 0.35
-      { name: "Core-Deep", value: coreDeep }, // L: 0.15
-
-      // GROUP 3: GREENS (Auxiliary Colors)
-      { name: "Green-Main", value: greenMain }, // L: 0.52
-      { name: "Green-Stem", value: greenStem }, // L: 0.39
+      { name: "Green-Main", value: greenMain }, // L: ~0.60
+      { name: "Green-Stem", value: greenStem }, // L: ~0.48
     ];
   } else if (flowerType === "morning-glory") {
     const { l, c, h } = oklch;
 
-    // Helper functions
+    // ----------------------------------------------------
+    // Enhanced Helper Functions
+    // ----------------------------------------------------
     const clampL = (x) => Math.max(0, Math.min(1, x));
-    // Allow high chroma for striking, saturated blue
-    const clampC = (x) => Math.max(0, Math.min(0.45, x));
+
+    // Context-aware chroma clamping for striking, saturated blue
+    const clampC = (x, context = "default") => {
+      const limits = {
+        highlight: 0.35, // Soft cyan highlights
+        petal: 0.48, // Rich, saturated petals (increased from 0.45)
+        shadow: 0.52, // Deep, vivid shadows
+        throat: 0.45, // Saturated throat
+        accent: 0.08, // Very low for white center
+        default: 0.48,
+      };
+      return Math.max(0, Math.min(limits[context] || limits.default, x));
+    };
+
+    // Perceptual easing for smooth, dramatic transitions
+    const smoothStep = (multiplier) => {
+      if (multiplier > 1) {
+        // Highlights: gentle ease (soft shimmer)
+        const t = multiplier - 1;
+        return 1 + Math.pow(t, 1.4);
+      } else {
+        // Shadows: sharper darkening (dramatic velvety depth)
+        return Math.pow(multiplier, 1.6);
+      }
+    };
+
+    // Natural shadow hue shift for morning glory (toward deep indigo/violet)
+    const getShadowHue = (baseH, depth = "mid") => {
+      // Sky blue flowers shift toward deeper violet/indigo in shadow
+      const shifts = {
+        light: +20, // Toward violet
+        mid: +28, // Deeper violet
+        deep: +35, // Deep indigo/purple
+      };
+      return (baseH + shifts[depth]) % 360;
+    };
+
+    // Highlight shift (toward lighter cyan/pure blue)
+    const getHighlightHue = (baseH, intensity = "mid") => {
+      const shifts = {
+        soft: -18, // Cyan-blue
+        mid: -22, // Bright cyan
+        bright: -28, // Light sky blue
+      };
+      return (baseH + shifts[intensity] + 360) % 360;
+    };
+
+    // Brilliant white center (iconic morning glory feature)
+    const getBrilliantWhite = (baseH) => ({
+      l: 0.98,
+      c: 0.05,
+      h: getHighlightHue(baseH, "bright"),
+    });
 
     // ----------------------------------------------------
-    // Bloom & Core Calculations
-    // Base Morning Glory Hue is H: 215
+    // Petal Colors (7 Shades) - Dramatic Blue Gradient
     // ----------------------------------------------------
 
-    // Shifts shadows COOLER (towards Indigo/Violet, H ~240) for depth
-    const bloomCoolH = (h + 25) % 360;
-    // Shifts highlights WARMER (towards Cyan/Pure Blue, H ~195) for shimmer
-    const bloomWarmH = (h - 20) % 360;
+    // Core-Accent: Brilliant white/near-white for the throat center (star)
+    const coreAccent = getBrilliantWhite(h);
 
-    // Base Morning Glory (L: 0.68, C: 0.20, H: 215)
-    // Adjusted slightly for better separation from Bloom-Light
-    const bloom = { l: clampL(l * 1.05), c, h };
-
-    // Petal Colors (6 Shades)
-
-    // Bloom-Highlight: Very near white, low chroma for purity (L: 0.95)
+    // Bloom-Highlight: Very near white, low chroma for purity
     const bloomHighlight = {
       l: 0.95,
-      c: 0.05,
+      c: 0.06,
       h: h,
     };
 
-    // Bloom-Light: High L, high C, shifted cyan for luminosity (L ~0.80)
-    const bloomLight = {
-      l: clampL(l * 1.15),
-      c: clampC(c * 1.2),
-      h: bloomWarmH,
-    };
-
-    // Bloom-Soft: Muted, luminous edge highlight (L ~0.85)
+    // Bloom-Soft: Muted, luminous edge highlight
     const bloomSoft = {
-      l: clampL(l * 1.25), // Pushing L for visual distinction
-      c: clampC(c * 0.6),
-      h: bloomWarmH,
+      l: clampL(l * smoothStep(1.28)), // More dramatic
+      c: clampC(c * 0.58, "highlight"),
+      h: getHighlightHue(h, "bright"),
     };
 
-    // Bloom-Mid: Primary transition tone, significantly darker than base (L ~0.50)
+    // Bloom-Light: High L, high C, shifted cyan for luminosity
+    const bloomLight = {
+      l: clampL(l * smoothStep(1.18)),
+      c: clampC(c * 1.25, "petal"),
+      h: getHighlightHue(h, "mid"),
+    };
+
+    // Bloom: Base color - adjusted slightly for better separation
+    const bloom = {
+      l: clampL(l * 1.05),
+      c: clampC(c * 1.05),
+      h,
+    };
+
+    // Bloom-Mid: Primary transition tone, significantly darker
     const bloomMid = {
-      l: clampL(l * 0.75),
-      c: clampC(c * 1.1),
+      l: clampL(l * smoothStep(0.78)),
+      c: clampC(c * 1.15, "petal"),
       h: h,
     };
 
-    // Bloom-Dark: Primary shadow color, indigo shift (L ~0.45)
+    // Bloom-Dark: Primary shadow color, indigo shift
     const bloomDark = {
-      l: clampL(l * 0.65),
-      c: clampC(c * 1.3),
-      h: bloomCoolH,
+      l: clampL(l * smoothStep(0.68)),
+      c: clampC(c * 1.35, "shadow"),
+      h: getShadowHue(h, "mid"),
     };
 
-    // Bloom-Deep: Deepest shadow, intense indigo/violet (lowest L, highest C) (L ~0.35)
+    // Bloom-Deep: Deepest shadow, intense indigo/violet (velvety)
     const bloomDeep = {
-      l: clampL(l * 0.5),
-      c: clampC(c * 1.8), // Pushing max chroma for velvety look
-      h: bloomCoolH,
+      l: clampL(l * smoothStep(0.52)),
+      c: clampC(c * 1.85, "shadow"), // Peak saturation
+      h: getShadowHue(h, "deep"),
     };
 
-    // Core Colors (2 Shades)
+    // ----------------------------------------------------
+    // Throat/Core Colors (1 Shade) - Deep Purple Throat
+    // ----------------------------------------------------
 
     // Core-Main: Deepest, most saturated purple for the throat
     const coreMain = {
-      l: clampL(l * 0.35),
-      c: clampC(c * 1.5),
-      h: bloomCoolH,
+      l: clampL(l * 0.38),
+      c: clampC(c * 1.6, "throat"),
+      h: getShadowHue(h, "deep"),
     };
 
-    // Core-Accent: Brilliant white/near-white for the throat center
-    const coreAccent = {
-      l: 0.98,
-      c: 0.05,
-      h: bloomWarmH,
-    };
+    // ----------------------------------------------------
+    // Green Foliage (2 Colors) - Fresh, Bright Greens
+    // ----------------------------------------------------
 
-    // Green Colors (2 Shades)
-    // Fresh, slightly warm greens to contrast the cool blue.
-    const leafH = (h - 100) % 360; // H: 215 - 100 = 115 (Fresh Green)
-    const stemH = (h - 120) % 360; // H: 215 - 120 = 95 (Slightly warmer/muted green)
+    // Fresh, slightly warm greens to contrast the cool blue
+    const leafH = (h - 95 + 360) % 360; // H: 215 - 95 = 120 (Fresh Green)
+    const stemH = (h - 115 + 360) % 360; // H: 215 - 115 = 100 (Slightly warmer/muted)
 
     // Green-Main: Fresh, bright green for foliage
     const greenMain = {
-      l: clampL(l * 0.8),
-      c: clampC(c * 0.6),
+      l: clampL(l * smoothStep(0.82)), // Lighter
+      c: clampC(c * 0.7), // More saturated
       h: leafH,
     };
 
     // Green-Stem: Darker, muted tone for the vine/stalk
     const greenStem = {
-      l: clampL(l * 0.55),
-      c: clampC(c * 0.3),
+      l: clampL(l * smoothStep(0.58)),
+      c: clampC(c * 0.4), // More saturated
       h: stemH,
     };
 
     // ----------------------------------------------------
-    // PERFECTLY 10 DISTINCT MORNING GLORY COLORS (ARRANGED FOR FLOW)
+    // PERFECTLY 11 DISTINCT MORNING GLORY COLORS
+    // Dramatic, velvety, iconic white-star center
     // ----------------------------------------------------
     return [
       // GROUP 1: BLOOM HIGHLIGHTS (Purity and Light)
-      { name: "Core-Accent", value: coreAccent }, // L: 0.98 (Throat White)
-      { name: "Bloom-Highlight", value: bloomHighlight }, // L: 0.95 (Purity)
-      { name: "Bloom-Soft", value: bloomSoft }, // L ~0.85 (Muted edge)
-      { name: "Bloom-Light", value: bloomLight }, // L ~0.80
+      { name: "Core-Accent", value: coreAccent }, // L: 0.98, white star
+      { name: "Bloom-Highlight", value: bloomHighlight }, // L: 0.95, purity
+      { name: "Bloom-Soft", value: bloomSoft }, // L: ~0.87, muted edge
+      { name: "Bloom-Light", value: bloomLight }, // L: ~0.80, cyan
 
       // GROUP 2: PETAL TRANSITIONS (Base to Deep Shadow)
-      { name: "Bloom", value: bloom }, // L ~0.71 (Base)
-      { name: "Bloom-Mid", value: bloomMid }, // L ~0.51
-      { name: "Bloom-Dark", value: bloomDark }, // L ~0.44
-      { name: "Bloom-Deep", value: bloomDeep }, // L ~0.34 (Deep Indigo)
+      { name: "Bloom", value: bloom }, // L: ~0.71, base
+      { name: "Bloom-Mid", value: bloomMid }, // L: ~0.53
+      { name: "Bloom-Dark", value: bloomDark }, // L: ~0.46
+      { name: "Bloom-Deep", value: bloomDeep }, // L: ~0.35, velvety
 
       // GROUP 3: CORE (Throat Contrast)
-      { name: "Core-Main", value: coreMain }, // L ~0.24 (Saturated Deep Purple)
+      { name: "Core-Main", value: coreMain }, // L: ~0.26, deep purple
 
       // GROUP 4: GREENS (Auxiliary Colors)
-      { name: "Green-Main", value: greenMain }, // L ~0.54
-      { name: "Green-Stem", value: greenStem }, // L ~0.37
+      { name: "Green-Main", value: greenMain }, // L: ~0.56
+      { name: "Green-Stem", value: greenStem }, // L: ~0.39
     ];
   } else if (flowerType === "tangerine-gerbera") {
-    // Use the passed in base L, C, H from the surrounding scope (oklch)
     const { l, c, h } = oklch;
 
-    // Helper functions
+    // ----------------------------------------------------
+    // Enhanced Helper Functions
+    // ----------------------------------------------------
     const clampL = (x) => Math.max(0, Math.min(1, x));
-    // Allowing very high chroma for striking, saturated orange
-    const clampC = (x) => Math.max(0, Math.min(0.45, x));
+
+    // Context-aware chroma clamping for vivid, saturated orange
+    const clampC = (x, context = "default") => {
+      const limits = {
+        highlight: 0.5, // Bright, vivid yellow-orange
+        petal: 0.52, // Rich, saturated petals (increased from 0.45)
+        shadow: 0.55, // Deep, intense shadows
+        core: 0.35, // Muted yellow-green core
+        vein: 0.08, // Very low for white veins
+        default: 0.5,
+      };
+      return Math.max(0, Math.min(limits[context] || limits.default, x));
+    };
+
+    // Perceptual easing for smooth, vibrant transitions
+    const smoothStep = (multiplier) => {
+      if (multiplier > 1) {
+        // Highlights: gentle ease (bright, cheerful glow)
+        const t = multiplier - 1;
+        return 1 + Math.pow(t, 1.3);
+      } else {
+        // Shadows: moderate darkening (rich depth)
+        return Math.pow(multiplier, 1.5);
+      }
+    };
+
+    // Natural shadow hue shift for gerbera (toward red-orange/magenta)
+    const getShadowHue = (baseH, depth = "mid") => {
+      // Tangerine/orange flowers shift toward warmer red/magenta in shadow
+      const shifts = {
+        light: -12, // Red-orange
+        mid: -18, // Deeper red
+        deep: -25, // Red-magenta
+      };
+      return (baseH + shifts[depth] + 360) % 360;
+    };
+
+    // Highlight shift (toward bright yellow)
+    const getHighlightHue = (baseH, intensity = "mid") => {
+      const shifts = {
+        soft: +15, // Yellow-orange
+        mid: +22, // Golden yellow
+        bright: +28, // Bright yellow
+      };
+      return (baseH + shifts[intensity]) % 360;
+    };
+
+    // Bright white vein accent (crisp contrast)
+    const getVeinAccent = (baseH) => ({
+      l: 0.96,
+      c: 0.06,
+      h: getHighlightHue(baseH, "bright"),
+    });
 
     // ----------------------------------------------------
-    // Bloom & Core Calculations
+    // Petal Colors (6 Shades) - Vivid Orange Gradient
     // ----------------------------------------------------
 
-    // Shifts shadows RED-WARMER (towards Red/Magenta, H ~35)
-    const bloomCoolH = (h - 15 + 360) % 360;
-    // Shifts highlights YELLOW-WARMER (towards Yellow, H ~70)
-    const bloomWarmH = (h + 20) % 360;
+    // Bloom-Vein: Near-white accent for delicate vein lines
+    const bloomVein = getVeinAccent(h);
 
-    // Base Tangerine Gerbera
+    // Bloom-Bright: Highest L, high C, shifted yellow for brilliance
+    const bloomBright = {
+      l: clampL(l * smoothStep(1.22)),
+      c: clampC(c * 1.15, "highlight"),
+      h: getHighlightHue(h, "bright"),
+    };
+
+    // Bloom-Light: Primary highlight tone
+    const bloomLight = {
+      l: clampL(l * smoothStep(1.12)),
+      c: clampC(c * 1.08),
+      h: getHighlightHue(h, "mid"),
+    };
+
+    // Bloom: Base color (unchanged from input)
     const bloom = { l: l, c: c, h: h };
 
-    // Petal Colors (5 Shades)
-
-    const bloomBright = {
-      l: clampL(l * 1.2),
-      c: clampC(c * 1.1),
-      h: bloomWarmH,
-    };
-
-    const bloomLight = {
-      l: clampL(l * 1.1),
-      c: clampC(c * 1.05),
-      h: bloomWarmH,
-    };
-
-    // Bloom-Mid: ADJUSTED L multiplier for clear step down (L ~0.50)
+    // Bloom-Mid: ADJUSTED L multiplier for clear step down
     const bloomMid = {
-      l: clampL(l * 0.67), // Adjusted from 0.77 to 0.67 for a major drop
-      c: clampC(c * 1.05),
+      l: clampL(l * smoothStep(0.7)), // Adjusted from 0.67 for better flow
+      c: clampC(c * 1.1, "petal"),
       h: h,
     };
 
-    // Bloom-Dark: L multiplier remains at 0.54 (L ~0.40)
+    // Bloom-Dark: Primary shadow, red-orange shift
     const bloomDark = {
-      l: clampL(l * 0.54),
-      c: clampC(c * 1.2),
-      h: bloomCoolH,
+      l: clampL(l * smoothStep(0.57)),
+      c: clampC(c * 1.28, "shadow"),
+      h: getShadowHue(h, "mid"),
     };
 
-    const bloomVein = {
-      l: 0.95,
-      c: 0.05,
-      h: h,
-    };
+    // ----------------------------------------------------
+    // Core & Stamen Colors (4 Shades) - Yellow-Green Center
+    // ----------------------------------------------------
 
-    // Core Colors (3 Shades)
-
-    const coreBase = {
-      l: clampL(l * 0.8),
-      c: clampC(c * 0.4),
-      h: 95,
-    };
-
-    const coreDeep = {
-      l: 0.25,
-      c: 0.05,
-      h: 80,
-    };
-
+    // Core-Stamen: Bright, warm yellow stamen tips
     const coreStamen = {
-      l: 0.88,
-      c: 0.2,
-      h: bloomWarmH,
+      l: 0.9,
+      c: 0.25,
+      h: getHighlightHue(h, "mid"),
     };
 
-    // Green Colors (2 Shades)
-    const leafH = (h + 150) % 360;
-    const stemH = (h + 130) % 360;
+    // Core-Base: Muted yellow-green disc center
+    const coreBase = {
+      l: clampL(l * 0.82),
+      c: clampC(c * 0.45, "core"),
+      h: 95, // Yellow-green
+    };
 
+    // Core-Deep: Dark base of disc
+    const coreDeep = {
+      l: 0.28,
+      c: 0.08, // Slight warmth
+      h: 80, // Warmer brown-yellow
+    };
+
+    // ----------------------------------------------------
+    // Green Foliage (2 Colors) - Fresh Greens
+    // ----------------------------------------------------
+
+    const leafH = (h + 155) % 360; // H: 205 (Fresh Green)
+    const stemH = (h + 135) % 360; // H: 185 (Blue-green)
+
+    // Green-Main: Primary vibrant foliage
     const greenMain = {
-      l: clampL(l * 0.7),
-      c: clampC(c * 0.5),
+      l: clampL(l * smoothStep(0.73)),
+      c: clampC(c * 0.6),
       h: stemH,
     };
 
+    // Green-Stem: Darker stem/shadow
     const greenStem = {
-      l: clampL(l * 0.5),
-      c: clampC(c * 0.3),
+      l: clampL(l * smoothStep(0.55)),
+      c: clampC(c * 0.4),
       h: leafH,
     };
 
     // ----------------------------------------------------
-    // FINAL 10 DISTINCT GERBERA COLORS (ARRANGED FOR FLOW)
-    // New Luminosity Steps (Approx.): 0.75 -> 0.50 -> 0.40
+    // PERFECTLY 11 DISTINCT TANGERINE GERBERA COLORS
+    // Vivid, cheerful, daisy-like aesthetic
     // ----------------------------------------------------
     return [
       // GROUP 1: PETAL HIGHLIGHTS & BASE
-      { name: "Bloom-Vein", value: bloomVein },
-      { name: "Core-Stamen", value: coreStamen },
-      { name: "Bloom-Bright", value: bloomBright },
-      { name: "Bloom-Light", value: bloomLight },
-      { name: "Bloom", value: bloom }, // L: ~0.75
+      { name: "Bloom-Vein", value: bloomVein }, // L: 0.96, white veins
+      { name: "Core-Stamen", value: coreStamen }, // L: 0.90, yellow
+      { name: "Bloom-Bright", value: bloomBright }, // L: ~0.92, brilliant
+      { name: "Bloom-Light", value: bloomLight }, // L: ~0.84
+      { name: "Bloom", value: bloom }, // L: 0.75 (base)
 
       // GROUP 2: SHADOWS & CORE CONTRAST
-      { name: "Bloom-Mid", value: bloomMid }, // L: ~0.50 (Clear 0.25 step down)
-      { name: "Bloom-Dark", value: bloomDark }, // L: ~0.40
-      { name: "Core-Base", value: coreBase },
+      { name: "Bloom-Mid", value: bloomMid }, // L: ~0.53, clear step
+      { name: "Bloom-Dark", value: bloomDark }, // L: ~0.43
+      { name: "Core-Base", value: coreBase }, // L: ~0.62
 
       // GROUP 3: AUXILIARY
-      { name: "Green-Main", value: greenMain },
-      { name: "Green-Stem", value: greenStem },
-      { name: "Core-Deep", value: coreDeep },
+      { name: "Green-Main", value: greenMain }, // L: ~0.55
+      { name: "Green-Stem", value: greenStem }, // L: ~0.41
+      { name: "Core-Deep", value: coreDeep }, // L: 0.28
     ];
   } else if (flowerType === "cymbidium-orchid") {
-    // Use the passed in base L, C, H from the surrounding scope (oklch)
     const { l, c, h } = oklch;
 
-    // Helper functions
+    // ----------------------------------------------------
+    // Enhanced Helper Functions
+    // ----------------------------------------------------
     const clampL = (x) => Math.max(0, Math.min(1, x));
-    // Allowing high chroma for the vivid lime tone
-    const clampC = (x) => Math.max(0, Math.min(0.4, x));
 
-    // ----------------------------------------------------
-    // Bloom & Lip Calculations (6 Shades)
-    // ----------------------------------------------------
-
-    // Shifts shadows COOLER (towards Blue-Green, H ~130) for depth
-    const bloomCoolH = (h + 25) % 360;
-    // Shifts highlights WARMER (towards Yellow-Green/Lime, H ~95) for intensity
-    const bloomWarmH = (h - 10 + 360) % 360;
-
-    // Base Cymbidium Bloom
-    const bloom = { l: l, c: c, h: h };
-
-    // Bloom Colors (4 Shades)
-
-    // Bloom-Bright: Highest L, shifted yellow for brilliant luster (L ~0.90)
-    const bloomBright = {
-      l: clampL(l * 1.12),
-      c: clampC(c * 1.1),
-      h: bloomWarmH,
+    // Context-aware chroma clamping for vivid lime-green orchid
+    const clampC = (x, context = "default") => {
+      const limits = {
+        highlight: 0.45, // Bright lime highlights
+        bloom: 0.48, // Rich, saturated bloom (increased from 0.4)
+        shadow: 0.5, // Deep, saturated shadows
+        lip: 0.42, // Vivid magenta lip accent
+        white: 0.08, // Very low for white throat
+        foliage: 0.35, // Deep green foliage
+        default: 0.45,
+      };
+      return Math.max(0, Math.min(limits[context] || limits.default, x));
     };
 
-    // Bloom-Light: Primary highlight tone, L ~0.84
-    const bloomLight = {
-      l: clampL(l * 1.05),
-      c: clampC(c * 1.05),
-      h: bloomWarmH,
+    // Perceptual easing for smooth, exotic transitions
+    const smoothStep = (multiplier) => {
+      if (multiplier > 1) {
+        // Highlights: gentle ease (glossy, waxy glow)
+        const t = multiplier - 1;
+        return 1 + Math.pow(t, 1.3);
+      } else {
+        // Shadows: moderate darkening (rich depth)
+        return Math.pow(multiplier, 1.5);
+      }
     };
 
-    // Bloom-Mid: Clear step down from base (L ~0.68)
-    const bloomMid = {
-      l: clampL(l * 0.85),
-      c: clampC(c * 1.0),
-      h: h,
+    // Natural shadow hue shift for lime orchid (toward deeper green/blue-green)
+    const getShadowHue = (baseH, depth = "mid") => {
+      // Lime/yellow-green flowers shift toward cooler blue-green in shadow
+      const shifts = {
+        light: +20, // Toward cooler green
+        mid: +28, // Blue-green
+        deep: +35, // Deep teal/cyan
+      };
+      return (baseH + shifts[depth]) % 360;
     };
 
-    // Bloom-Shadow: Primary shadow color, cool blue-green shift (L ~0.55)
-    const bloomShadow = {
-      l: clampL(l * 0.68),
-      c: clampC(c * 1.15),
-      h: bloomCoolH,
+    // Highlight shift (toward brighter yellow-green/lime)
+    const getHighlightHue = (baseH, intensity = "mid") => {
+      const shifts = {
+        soft: -8, // Yellow-lime
+        mid: -12, // Bright lime
+        bright: -15, // Yellow
+      };
+      return (baseH + shifts[intensity] + 360) % 360;
     };
 
-    // Lip/Throat Colors (2 Shades)
-
-    // Lip-Main: Brilliant white/near-white for the throat/lip base
-    const lipMain = {
+    // Brilliant white throat (iconic orchid feature)
+    const getBrilliantWhite = (baseH) => ({
       l: 0.98,
       c: 0.05,
+      h: baseH,
+    });
+
+    // ----------------------------------------------------
+    // Bloom Colors (5 Shades) - Luminous Lime Gradient
+    // ----------------------------------------------------
+
+    // Lip-Main: Brilliant white/near-white for the throat/lip base
+    const lipMain = getBrilliantWhite(h);
+
+    // Bloom-Bright: Highest L, shifted yellow for brilliant luster
+    const bloomBright = {
+      l: clampL(l * smoothStep(1.15)),
+      c: clampC(c * 1.15, "highlight"),
+      h: getHighlightHue(h, "bright"),
+    };
+
+    // Bloom-Light: Primary highlight tone
+    const bloomLight = {
+      l: clampL(l * smoothStep(1.08)),
+      c: clampC(c * 1.08),
+      h: getHighlightHue(h, "mid"),
+    };
+
+    // Bloom: Base color (unchanged from input)
+    const bloom = { l: l, c: c, h: h };
+
+    // Bloom-Mid: Clear step down from base
+    const bloomMid = {
+      l: clampL(l * smoothStep(0.88)),
+      c: clampC(c * 1.05, "bloom"),
       h: h,
     };
+
+    // Bloom-Shadow: Primary shadow color, cool blue-green shift
+    const bloomShadow = {
+      l: clampL(l * smoothStep(0.72)),
+      c: clampC(c * 1.2, "shadow"),
+      h: getShadowHue(h, "mid"),
+    };
+
+    // ----------------------------------------------------
+    // Lip/Accent Colors (1 Shade) - Deep Magenta Contrast
+    // ----------------------------------------------------
 
     // Lip-Accent: Deep magenta/red spot for high contrast on the lip
     const lipAccent = {
-      l: 0.45,
-      c: 0.35,
+      l: 0.48,
+      c: 0.4, // High saturation for vivid contrast
       h: 340, // Deep Magenta/Red hue
     };
 
     // ----------------------------------------------------
-    // Green & Auxiliary Colors (4 Shades)
+    // Green Foliage (4 Shades) - Deep, Saturated Greens
     // ----------------------------------------------------
 
-    // Since the BLOOM is green, the auxiliary colors must be dramatically cooler/darker.
-    const leafH = (h + 100) % 360; // H: 205 (Deep, cool blue-green)
-    const stemH = (h + 120) % 360; // H: 225 (Deep, muted blue/teal)
+    // Since the BLOOM is green, foliage must be dramatically darker/cooler
+    const leafH = (h + 105) % 360; // H: 210 (Deep, cool blue-green)
+    const stemH = (h + 125) % 360; // H: 230 (Deep, muted blue/teal)
 
     // Green-Main: Very dark, saturated blue-green for leaves
     const greenMain = {
-      l: clampL(l * 0.55),
-      c: clampC(c * 1.5), // Pushing chroma for a rich, jewel tone contrast
+      l: clampL(l * smoothStep(0.6)),
+      c: clampC(c * 1.8, "foliage"), // Pushing chroma for rich contrast
       h: leafH,
     };
 
     // Green-Stem: Darkest, most muted blue for pseudobulb/shadows
     const greenStem = {
-      l: clampL(l * 0.35),
-      c: clampC(c * 0.8),
+      l: clampL(l * smoothStep(0.42)),
+      c: clampC(c * 1.2, "foliage"),
       h: stemH,
     };
 
+    // Core-Deep: Re-using lip accent for core dark spot
+    const coreDeep = lipAccent;
+
     // ----------------------------------------------------
-    // FINAL 10 DISTINCT CYMBIDIUM ORCHID COLORS (ARRANGED FOR FLOW)
+    // PERFECTLY 11 DISTINCT CYMBIDIUM ORCHID COLORS
+    // Exotic, lime-green, high-contrast aesthetic
     // ----------------------------------------------------
     return [
       // GROUP 1: BLOOM HIGHLIGHTS & ACCENTS
-      { name: "Lip-Main", value: lipMain },
-      { name: "Bloom-Bright", value: bloomBright },
-      { name: "Lip-Accent", value: lipAccent }, // High contrast dot
-      { name: "Bloom-Light", value: bloomLight },
-      { name: "Bloom", value: bloom },
+      { name: "Lip-Main", value: lipMain }, // L: 0.98, white throat
+      { name: "Bloom-Bright", value: bloomBright }, // L: ~0.92, yellow-lime
+      { name: "Lip-Accent", value: lipAccent }, // L: 0.48, magenta spot
+      { name: "Bloom-Light", value: bloomLight }, // L: ~0.86
 
-      // GROUP 2: BLOOM SHADOWS & GREENS
-      { name: "Bloom-Mid", value: bloomMid },
-      { name: "Bloom-Shadow", value: bloomShadow },
-      { name: "Green-Main", value: greenMain }, // Deep Saturated Blue-Green
-      { name: "Green-Stem", value: greenStem }, // Deepest Blue/Teal
+      // GROUP 2: BLOOM BASE & SHADOWS
+      { name: "Bloom", value: bloom }, // L: 0.80 (base)
+      { name: "Bloom-Mid", value: bloomMid }, // L: ~0.70
+      { name: "Bloom-Shadow", value: bloomShadow }, // L: ~0.58
 
-      // GROUP 3: CORE
-      { name: "Core-Deep", value: lipAccent }, // Re-using lip accent for core dark spot
+      // GROUP 3: DEEP FOLIAGE (High Contrast)
+      { name: "Green-Main", value: greenMain }, // L: ~0.48, saturated
+      { name: "Green-Stem", value: greenStem }, // L: ~0.34, deepest
+
+      // GROUP 4: CORE
+      { name: "Core-Deep", value: coreDeep }, // L: 0.48, magenta
     ];
   } else if (flowerType === "chocolateCosmos") {
-    // Base OKLCH set to: L: 0.35, C: 0.25, H: 15 (Deep Oxblood Red)
-    // This is the input that will be read from the surrounding scope { l, c, h }
     const { l, c, h } = oklch;
 
-    // Helper functions
-    const clampL = (x) => Math.max(0.1, Math.min(0.8, x)); // Restricted L range for dark palette
-    const clampC = (x) => Math.max(0.05, Math.min(0.3, x)); // Restricted C range
+    // ----------------------------------------------------
+    // Enhanced Helper Functions
+    // ----------------------------------------------------
+    const clampL = (x) => Math.max(0.1, Math.min(0.8, x)); // Restricted L for dark palette
+    const clampC = (x) => Math.max(0.05, Math.min(0.35, x)); // Restricted C for muted aesthetic
 
-    // --- Hue Relationships (Fixed offsets for botanical accuracy) ---
-    // Petal Hues: Stay tightly clustered around 15 degrees for oxblood look
-    const bloomCoolH = (h - 10 + 360) % 360; // H: ~5 (Burgundy)
-    const bloomWarmH = (h + 10) % 360; // H: ~25 (Brownish-Red)
+    // Perceptual easing for smooth, velvety transitions
+    const smoothStep = (multiplier) => {
+      if (multiplier > 1) {
+        // Highlights: gentle ease (soft, dusty glow)
+        const t = multiplier - 1;
+        return 1 + Math.pow(t, 1.5);
+      } else {
+        // Shadows: moderate darkening (rich velvet)
+        return Math.pow(multiplier, 1.4);
+      }
+    };
 
-    // Core/Brown Hue: Needs to be near H=40 for warmth, but must scale from the base H
-    const coreH = (h + 25) % 360; // e.g., 15 + 25 = 40 (Warm Brown)
+    // Natural shadow hue shift for oxblood/burgundy (toward cooler burgundy/plum)
+    const getShadowHue = (baseH, depth = "mid") => {
+      // Deep red flowers shift slightly toward cooler burgundy in shadow
+      const shifts = {
+        light: -8, // Subtle burgundy
+        mid: -12, // Deeper burgundy
+        deep: -18, // Cool burgundy/plum
+      };
+      return (baseH + shifts[depth] + 360) % 360;
+    };
 
-    // Leaf Hues: Must be in the Muted Olive range (H 110-130).
-    // Use a static value, but allow L/C to scale from base.
-    const leafH = 120; // Muted olive
-    const stemH = 130; // Slightly deeper olive
+    // Highlight shift (toward warmer, wine-red)
+    const getHighlightHue = (baseH, intensity = "mid") => {
+      const shifts = {
+        soft: +8, // Warmer red
+        mid: +12, // Wine-red
+        bright: +15, // Bright wine (H: ~30, approaching red-orange)
+      };
+      return (baseH + shifts[intensity]) % 360;
+    };
 
-    // Base Chocolate Cosmos Petal
-    const bloom = { l: l, c: c, h: h };
+    // Chocolate brown hue (essential neutral)
+    const chocolateH = (h + 28) % 360; // H: ~43 (Warm Brown)
+
+    // Muted olive hue (for foliage)
+    const oliveH = 120; // Fixed muted olive
 
     // ----------------------------------------------------
-    // Petal Colors (5 Shades)
+    // Petal Colors (6 Shades) - Oxblood/Maroon Velvet
     // ----------------------------------------------------
 
-    // Bloom-Highlight: The lightest point (L multiplier must be high)
+    // Bloom-Highlight: The lightest point (wine-red glow)
     const bloomHighlight = {
-      l: clampL(l * 1.4),
-      c: clampC(c * 0.75), // Significantly lower C to prevent too much saturation
-      h: 355, // Fixed H near 355 for wine-red highlight (per final requirements)
+      l: clampL(l * smoothStep(1.55)), // Increased from 1.4
+      c: clampC(c * 0.7), // Lowered C for dusty, muted look
+      h: getHighlightHue(h, "bright"), // H: ~30 (Wine-red, approaching red-orange)
     };
 
     // Bloom-Light: Primary light tone
     const bloomLight = {
-      l: clampL(l * 1.15),
-      c: clampC(c * 0.9),
+      l: clampL(l * smoothStep(1.25)),
+      c: clampC(c * 0.85),
+      h: getHighlightHue(h, "mid"),
+    };
+
+    // Bloom: Base color (unchanged from input)
+    const bloom = { l: l, c: c, h: h };
+
+    // Bloom-Mid: Transition tone with slight saturation boost
+    const bloomMid = {
+      l: clampL(l * smoothStep(0.85)),
+      c: clampC(c * 1.1),
       h: h,
     };
 
-    // Bloom-Deep: Primary shadow color
+    // Bloom-Deep: Primary shadow color (velvet texture)
     const bloomDeep = {
-      l: clampL(l * 0.7),
-      c: clampC(c * 1.2), // Increased C for velvet texture
-      h: bloomCoolH,
+      l: clampL(l * smoothStep(0.68)),
+      c: clampC(c * 1.25), // Increased for velvet richness
+      h: getShadowHue(h, "mid"),
     };
 
     // Bloom-Muted: Near-black tone
     const bloomMuted = {
-      l: clampL(l * 0.45), // Always dark, but scales
-      c: clampC(c * 0.3),
-      h: bloomCoolH,
+      l: clampL(l * smoothStep(0.48)),
+      c: clampC(c * 0.35), // Low C for muted, dark look
+      h: getShadowHue(h, "deep"),
     };
 
     // ----------------------------------------------------
-    // Core/Center Colors (2 Shades)
+    // Core/Center Colors (2 Shades) - Chocolate Brown
     // ----------------------------------------------------
 
-    // Core-Brown: The essential low-chroma "Chocolate" neutral brown.
-    // L scales from base L; C is kept very low. H is warm brown.
+    // Core-Brown: The essential low-chroma "Chocolate" neutral brown
     const coreBrown = {
-      l: clampL(l * 1.15), // Slightly lighter L than bloom base
-      c: clampC(c * 0.2), // Very low C multiplier (e.g. 0.25 * 0.2 = 0.05)
-      h: coreH,
+      l: clampL(l * 1.25), // Lighter for visibility
+      c: clampC(c * 0.25), // Very low C (e.g. 0.18 * 0.25 = 0.045)
+      h: chocolateH,
     };
 
-    // Core-Stamen: Darkest point in the core (not a bright accent)
+    // Core-Stamen: Darkest point in the core
     const coreStamen = {
-      l: clampL(l * 0.6),
-      c: clampC(c * 0.4),
-      h: bloomCoolH,
+      l: clampL(l * 0.65),
+      c: clampC(c * 0.45),
+      h: getShadowHue(h, "mid"),
     };
 
     // ----------------------------------------------------
-    // Green & Auxiliary Colors (3 Shades)
+    // Green & Auxiliary Colors (2 Shades) - Muted Olive
     // ----------------------------------------------------
 
-    // Green-Main: Muted olive leaf green. L/C scale from bloom base.
+    // Green-Main: Muted olive leaf green
     const greenMain = {
-      l: clampL(l * 1.5),
-      c: clampC(c * 0.3), // Low Chroma for "Muted" look
-      h: leafH,
+      l: clampL(l * 1.8), // Much lighter
+      c: clampC(c * 0.4), // More saturated
+      h: oliveH,
     };
 
-    // Green-Shadow: Dark stem shadow.
+    // Green-Shadow: Dark stem shadow
     const greenShadow = {
-      l: clampL(l * 1.1),
-      c: clampC(c * 0.2),
-      h: stemH,
-    };
-
-    // Earth-Dust: Muted, cool grey-brown for soil/dust
-    const earthDust = {
       l: clampL(l * 1.3),
-      c: clampC(c * 0.15),
-      h: 100, // Near-neutral
+      c: clampC(c * 0.28), // More saturated
+      h: oliveH + 10, // Slightly deeper olive
     };
 
     // ----------------------------------------------------
-    // FINAL 10 DISTINCT CHOCOLATE COSMOS COLORS (ARRANGED FOR FLOW)
+    // PERFECTLY 10 DISTINCT CHOCOLATE COSMOS COLORS
+    // Dark, velvety, sophisticated aesthetic
     // ----------------------------------------------------
     return [
       // GROUP 1: BLOOM HIGHLIGHTS & BASE (Oxblood/Maroon)
-      { name: "Bloom-Highlight", value: bloomHighlight },
-      { name: "Bloom-Light", value: bloomLight },
-      { name: "Bloom", value: bloom },
-      { name: "Bloom-Deep", value: bloomDeep },
-      { name: "Bloom-Muted", value: bloomMuted },
+      { name: "Bloom-Highlight", value: bloomHighlight }, // L: ~0.47, wine-red
+      { name: "Bloom-Light", value: bloomLight }, // L: ~0.38
+      { name: "Bloom", value: bloom }, // L: 0.30 (base)
+      { name: "Bloom-Mid", value: bloomMid }, // L: ~0.26
+      { name: "Bloom-Deep", value: bloomDeep }, // L: ~0.20
 
-      // GROUP 2: CORE & NEUTRALS
-      { name: "Core-Brown", value: coreBrown }, // The distinct Chocolate Brown
-      { name: "Core-Stamen", value: coreStamen }, // Darkest Core Point
+      // GROUP 2: SHADOWS & CORE
+      { name: "Bloom-Muted", value: bloomMuted }, // L: ~0.14, near-black
+      { name: "Core-Brown", value: coreBrown }, // L: ~0.38, chocolate
+      { name: "Core-Stamen", value: coreStamen }, // L: ~0.20
 
       // GROUP 3: LEAVES & AUXILIARY (Muted Olive Greens)
-      { name: "Green-Main", value: greenMain },
-      { name: "Green-Shadow", value: greenShadow },
-      { name: "Earth-Dust", value: earthDust },
+      { name: "Green-Main", value: greenMain }, // L: ~0.54
+      { name: "Green-Shadow", value: greenShadow }, // L: ~0.39
     ];
   } else if (flowerType === "birdOfParadise") {
     const { l, c, h } = oklch;
 
-    // Helper functions
-    const clampL = (x) => Math.max(0.1, Math.min(0.9, x));
-    const clampC = (x) => Math.max(0.05, Math.min(0.4, x));
-
-    // --- Hue Relationships ---
-    // Shifts shadows RED-WARMER (towards Red, H ~40)
-    const bloomCoolH = (h - 15 + 360) % 360;
-    // Shifts highlights YELLOW-WARMER (towards Yellow-Orange, H ~70)
-    const bloomWarmH = (h + 15) % 360;
-
-    const contrastH = 260; // Bluebell Blue hue
-
-    // Base Orange Sepal
-    const bloom = { l: l, c: c, h: h };
-
     // ----------------------------------------------------
-    // Orange Sepal Colors (4 Shades)
+    // Enhanced Helper Functions
     // ----------------------------------------------------
+    const clampL = (x) => Math.max(0.1, Math.min(0.95, x));
+    const clampC = (x) => Math.max(0.05, Math.min(0.55, x)); // Increased for vivid colors
 
-    const bloomHighlight = {
-      l: clampL(l * 1.15),
-      c: clampC(c * 1.05),
-      h: bloomWarmH,
+    // Perceptual easing for smooth, dramatic transitions
+    const smoothStep = (multiplier) => {
+      if (multiplier > 1) {
+        // Highlights: gentle ease (bright, tropical glow)
+        const t = multiplier - 1;
+        return 1 + Math.pow(t, 1.3);
+      } else {
+        // Shadows: moderate darkening (rich depth)
+        return Math.pow(multiplier, 1.5);
+      }
     };
 
+    // Natural shadow hue shift for orange (toward red/brown)
+    const getShadowHue = (baseH, depth = "mid") => {
+      // Orange flowers shift toward warmer red/brown in shadow
+      const shifts = {
+        light: -12, // Red-orange
+        mid: -18, // Deeper red
+        deep: -25, // Red-brown
+      };
+      return (baseH + shifts[depth] + 360) % 360;
+    };
+
+    // Highlight shift (toward bright yellow-orange)
+    const getHighlightHue = (baseH, intensity = "mid") => {
+      const shifts = {
+        soft: +12, // Yellow-orange
+        mid: +18, // Golden yellow
+        bright: +25, // Bright yellow
+      };
+      return (baseH + shifts[intensity]) % 360;
+    };
+
+    // Blue/purple contrast hue (for the exotic "bird" element)
+    const contrastH = 260; // Bluebell Blue/Violet
+
+    // ----------------------------------------------------
+    // Orange Sepal Colors (5 Shades) - Vivid Orange Flame
+    // ----------------------------------------------------
+
+    // Bloom-Highlight: Brightest, shifted yellow for luminescence
+    const bloomHighlight = {
+      l: clampL(l * smoothStep(1.18)),
+      c: clampC(c * 1.1),
+      h: getHighlightHue(h, "bright"),
+    };
+
+    // Bloom-Light: Primary luminous tone
     const bloomLight = {
-      l: clampL(l * 1.08),
-      c: clampC(c * 1.0),
+      l: clampL(l * smoothStep(1.1)),
+      c: clampC(c * 1.05),
+      h: getHighlightHue(h, "mid"),
+    };
+
+    // Bloom: Base color (unchanged from input)
+    const bloom = { l: l, c: c, h: h };
+
+    // Bloom-Mid: Transition tone with slight saturation boost
+    const bloomMid = {
+      l: clampL(l * smoothStep(0.85)),
+      c: clampC(c * 1.1),
       h: h,
     };
 
-    // Bloom-Shadow: ADJUSTED L multiplier to 0.65 for clear contrast (L ~0.45)
+    // Bloom-Shadow: ADJUSTED L multiplier for clear contrast
     const bloomShadow = {
-      l: clampL(l * 0.65), // Adjusted from 0.78
-      c: clampC(c * 1.15),
-      h: bloomCoolH,
-    };
-
-    const spatheBase = {
-      l: clampL(l * 1.2), // L ~0.84
-      c: clampC(c * 0.4),
-      h: 80, // Yellow-Green
+      l: clampL(l * smoothStep(0.68)), // Adjusted from 0.65
+      c: clampC(c * 1.2),
+      h: getShadowHue(h, "mid"),
     };
 
     // ----------------------------------------------------
-    // Blue/Purple Contrast & Core (3 Shades)
+    // Blue/Purple Contrast & Spathe (3 Shades) - Exotic Accent
     // ----------------------------------------------------
 
+    // Contrast-Main: Rich, saturated blue/violet for the "bird" petals
     const contrastMain = {
-      l: clampL(l * 0.72), // Scales down L
-      c: clampC(c * 0.9), // Scales down C slightly
+      l: clampL(l * 0.75),
+      c: clampC(c * 1.0), // Increased from 0.9
       h: contrastH,
     };
 
+    // Contrast-Deep: Deepest blue/purple shadow
     const contrastDeep = {
-      l: 0.2,
-      c: 0.15,
+      l: 0.25,
+      c: 0.2, // Increased from 0.15
       h: contrastH,
     };
 
-    const coreAccent = {
-      l: 0.95,
-      c: 0.05,
-      h: 90, // Yellow-Neutral
+    // Spathe-Base: Yellow-green protective bract
+    const spatheBase = {
+      l: clampL(l * 1.25),
+      c: clampC(c * 0.45),
+      h: 85, // Yellow-Green (adjusted from 80)
     };
 
     // ----------------------------------------------------
-    // Green Foliage (3 Shades)
+    // Green Foliage (2 Shades) - Tropical Greens
     // ----------------------------------------------------
 
     const leafH = 150; // Standard Leafy Green
     const stemH = 180; // Dark Cyan-Green
 
+    // Green-Main: Primary vibrant tropical foliage
     const greenMain = {
-      l: clampL(l * 0.8),
-      c: clampC(c * 0.4),
+      l: clampL(l * smoothStep(0.85)), // Lighter
+      c: clampC(c * 0.5), // More saturated
       h: leafH,
     };
 
+    // Green-Stem: Darker stem/shadow
     const greenStem = {
-      l: clampL(l * 0.5),
-      c: clampC(c * 0.25),
+      l: clampL(l * smoothStep(0.58)),
+      c: clampC(c * 0.35), // More saturated
       h: stemH,
     };
 
+    // Core-Accent: Near-white highlight accent
+    const coreAccent = {
+      l: 0.96,
+      c: 0.08,
+      h: 90, // Yellow-Neutral
+    };
+
     // ----------------------------------------------------
-    // FINAL 10 DISTINCT BIRD OF PARADISE COLORS
-    // L Progression (Orange): 0.70 -> 0.45 (Clear contrast now)
+    // PERFECTLY 10 DISTINCT BIRD OF PARADISE COLORS
+    // Exotic, tropical, high-contrast aesthetic
     // ----------------------------------------------------
     return [
-      // GROUP 1: ORANGE BLOOM
-      { name: "Bloom-Highlight", value: bloomHighlight },
-      { name: "Bloom-Light", value: bloomLight },
-      { name: "Bloom", value: bloom },
-      { name: "Bloom-Shadow", value: bloomShadow },
+      // GROUP 1: ORANGE BLOOM (Fire-like gradient)
+      { name: "Bloom-Highlight", value: bloomHighlight }, // L: ~0.83, yellow
+      { name: "Bloom-Light", value: bloomLight }, // L: ~0.77
+      { name: "Bloom", value: bloom }, // L: 0.70 (base)
+      { name: "Bloom-Mid", value: bloomMid }, // L: ~0.60
+      { name: "Bloom-Shadow", value: bloomShadow }, // L: ~0.48
 
       // GROUP 2: SPATHE & CONTRAST (BLUE/PURPLE)
-      { name: "Contrast-Main", value: contrastMain },
-      { name: "Contrast-Deep", value: contrastDeep },
-      { name: "Spathe-Base", value: spatheBase },
+      { name: "Contrast-Main", value: contrastMain }, // L: ~0.53, blue
+      { name: "Contrast-Deep", value: contrastDeep }, // L: 0.25, deep
+      { name: "Spathe-Base", value: spatheBase }, // L: ~0.88, yellow-green
 
       // GROUP 3: GREENS & ACCENTS
-      { name: "Green-Main", value: greenMain },
-      { name: "Green-Stem", value: greenStem },
-      { name: "Core-Accent", value: coreAccent },
+      { name: "Green-Main", value: greenMain }, // L: ~0.60
+      { name: "Green-Stem", value: greenStem }, // L: ~0.41
+      { name: "Core-Accent", value: coreAccent }, // L: 0.96, white
     ];
   } else if (flowerType === "passionFlower") {
-    // Base OKLCH set to: L: 0.90, C: 0.08, H: 280 (Pale Lavender)
     const { l, c, h } = oklch;
 
-    // Helper functions
+    // ----------------------------------------------------
+    // Enhanced Helper Functions
+    // ----------------------------------------------------
     const clampL = (x) => Math.max(0.1, Math.min(0.98, x));
-    const clampC = (x) => Math.max(0.02, Math.min(0.35, x));
+    const clampC = (x) => Math.max(0.02, Math.min(0.42, x)); // Increased from 0.35
 
-    // --- Hue Relationships ---
-    // Shifts petals slightly WARMER (towards Pink/Magenta, H ~300) for soft glow
-    const bloomWarmH = (h + 20) % 360;
+    // Perceptual easing for smooth, dramatic transitions
+    const smoothStep = (multiplier) => {
+      if (multiplier > 1) {
+        // Highlights: gentle ease (soft, luminous glow)
+        const t = multiplier - 1;
+        return 1 + Math.pow(t, 1.6); // Gentler for ethereal look
+      } else {
+        // Shadows: gentle darkening (soft, not harsh)
+        return Math.pow(multiplier, 1.3);
+      }
+    };
 
-    // The essential contrast color: Deep, saturated Violet/Blue for filaments
-    const filamentH = 250; // Deep Blue-Violet
-    // Secondary filament hue: Magenta for contrast banding
-    const filamentAccentH = 320; // Vivid Magenta
+    // Highlight shift (toward slightly warmer pink/magenta for soft glow)
+    const getHighlightHue = (baseH, intensity = "mid") => {
+      const shifts = {
+        soft: +15, // Warm lavender-pink
+        mid: +20, // Pink-magenta
+        bright: +25, // Warm magenta
+      };
+      return (baseH + shifts[intensity]) % 360;
+    };
 
-    // Base Pale Petal
-    const bloom = { l: l, c: c, h: h };
+    // Filament contrast colors (the exotic corona)
+    const filamentH = 250; // Deep Blue-Violet (cooler than base)
+    const filamentAccentH = 320; // Vivid Magenta (warm contrast)
+
+    // Core colors
+    const antherH = 90; // Bright Yellow (pollen)
+    const stigmaH = 150; // Green (center structure)
 
     // ----------------------------------------------------
-    // Petal Colors (4 Shades)
+    // Petal Colors (5 Shades) - Pale Lavender/White
     // ----------------------------------------------------
 
-    // Bloom-Purity: Near-white for the purest parts (L ~0.95)
+    // Bloom-Purity: Near-white for the purest parts
     const bloomPurity = {
-      l: 0.95,
+      l: 0.96,
       c: 0.03,
       h: h,
     };
 
-    // Bloom-Light: Primary luminous tone, slightly warmer (L ~0.92)
+    // Bloom-Light: Primary luminous tone, slightly warmer
     const bloomLight = {
-      l: clampL(l * 1.02),
+      l: clampL(l * smoothStep(1.03)),
+      c: clampC(c * 1.15),
+      h: getHighlightHue(h, "mid"),
+    };
+
+    // Bloom: Base color (unchanged from input)
+    const bloom = { l: l, c: c, h: h };
+
+    // Bloom-Mid: Transition tone with slight saturation
+    const bloomMid = {
+      l: clampL(l * smoothStep(0.95)),
       c: clampC(c * 1.1),
-      h: bloomWarmH,
+      h: h,
     };
 
-    // Bloom-Shadow: Subtle shade on the white petals (L ~0.80)
+    // Bloom-Shadow: Subtle shade on the white petals
     const bloomShadow = {
-      l: clampL(l * 0.9),
-      c: clampC(c * 1.2), // Slight Chroma increase for shadow visibility
-      h: h,
-    };
-
-    // Petal-Vein: Darker, muted accent for the petal base/sepal
-    const petalVein = {
-      l: clampL(l * 0.75),
-      c: clampC(c * 0.8),
+      l: clampL(l * smoothStep(0.88)),
+      c: clampC(c * 1.25), // Increased for visibility
       h: h,
     };
 
     // ----------------------------------------------------
-    // Corona/Filament & Core (4 Shades)
+    // Corona/Filament Colors (3 Shades) - The Exotic Crown
     // ----------------------------------------------------
 
-    // Filament-Main: Deepest, most saturated violet (L ~0.40)
+    // Filament-Main: Deepest, most saturated violet (outer ring)
     const filamentMain = {
-      l: 0.4,
-      c: 0.3,
+      l: 0.45, // Slightly lighter for visibility
+      c: 0.35, // Increased from 0.30
       h: filamentH,
     };
 
-    // Filament-Accent: The vivid magenta band (L ~0.65)
+    // Filament-Accent: The vivid magenta band (middle ring)
     const filamentAccent = {
-      l: 0.65,
-      c: 0.35,
+      l: 0.68, // Slightly lighter
+      c: 0.4, // Increased from 0.35
       h: filamentAccentH,
     };
 
+    // Filament-Tip: Lighter tips of filaments (inner ring)
+    const filamentTip = {
+      l: 0.82,
+      c: 0.25,
+      h: filamentH,
+    };
+
+    // ----------------------------------------------------
+    // Core/Center Colors (2 Shades) - Anther & Stigma
+    // ----------------------------------------------------
+
     // Core-Anther: Bright yellow/gold for the pollen-bearing anthers
     const coreAnther = {
-      l: 0.85,
-      c: 0.2,
-      h: 90, // Pure Yellow
+      l: 0.88,
+      c: 0.28, // Increased from 0.20
+      h: antherH,
     };
 
     // Core-Stigma: Deep green spot/tip for the stigma
     const coreStigma = {
-      l: 0.55,
-      c: 0.15,
-      h: 150, // Standard Green
+      l: 0.6, // Lighter for visibility
+      c: 0.2, // Increased from 0.15
+      h: stigmaH,
     };
 
     // ----------------------------------------------------
-    // Green Foliage (2 Shades)
+    // Green Foliage (2 Shades) - Cool Blue-Green
     // ----------------------------------------------------
 
-    // Cool-leaning greens to harmonize with the violet bloom.
     const leafH = 160; // Blue-Green for coolness
 
-    // Green-Main: Primary foliage green (L ~0.60)
+    // Green-Main: Primary foliage green
     const greenMain = {
-      l: clampL(l * 0.65),
-      c: clampC(c * 1.2),
+      l: clampL(l * smoothStep(0.68)),
+      c: clampC(c * 1.4), // Increased
       h: leafH,
     };
 
-    // Green-Vine: Darker shade for the woody vine/shadow (L ~0.40)
+    // Green-Vine: Darker shade for the woody vine/shadow
     const greenVine = {
-      l: clampL(l * 0.45),
-      c: clampC(c * 0.5),
+      l: clampL(l * smoothStep(0.5)),
+      c: clampC(c * 0.8), // Increased
       h: leafH,
     };
 
     // ----------------------------------------------------
-    // FINAL 10 DISTINCT PASSION FLOWER COLORS
+    // PERFECTLY 11 DISTINCT PASSION FLOWER COLORS
+    // Exotic, complex, intricate aesthetic
     // ----------------------------------------------------
     return [
-      // GROUP 1: PETALS & LUMINESCENCE
-      { name: "Bloom-Purity", value: bloomPurity },
-      { name: "Core-Anther", value: coreAnther },
-      { name: "Bloom-Light", value: bloomLight },
-      { name: "Bloom", value: bloom },
-      { name: "Bloom-Shadow", value: bloomShadow },
+      // GROUP 1: PETALS & LUMINESCENCE (Pale lavender/white)
+      { name: "Bloom-Purity", value: bloomPurity }, // L: 0.96, near-white
+      { name: "Core-Anther", value: coreAnther }, // L: 0.88, yellow
+      { name: "Bloom-Light", value: bloomLight }, // L: ~0.93
+      { name: "Bloom", value: bloom }, // L: 0.90 (base)
+      { name: "Bloom-Mid", value: bloomMid }, // L: ~0.86
 
-      // GROUP 2: FILAMENTS & CORE
-      { name: "Filament-Accent", value: filamentAccent }, // Vivid Magenta band
-      { name: "Filament-Main", value: filamentMain }, // Deepest Violet/Blue
-      { name: "Core-Stigma", value: coreStigma },
+      // GROUP 2: SHADOWS
+      { name: "Bloom-Shadow", value: bloomShadow }, // L: ~0.79
 
-      // GROUP 3: GREENS
-      { name: "Green-Main", value: greenMain },
-      { name: "Green-Vine", value: greenVine },
+      // GROUP 3: FILAMENTS & CORE (The exotic crown)
+      { name: "Filament-Tip", value: filamentTip }, // L: 0.82, light violet
+      { name: "Filament-Accent", value: filamentAccent }, // L: 0.68, magenta
+      { name: "Filament-Main", value: filamentMain }, // L: 0.45, deep violet
+      { name: "Core-Stigma", value: coreStigma }, // L: 0.60, green
+
+      // GROUP 4: GREENS
+      { name: "Green-Main", value: greenMain }, // L: ~0.61
+      { name: "Green-Vine", value: greenVine }, // L: ~0.45
     ];
   } else if (flowerType === "kingProtea") {
-    // Base OKLCH set to: L: 0.65, C: 0.15, H: 350 (Muted Rose/Crimson)
     const { l, c, h } = oklch;
 
-    // Helper functions
+    // ----------------------------------------------------
+    // Enhanced Helper Functions
+    // ----------------------------------------------------
     const clampL = (x) => Math.max(0.15, Math.min(0.95, x));
-    const clampC = (x) => Math.max(0.05, Math.min(0.3, x));
+    const clampC = (x) => Math.max(0.05, Math.min(0.38, x)); // Increased from 0.30
 
-    // --- Hue Relationships ---
-    // Shifts shadows COOLER (towards Burgundy, H ~340) for depth
-    const bloomCoolH = (h - 10 + 360) % 360;
-    // Shifts highlights WARMER (towards Peach/Light Red, H ~10) for subtle warmth
-    const bloomWarmH = (h + 20) % 360;
+    // Perceptual easing for smooth, velvety transitions
+    const smoothStep = (multiplier) => {
+      if (multiplier > 1) {
+        // Highlights: gentle ease (soft, dusty glow)
+        const t = multiplier - 1;
+        return 1 + Math.pow(t, 1.6); // Very gentle for dusty look
+      } else {
+        // Shadows: moderate darkening (velvet depth)
+        return Math.pow(multiplier, 1.5);
+      }
+    };
 
-    // Base Rose Bract
+    // Natural shadow hue shift for rose/crimson (toward deeper burgundy)
+    const getShadowHue = (baseH, depth = "mid") => {
+      // Rose/crimson flowers shift toward cooler burgundy/plum in shadow
+      const shifts = {
+        light: -8, // Subtle burgundy
+        mid: -12, // Deeper burgundy
+        deep: -18, // Cool burgundy/plum
+      };
+      return (baseH + shifts[depth] + 360) % 360;
+    };
+
+    // Highlight shift (toward warmer peach/light red)
+    const getHighlightHue = (baseH, intensity = "mid") => {
+      const shifts = {
+        soft: +15, // Peach-pink
+        mid: +20, // Light coral-red
+        bright: +25, // Warm peachy-coral
+      };
+      return (baseH + shifts[intensity]) % 360;
+    };
+
+    // ----------------------------------------------------
+    // Bract & Petal Colors (6 Shades) - Dusty Rose/Crimson
+    // ----------------------------------------------------
+
+    // Bloom-Highlight: Soft, pale blush tip (dusty aesthetic)
+    const bloomHighlight = {
+      l: clampL(l * smoothStep(1.28)), // Increased from 1.25
+      c: clampC(c * 0.65), // Lowered for dusty look
+      h: getHighlightHue(h, "bright"),
+    };
+
+    // Bloom-Light: Primary light tone
+    const bloomLight = {
+      l: clampL(l * smoothStep(1.18)),
+      c: clampC(c * 0.85),
+      h: getHighlightHue(h, "mid"),
+    };
+
+    // Bloom: Base color (unchanged from input)
     const bloom = { l: l, c: c, h: h };
 
-    // ----------------------------------------------------
-    // Bract & Petal Colors (5 Shades)
-    // ----------------------------------------------------
-
-    // Bloom-Highlight: Soft, pale blush tip (L ~0.80)
-    const bloomHighlight = {
-      l: clampL(l * 1.25),
-      c: clampC(c * 0.7), // Lowered C for a pale, dusty look
-      h: bloomWarmH,
-    };
-
-    // Bloom-Light: Primary light tone (L ~0.75)
-    const bloomLight = {
-      l: clampL(l * 1.15),
-      c: clampC(c * 0.9),
-      h: h,
-    };
-
-    // Bloom-Mid: A clear step down from the base (L ~0.55)
+    // Bloom-Mid: A clear step down from the base
     const bloomMid = {
-      l: clampL(l * 0.85),
-      c: clampC(c * 1.05),
+      l: clampL(l * smoothStep(0.88)),
+      c: clampC(c * 1.08),
       h: h,
     };
 
-    // Bloom-Deep: Primary shadow and deep crimson base (L ~0.40)
+    // Bloom-Deep: Primary shadow and deep crimson base
     const bloomDeep = {
-      l: clampL(l * 0.62),
-      c: clampC(c * 1.3), // Increased C for perceived richness/velvet
-      h: bloomCoolH,
+      l: clampL(l * smoothStep(0.65)),
+      c: clampC(c * 1.35), // Increased for richness
+      h: getShadowHue(h, "mid"),
     };
 
-    // Bloom-Velvet: Darkest shadow/vein accent (L ~0.25)
+    // Bloom-Velvet: Darkest shadow/vein accent (velvety)
     const bloomVelvet = {
-      l: clampL(l * 0.4),
-      c: clampC(c * 0.8),
-      h: bloomCoolH,
+      l: clampL(l * smoothStep(0.45)),
+      c: clampC(c * 1.0), // Increased from 0.8
+      h: getShadowHue(h, "deep"),
     };
 
     // ----------------------------------------------------
-    // Core/Fuzz & Stem Colors (5 Shades)
+    // Core/Fuzz & Contrast (4 Shades) - White Fuzz Center
     // ----------------------------------------------------
 
-    // Core-Fuzz: The soft, dense white/cream fuzz at the center (L fixed high)
+    // Core-Fuzz: The soft, dense white/cream fuzz at the center
     const coreFuzz = {
-      l: 0.95,
-      c: 0.05,
-      h: bloomWarmH,
+      l: 0.96, // Slightly lighter
+      c: 0.06, // Slight increase
+      h: getHighlightHue(h, "soft"),
     };
 
-    // Core-Stigma: The tiny, often dark, core center spot
+    // Core-Ring: Transitional ring around the fuzz (muted rose)
+    const coreRing = {
+      l: clampL(l * 0.95),
+      c: clampC(c * 0.5),
+      h: h,
+    };
+
+    // Core-Stigma: The tiny, dark core center spot
     const coreStigma = {
-      l: 0.2,
-      c: 0.1,
-      h: bloomCoolH,
+      l: 0.25, // Slightly lighter
+      c: 0.15, // Increased from 0.10
+      h: getShadowHue(h, "deep"),
     };
 
-    // Green Foliage: Often a dry, blue-green (H 180-200)
-    const leafH = 180; // Muted Cyan-Green
+    // ----------------------------------------------------
+    // Green Foliage (2 Shades) - Muted Blue-Green
+    // ----------------------------------------------------
+
+    const leafH = 180; // Muted Cyan-Green (cooler)
     const stemH = 150; // Standard Green
 
-    // Green-Main: Primary foliage/stem green (L ~0.50)
+    // Green-Main: Primary foliage/stem green
     const greenMain = {
-      l: clampL(l * 0.75),
-      c: clampC(c * 0.4),
+      l: clampL(l * smoothStep(0.78)), // Lighter
+      c: clampC(c * 0.5), // More saturated
       h: stemH,
     };
 
-    // Green-Base: The tough, woody base/stalk (L ~0.40)
+    // Green-Base: The tough, woody base/stalk
     const greenBase = {
-      l: clampL(l * 0.6),
-      c: clampC(c * 0.25),
+      l: clampL(l * smoothStep(0.62)),
+      c: clampC(c * 0.35), // More saturated
       h: leafH,
     };
 
     // ----------------------------------------------------
-    // FINAL 10 DISTINCT KING PROTEA COLORS
+    // PERFECTLY 11 DISTINCT KING PROTEA COLORS
+    // Dusty, velvety, architectural aesthetic
     // ----------------------------------------------------
     return [
       // GROUP 1: HIGHLIGHTS & CORE
-      { name: "Core-Fuzz", value: coreFuzz },
-      { name: "Bloom-Highlight", value: bloomHighlight },
-      { name: "Bloom-Light", value: bloomLight },
+      { name: "Core-Fuzz", value: coreFuzz }, // L: 0.96, white fuzz
+      { name: "Bloom-Highlight", value: bloomHighlight }, // L: ~0.83, dusty blush
+      { name: "Bloom-Light", value: bloomLight }, // L: ~0.77
 
       // GROUP 2: BRACTS (Rose/Crimson)
-      { name: "Bloom", value: bloom },
-      { name: "Bloom-Mid", value: bloomMid },
-      { name: "Bloom-Deep", value: bloomDeep },
-      { name: "Bloom-Velvet", value: bloomVelvet },
+      { name: "Bloom", value: bloom }, // L: 0.65 (base)
+      { name: "Core-Ring", value: coreRing }, // L: ~0.62, muted
+      { name: "Bloom-Mid", value: bloomMid }, // L: ~0.57
+      { name: "Bloom-Deep", value: bloomDeep }, // L: ~0.42
+      { name: "Bloom-Velvet", value: bloomVelvet }, // L: ~0.29
 
       // GROUP 3: AUXILIARY & DARK CORE
-      { name: "Green-Main", value: greenMain },
-      { name: "Green-Base", value: greenBase },
-      { name: "Core-Stigma", value: coreStigma },
-    ];
-  } else if (flowerType === "gardenCosmos") {
-    // Base OKLCH set to: L: 0.78, C: 0.28, H: 320 (Vivid Magenta)
-    const { l, c, h } = oklch;
-
-    // Helper functions
-    const clampL = (x) => Math.max(0.2, Math.min(0.95, x));
-    const clampC = (x) => Math.max(0.05, Math.min(0.4, x));
-
-    // --- Hue Relationships ---
-    // Shifts shadows COOLER (towards Violet, H ~290) for depth
-    const bloomCoolH = (h - 30 + 360) % 360;
-    // Shifts highlights WARMER (towards Red, H ~340) for luminescence
-    const bloomWarmH = (h + 20) % 360;
-
-    // Base Garden Cosmos Petal
-    const bloom = { l: l, c: c, h: h };
-
-    // ----------------------------------------------------
-    // Petal Colors (5 Shades)
-    // ----------------------------------------------------
-
-    // Bloom-Highlight: Very high L, lower C for a soft, luminous edge (L ~0.90)
-    const bloomHighlight = {
-      l: clampL(l * 1.15),
-      c: clampC(c * 0.7),
-      h: bloomWarmH,
-    };
-
-    // Bloom-Light: Primary light tone, pushing L and C for vividness (L ~0.85)
-    const bloomLight = {
-      l: clampL(l * 1.1),
-      c: clampC(c * 1.05),
-      h: h,
-    };
-
-    // Bloom-Mid: Primary shadow step, distinct drop in L (L ~0.65)
-    const bloomMid = {
-      l: clampL(l * 0.83),
-      c: clampC(c * 1.1),
-      h: bloomCoolH,
-    };
-
-    // Bloom-Deep: Deep shadow/vein color (L ~0.50)
-    const bloomDeep = {
-      l: clampL(l * 0.65),
-      c: clampC(c * 1.2),
-      h: bloomCoolH,
-    };
-
-    // Bloom-Vein: Near-white accent for delicate vein lines
-    const bloomVein = {
-      l: 0.95,
-      c: 0.05,
-      h: h,
-    };
-
-    // ----------------------------------------------------
-    // Core/Center Colors (3 Shades)
-    // ----------------------------------------------------
-
-    // Core-Disc: Muted yellow-orange for the dry center disc.
-    const coreDisc = {
-      l: clampL(l * 0.9),
-      c: clampC(c * 0.4),
-      h: 70, // Yellow-Orange for contrast
-    };
-
-    // Core-Deep: Dark, near-black center spot
-    const coreDeep = {
-      l: 0.25,
-      c: 0.1,
-      h: 70,
-    };
-
-    // Core-Accent: Brilliant white center where the petals meet
-    const coreAccent = {
-      l: 0.98,
-      c: 0.03,
-      h: h,
-    };
-
-    // ----------------------------------------------------
-    // Green & Auxiliary Colors (2 Shades)
-    // ----------------------------------------------------
-
-    // Muted, mid-range greens for the delicate foliage
-    const leafH = (h + 160) % 360; // H: 120 (Warm Olive Green)
-
-    // Green-Main: Muted, delicate leaf green
-    const greenMain = {
-      l: clampL(l * 0.7),
-      c: clampC(c * 0.5),
-      h: leafH,
-    };
-
-    // Green-Stem: Darker tone for the slender stem
-    const greenStem = {
-      l: clampL(l * 0.5),
-      c: clampC(c * 0.3),
-      h: leafH,
-    };
-
-    // ----------------------------------------------------
-    // FINAL 10 DISTINCT GARDEN COSMOS COLORS
-    // ----------------------------------------------------
-    return [
-      // GROUP 1: HIGHLIGHTS & ACCENTS
-      { name: "Core-Accent", value: coreAccent },
-      { name: "Bloom-Vein", value: bloomVein },
-      { name: "Bloom-Highlight", value: bloomHighlight },
-
-      // GROUP 2: PETALS
-      { name: "Bloom-Light", value: bloomLight },
-      { name: "Bloom", value: bloom },
-      { name: "Bloom-Mid", value: bloomMid },
-      { name: "Bloom-Deep", value: bloomDeep },
-
-      // GROUP 3: CORE & GREENS
-      { name: "Core-Disc", value: coreDisc },
-      { name: "Green-Main", value: greenMain },
-      { name: "Green-Stem", value: greenStem },
-      { name: "Core-Deep", value: coreDeep },
+      { name: "Green-Main", value: greenMain }, // L: ~0.51
+      { name: "Green-Base", value: greenBase }, // L: ~0.40
+      { name: "Core-Stigma", value: coreStigma }, // L: 0.25
     ];
   } else if (flowerType === "plumeria") {
-    // Base OKLCH set to: L: 0.95, C: 0.05, H: 90 (Luminous Warm White)
     const { l, c, h } = oklch;
 
-    // Helper functions
+    // ----------------------------------------------------
+    // Enhanced Helper Functions
+    // ----------------------------------------------------
     const clampL = (x) => Math.max(0.2, Math.min(0.98, x));
-    const clampC = (x) => Math.max(0.02, Math.min(0.4, x));
+    const clampC = (x) => Math.max(0.02, Math.min(0.45, x)); // Increased from 0.40
 
-    // --- Hue Relationships ---
-    // Shifts shadows COOLER (towards Blue-White, H ~120) for subtle shadow
-    const bloomCoolH = (h + 30) % 360;
+    // Perceptual easing for smooth, waxy transitions
+    const smoothStep = (multiplier) => {
+      if (multiplier > 1) {
+        // Highlights: gentle ease (soft, creamy glow)
+        const t = multiplier - 1;
+        return 1 + Math.pow(t, 1.8); // Very gentle for creamy look
+      } else {
+        // Shadows: gentle darkening (soft, not harsh)
+        return Math.pow(multiplier, 1.2);
+      }
+    };
+
+    // Natural shadow hue shift for warm white (toward cooler blue-white)
+    const getShadowHue = (baseH, depth = "mid") => {
+      // Warm white flowers shift subtly toward cooler tones in shadow
+      const shifts = {
+        light: +25, // Cooler
+        mid: +35, // Blue-white
+        deep: +45, // Cool white-green
+      };
+      return (baseH + shifts[depth]) % 360;
+    };
 
     // The essential contrasting color: Vivid Yellow for the center
     const coreH = 75; // Pure Yellow-Orange for intensity
 
-    // Base Petal White
-    const bloom = { l: l, c: c, h: h };
-
     // ----------------------------------------------------
-    // Petal Colors (4 Shades)
+    // Petal Colors (5 Shades) - Warm Creamy White
     // ----------------------------------------------------
 
-    // Bloom-Purity: The absolute whitest point (L fixed high)
+    // Bloom-Purity: The absolute whitest point
     const bloomPurity = {
       l: 0.98,
       c: 0.02,
       h: h,
     };
 
-    // Bloom-Light: ADJUSTED for distinction (L ~0.98, C ~0.07)
-    // This is now visibly brighter and slightly more saturated than Bloom (L: 0.95, C: 0.05)
+    // Bloom-Light: Primary luminous tone (creamy)
     const bloomLight = {
-      l: clampL(l * 1.03), // Adjusted from 1.01
-      c: clampC(c * 1.4), // Adjusted from 1.0
+      l: clampL(l * smoothStep(1.03)),
+      c: clampC(c * 1.5), // Increased from 1.4
       h: h,
     };
 
-    // Bloom-Shadow: Subtle shadow on the white petals (L ~0.85)
-    const bloomShadow = {
-      l: clampL(l * 0.9),
-      c: clampC(c * 1.5),
-      h: bloomCoolH,
-    };
-
-    // Petal-Vein: Base shadow where petals meet (L ~0.70)
-    const petalVein = {
-      l: clampL(l * 0.75),
-      c: clampC(c * 2.0),
-      h: bloomCoolH,
-    };
-
-    // ----------------------------------------------------
-    // Core/Center & Accent (3 Shades)
-    // ----------------------------------------------------
-
-    // Core-Vivid: The highly saturated, bright yellow center
-    const coreVivid = {
-      l: 0.85,
-      c: 0.35,
-      h: coreH,
-    };
-
-    // Core-Mid: The transition point between yellow and white (L ~0.90)
-    const coreMid = {
-      l: clampL(l * 0.95),
-      c: clampC(c * 3.0),
-      h: coreH,
-    };
-
-    // Core-Deep: The shadow/base of the core (L ~0.65)
-    const coreDeep = {
-      l: clampL(l * 0.7),
-      c: clampC(c * 2.5),
-      h: coreH,
-    };
-
-    // ----------------------------------------------------
-    // Green Foliage (3 Shades)
-    // ----------------------------------------------------
-
-    // Rich, dark greens typical of tropical foliage.
-    const leafH = 150; // Standard Green
-    const stemH = 180; // Dark Blue-Green
-
-    // Green-Main: Primary rich foliage green (L ~0.55)
-    const greenMain = {
-      l: clampL(l * 0.6),
-      c: clampC(c * 4.0),
-      h: leafH,
-    };
-
-    // Green-Stem: Darkest shade for the woody branch (L ~0.35)
-    const greenStem = {
-      l: clampL(l * 0.4),
-      c: clampC(c * 3.0),
-      h: stemH,
-    };
-
-    // ----------------------------------------------------
-    // FINAL 10 DISTINCT PLUMERIA COLORS
-    // ----------------------------------------------------
-    return [
-      // GROUP 1: WHITE PETALS & HIGHLIGHTS
-      { name: "Bloom-Purity", value: bloomPurity }, // L: 0.98, C: 0.02
-      { name: "Bloom-Light", value: bloomLight }, // L: ~0.98, C: ~0.07 (Now Distinct)
-      { name: "Bloom", value: bloom }, // L: 0.95, C: 0.05
-      { name: "Bloom-Shadow", value: bloomShadow }, // L: ~0.85
-
-      // GROUP 2: YELLOW CORE
-      { name: "Core-Vivid", value: coreVivid },
-      { name: "Core-Mid", value: coreMid },
-      { name: "Core-Deep", value: coreDeep },
-
-      // GROUP 3: GREENS & BASE
-      { name: "Petal-Vein", value: petalVein },
-      { name: "Green-Main", value: greenMain },
-      { name: "Green-Stem", value: greenStem },
-    ];
-  } else if (flowerType === "blackPansy") {
-    // Base OKLCH set to: L: 0.25, C: 0.05, H: 280 (Near-Black Violet)
-    const { l, c, h } = oklch;
-
-    // Helper functions
-    const clampL = (x) => Math.max(0.1, Math.min(0.6, x)); // Restricted L for darkness
-    const clampC = (x) => Math.max(0.02, Math.min(0.3, x));
-
-    // --- Hue Relationships ---
-    // Shifts shadows COOLER (towards Blue, H ~250) for maximum depth
-    const bloomCoolH = (h - 30 + 360) % 360;
-    // Shifts highlights WARMER (towards Magenta, H ~310) for subtle sheen
-    const bloomWarmH = (h + 30) % 360;
-
-    // The essential contrasting color: Bright Yellow/Gold for the center
-    const coreH = 90; // Pure Yellow
-
-    // Base Near-Black Petal
+    // Bloom: Base color (unchanged from input)
     const bloom = { l: l, c: c, h: h };
 
-    // ----------------------------------------------------
-    // Petal Colors (5 Shades)
-    // ----------------------------------------------------
-
-    // Bloom-Highlight: The subtle, low-light sheen on the velvet petals (L ~0.35)
-    const bloomHighlight = {
-      l: clampL(l * 1.4),
-      c: clampC(c * 1.5),
-      h: bloomWarmH,
-    };
-
-    // Bloom-Light: The primary illuminated part (L ~0.30)
-    const bloomLight = {
-      l: clampL(l * 1.2),
+    // Bloom-Mid: Subtle transition with gentle saturation
+    const bloomMid = {
+      l: clampL(l * smoothStep(0.97)),
       c: clampC(c * 1.2),
       h: h,
     };
 
-    // Bloom-Deep: The primary shadow area/most saturated look (L ~0.20)
-    const bloomDeep = {
-      l: clampL(l * 0.8),
-      c: clampC(c * 1.8), // Increased C for perceived depth/velvet texture
+    // Bloom-Shadow: Subtle shadow on the white petals
+    const bloomShadow = {
+      l: clampL(l * smoothStep(0.92)),
+      c: clampC(c * 1.6), // Increased from 1.5
+      h: getShadowHue(h, "light"),
+    };
+
+    // ----------------------------------------------------
+    // Core/Center Colors (4 Shades) - Vivid Yellow Gradient
+    // ----------------------------------------------------
+
+    // Core-Vivid: The highly saturated, bright yellow center
+    const coreVivid = {
+      l: 0.88, // Slightly lighter
+      c: 0.4, // Increased from 0.35
+      h: coreH,
+    };
+
+    // Core-Mid: The transition point between yellow and white
+    const coreMid = {
+      l: clampL(l * 0.96),
+      c: clampC(c * 3.5), // Increased from 3.0
+      h: coreH,
+    };
+
+    // Core-Deep: The shadow/base of the core
+    const coreDeep = {
+      l: clampL(l * 0.73),
+      c: clampC(c * 3.0), // Increased from 2.5
+      h: coreH,
+    };
+
+    // Petal-Vein: Base shadow where petals meet (cool-toned)
+    const petalVein = {
+      l: clampL(l * 0.78),
+      c: clampC(c * 2.2), // Increased from 2.0
+      h: getShadowHue(h, "mid"),
+    };
+
+    // ----------------------------------------------------
+    // Green Foliage (2 Shades) - Rich, Dark Tropical Greens
+    // ----------------------------------------------------
+
+    const leafH = 150; // Standard Green
+    const stemH = 180; // Dark Blue-Green
+
+    // Green-Main: Primary rich foliage green
+    const greenMain = {
+      l: clampL(l * smoothStep(0.63)), // Slightly lighter
+      c: clampC(c * 4.5), // Increased from 4.0
+      h: leafH,
+    };
+
+    // Green-Stem: Darkest shade for the woody branch
+    const greenStem = {
+      l: clampL(l * smoothStep(0.45)),
+      c: clampC(c * 3.5), // Increased from 3.0
+      h: stemH,
+    };
+
+    // ----------------------------------------------------
+    // PERFECTLY 10 DISTINCT PLUMERIA COLORS
+    // Creamy, tropical, waxy aesthetic
+    // ----------------------------------------------------
+    return [
+      // GROUP 1: WHITE PETALS & HIGHLIGHTS
+      { name: "Bloom-Purity", value: bloomPurity }, // L: 0.98, pure white
+      { name: "Bloom-Light", value: bloomLight }, // L: ~0.98, creamy
+      { name: "Bloom", value: bloom }, // L: 0.95 (base)
+      { name: "Bloom-Mid", value: bloomMid }, // L: ~0.92
+
+      // GROUP 2: SHADOWS
+      { name: "Bloom-Shadow", value: bloomShadow }, // L: ~0.87
+
+      // GROUP 3: YELLOW CORE GRADIENT
+      { name: "Core-Vivid", value: coreVivid }, // L: 0.88, bright yellow
+      { name: "Core-Mid", value: coreMid }, // L: ~0.91, transition
+      { name: "Core-Deep", value: coreDeep }, // L: ~0.69
+
+      // GROUP 4: GREENS & BASE
+      { name: "Petal-Vein", value: petalVein }, // L: ~0.74, cool shadow
+      { name: "Green-Main", value: greenMain }, // L: ~0.60
+      { name: "Green-Stem", value: greenStem }, // L: ~0.43
+    ];
+  } else if (flowerType === "blackPansy") {
+    const { l, c, h } = oklch;
+
+    // ----------------------------------------------------
+    // Enhanced Helper Functions
+    // ----------------------------------------------------
+    const clampL = (x) => Math.max(0.1, Math.min(0.65, x)); // Restricted L for darkness (raised max)
+    const clampC = (x) => Math.max(0.02, Math.min(0.38, x)); // Increased from 0.30
+
+    // Perceptual easing for smooth, velvety transitions
+    const smoothStep = (multiplier) => {
+      if (multiplier > 1) {
+        // Highlights: gentle ease (soft, velvety sheen)
+        const t = multiplier - 1;
+        return 1 + Math.pow(t, 1.5);
+      } else {
+        // Shadows: moderate darkening (rich velvet)
+        return Math.pow(multiplier, 1.3);
+      }
+    };
+
+    // Natural shadow hue shift for near-black violet (toward deeper blue)
+    const getShadowHue = (baseH, depth = "mid") => {
+      // Near-black violet shifts toward cooler blue for maximum depth
+      const shifts = {
+        light: -25, // Toward blue
+        mid: -35, // Deeper blue
+        deep: -45, // Deep blue-violet
+      };
+      return (baseH + shifts[depth] + 360) % 360;
+    };
+
+    // Highlight shift (toward warmer magenta for subtle sheen)
+    const getHighlightHue = (baseH, intensity = "mid") => {
+      const shifts = {
+        soft: +25, // Warm violet
+        mid: +30, // Magenta-violet
+        bright: +35, // Warm magenta
+      };
+      return (baseH + shifts[intensity]) % 360;
+    };
+
+    // The essential contrasting color: Bright Yellow/Gold for the center eye
+    const coreH = 90; // Pure Yellow
+
+    // ----------------------------------------------------
+    // Petal Colors (6 Shades) - Near-Black Violet Velvet
+    // ----------------------------------------------------
+
+    // Bloom-Highlight: The subtle, low-light sheen on the velvet petals
+    const bloomHighlight = {
+      l: clampL(l * smoothStep(1.5)), // Increased from 1.4
+      c: clampC(c * 1.8), // Increased from 1.5
+      h: getHighlightHue(h, "bright"),
+    };
+
+    // Bloom-Light: The primary illuminated part
+    const bloomLight = {
+      l: clampL(l * smoothStep(1.3)),
+      c: clampC(c * 1.4), // Increased from 1.2
+      h: getHighlightHue(h, "mid"),
+    };
+
+    // Bloom: Base color (unchanged from input)
+    const bloom = { l: l, c: c, h: h };
+
+    // Bloom-Mid: Transition tone with saturation boost
+    const bloomMid = {
+      l: clampL(l * smoothStep(0.9)),
+      c: clampC(c * 1.2),
       h: h,
     };
 
-    // Bloom-Muted: The deepest, near-black fold (L ~0.15)
+    // Bloom-Deep: The primary shadow area/most saturated look
+    const bloomDeep = {
+      l: clampL(l * smoothStep(0.75)),
+      c: clampC(c * 2.0), // Increased from 1.8 for perceived depth/velvet
+      h: h,
+    };
+
+    // Bloom-Muted: The deepest, near-black fold
     const bloomMuted = {
-      l: clampL(l * 0.6),
-      c: clampC(c * 0.5),
-      h: bloomCoolH,
-    };
-
-    // Bloom-Edge: High-contrast, sharp dark edge color (L ~0.10)
-    const bloomEdge = {
-      l: 0.1,
-      c: 0.05,
-      h: bloomCoolH,
+      l: clampL(l * smoothStep(0.58)),
+      c: clampC(c * 0.6), // Increased from 0.5
+      h: getShadowHue(h, "mid"),
     };
 
     // ----------------------------------------------------
-    // Core/Center & Green (5 Shades)
+    // Core/Center & Contrast (3 Shades) - Bright Yellow Eye
     // ----------------------------------------------------
 
-    // Core-Vivid: The highly saturated, bright yellow eye (L ~0.65)
+    // Core-Vivid: The highly saturated, bright yellow eye
     const coreVivid = {
-      l: 0.65,
-      c: 0.35,
+      l: 0.7, // Increased from 0.65
+      c: 0.38, // Increased from 0.35 (maximum contrast)
       h: coreH,
     };
 
     // Core-Transition: Dark violet ring surrounding the yellow
     const coreTransition = {
-      l: 0.35,
-      c: 0.15,
-      h: bloomCoolH,
+      l: 0.38, // Slightly lighter
+      c: 0.2, // Increased from 0.15
+      h: getShadowHue(h, "light"),
     };
 
-    // Green Foliage: Dark, simple greens for contrast.
+    // Bloom-Edge: High-contrast, sharp dark edge color
+    const bloomEdge = {
+      l: 0.12, // Slightly lighter
+      c: 0.08, // Increased from 0.05
+      h: getShadowHue(h, "deep"),
+    };
+
+    // ----------------------------------------------------
+    // Green Foliage (2 Shades) - Dark, Rich Greens
+    // ----------------------------------------------------
+
     const leafH = 150; // Standard Green
     const stemH = 180; // Dark Blue-Green
 
-    // Green-Main: Primary foliage green (L ~0.50)
+    // Green-Main: Primary foliage green
     const greenMain = {
-      l: clampL(l * 2.0),
-      c: clampC(c * 3.0),
+      l: clampL(l * smoothStep(2.2)), // Much lighter
+      c: clampC(c * 4.0), // Increased from 3.0
       h: leafH,
     };
 
-    // Green-Stem: Darkest stem/soil shadow (L ~0.30)
+    // Green-Stem: Darkest stem/soil shadow
     const greenStem = {
-      l: clampL(l * 1.2),
-      c: clampC(c * 2.0),
+      l: clampL(l * smoothStep(1.5)),
+      c: clampC(c * 2.8), // Increased from 2.0
       h: stemH,
     };
 
     // ----------------------------------------------------
-    // FINAL 10 DISTINCT BLACK PANSY COLORS
+    // PERFECTLY 10 DISTINCT BLACK PANSY COLORS
+    // Dark, velvety, dramatic aesthetic
     // ----------------------------------------------------
     return [
       // GROUP 1: CORE & CONTRAST
-      { name: "Core-Vivid", value: coreVivid }, // Bright Yellow Eye
-      { name: "Bloom-Highlight", value: bloomHighlight }, // Subtle Sheen
+      { name: "Core-Vivid", value: coreVivid }, // L: 0.70, bright yellow
+      { name: "Bloom-Highlight", value: bloomHighlight }, // L: ~0.38, sheen
 
       // GROUP 2: PETALS (Near-Black Violet)
-      { name: "Bloom-Light", value: bloomLight },
-      { name: "Bloom", value: bloom },
-      { name: "Core-Transition", value: coreTransition },
-      { name: "Bloom-Deep", value: bloomDeep },
+      { name: "Bloom-Light", value: bloomLight }, // L: ~0.33
+      { name: "Bloom", value: bloom }, // L: 0.25 (base)
+      { name: "Core-Transition", value: coreTransition }, // L: 0.38, ring
+      { name: "Bloom-Mid", value: bloomMid }, // L: ~0.23
 
-      // GROUP 3: SHADOWS & GREENS
-      { name: "Bloom-Muted", value: bloomMuted },
-      { name: "Bloom-Edge", value: bloomEdge },
-      { name: "Green-Main", value: greenMain },
-      { name: "Green-Stem", value: greenStem },
+      // GROUP 3: DEEP SHADOWS
+      { name: "Bloom-Deep", value: bloomDeep }, // L: ~0.19
+      { name: "Bloom-Muted", value: bloomMuted }, // L: ~0.15
+      { name: "Bloom-Edge", value: bloomEdge }, // L: 0.12
+
+      // GROUP 4: GREENS
+      { name: "Green-Main", value: greenMain }, // L: ~0.55
+      { name: "Green-Stem", value: greenStem }, // L: ~0.38
     ];
   } else if (flowerType === "jadeVine") {
     // Base OKLCH set to: L: 0.65, C: 0.25, H: 175 (Luminous Turquoise)
@@ -2598,6 +3111,486 @@ export default function flowerPalGen(oklch, flowerType) {
       // GROUP 3: GREENS & SHADOWS
       { name: "Petal-Edge", value: petalEdge }, // White/Neutral Edge
       { name: "Core-Shadow", value: coreShadow }, // Dark Core Base
+      { name: "Green-Main", value: greenMain },
+      { name: "Green-Stem", value: greenStem },
+    ];
+  } else if (flowerType === "peony") {
+    // Base OKLCH set to: L: 0.58, C: 0.35, H: 10 (Deep Crimson Red)
+    const { l, c, h } = oklch;
+
+    // Helper functions
+    const clampL = (x) => Math.max(0.15, Math.min(0.95, x));
+    const clampC = (x) => Math.max(0.05, Math.min(0.45, x));
+
+    // --- Hue Relationships ---
+    // Shifts shadows COOLER (towards Magenta/Purple, H ~350) for depth
+    const bloomCoolH = (h - 20 + 360) % 360;
+    // Shifts highlights WARMER (towards Red-Orange, H ~25) for luminescence
+    const bloomWarmH = (h + 15) % 360;
+
+    // The core accent: Bright gold for stamens
+    const coreH = 85; // Golden Yellow
+
+    // Base Crimson Petal
+    const bloom = { l: l, c: c, h: h };
+
+    // ----------------------------------------------------
+    // Petal Colors (6 Shades)
+    // ----------------------------------------------------
+
+    // Bloom-Highlight: Soft, luminous edge (L ~0.75)
+    const bloomHighlight = {
+      l: clampL(l * 1.3),
+      c: clampC(c * 0.8), // Lower C for soft glow
+      h: bloomWarmH,
+    };
+
+    // Bloom-Light: Primary light tone (L ~0.68)
+    const bloomLight = {
+      l: clampL(l * 1.17),
+      c: clampC(c * 0.95),
+      h: h,
+    };
+
+    // Bloom-Mid: Primary transition (L ~0.48)
+    const bloomMid = {
+      l: clampL(l * 0.83),
+      c: clampC(c * 1.05),
+      h: h,
+    };
+
+    // Bloom-Shadow: Primary shadow color (L ~0.38)
+    const bloomShadow = {
+      l: clampL(l * 0.65),
+      c: clampC(c * 1.2),
+      h: bloomCoolH,
+    };
+
+    // Bloom-Deep: Deepest velvet shadow (L ~0.28)
+    const bloomDeep = {
+      l: clampL(l * 0.48),
+      c: clampC(c * 1.35),
+      h: bloomCoolH,
+    };
+
+    // Bloom-Vein: Near-black vein accent
+    const bloomVein = {
+      l: 0.2,
+      c: 0.15,
+      h: bloomCoolH,
+    };
+
+    // ----------------------------------------------------
+    // Core & Foliage (4 Shades)
+    // ----------------------------------------------------
+
+    // Core-Gold: Bright golden stamens
+    const coreGold = {
+      l: 0.85,
+      c: 0.35,
+      h: coreH,
+    };
+
+    // Core-Shadow: Dark base of stamens
+    const coreShadow = {
+      l: 0.45,
+      c: 0.25,
+      h: coreH,
+    };
+
+    // Green Foliage: Rich, lush greens
+    const leafH = 145; // Rich Green
+
+    // Green-Main: Primary foliage (L ~0.52)
+    const greenMain = {
+      l: clampL(l * 0.9),
+      c: clampC(c * 0.6),
+      h: leafH,
+    };
+
+    // Green-Stem: Darker stem/shadow (L ~0.38)
+    const greenStem = {
+      l: clampL(l * 0.65),
+      c: clampC(c * 0.4),
+      h: leafH,
+    };
+
+    // ----------------------------------------------------
+    // PERFECTLY 10 DISTINCT PEONY COLORS (ARRANGED FOR FLOW)
+    // ----------------------------------------------------
+    return [
+      // GROUP 1: HIGHLIGHTS & CORE
+      { name: "Core-Gold", value: coreGold },
+      { name: "Bloom-Highlight", value: bloomHighlight },
+      { name: "Bloom-Light", value: bloomLight },
+
+      // GROUP 2: CRIMSON PETALS
+      { name: "Bloom", value: bloom },
+      { name: "Bloom-Mid", value: bloomMid },
+      { name: "Bloom-Shadow", value: bloomShadow },
+      { name: "Bloom-Deep", value: bloomDeep },
+
+      // GROUP 3: SHADOWS & GREENS
+      { name: "Bloom-Vein", value: bloomVein },
+      { name: "Core-Shadow", value: coreShadow },
+      { name: "Green-Main", value: greenMain },
+      { name: "Green-Stem", value: greenStem },
+    ];
+  } else if (flowerType === "daffodil") {
+    // Base OKLCH set to: L: 0.85, C: 0.25, H: 95 (Pure Lemon Yellow)
+    const { l, c, h } = oklch;
+
+    // Helper functions
+    const clampL = (x) => Math.max(0.25, Math.min(0.98, x));
+    const clampC = (x) => Math.max(0.05, Math.min(0.35, x));
+
+    // --- Hue Relationships ---
+    // Shifts shadows WARMER (towards Orange, H ~75) for depth
+    const bloomCoolH = (h - 20 + 360) % 360;
+    // Shifts highlights COOLER (towards Lime, H ~105) for brightness
+    const bloomWarmH = (h + 10) % 360;
+
+    // Corona/trumpet hue: Deeper orange-gold
+    const coronaH = 70; // Orange-Gold
+
+    // Base Yellow Petal
+    const bloom = { l: l, c: c, h: h };
+
+    // ----------------------------------------------------
+    // Petal Colors (5 Shades)
+    // ----------------------------------------------------
+
+    // Bloom-Bright: Highest luminosity (L ~0.95)
+    const bloomBright = {
+      l: 0.95,
+      c: clampC(c * 1.1),
+      h: bloomWarmH,
+    };
+
+    // Bloom-Light: Primary light tone (L ~0.90)
+    const bloomLight = {
+      l: clampL(l * 1.06),
+      c: clampC(c * 1.0),
+      h: h,
+    };
+
+    // Bloom-Mid: Subtle shadow transition (L ~0.75)
+    const bloomMid = {
+      l: clampL(l * 0.88),
+      c: clampC(c * 1.05),
+      h: h,
+    };
+
+    // Bloom-Shadow: Primary shadow (L ~0.65)
+    const bloomShadow = {
+      l: clampL(l * 0.76),
+      c: clampC(c * 1.15),
+      h: bloomCoolH,
+    };
+
+    // Bloom-Base: Deepest petal shadow (L ~0.55)
+    const bloomBase = {
+      l: clampL(l * 0.65),
+      c: clampC(c * 1.2),
+      h: bloomCoolH,
+    };
+
+    // ----------------------------------------------------
+    // Corona/Trumpet & Foliage (5 Shades)
+    // ----------------------------------------------------
+
+    // Corona-Bright: Bright orange-gold trumpet edge
+    const coronaBright = {
+      l: 0.88,
+      c: 0.3,
+      h: coronaH,
+    };
+
+    // Corona-Deep: Deep shadow inside trumpet
+    const coronaDeep = {
+      l: 0.6,
+      c: 0.28,
+      h: coronaH,
+    };
+
+    // Green Foliage: Blue-green, slightly glaucous
+    const leafH = 155; // Cool Blue-Green
+    const stemH = 140; // Warmer Green
+
+    // Green-Main: Primary foliage (L ~0.65)
+    const greenMain = {
+      l: clampL(l * 0.76),
+      c: clampC(c * 0.7),
+      h: stemH,
+    };
+
+    // Green-Stem: Darker stem/base (L ~0.50)
+    const greenStem = {
+      l: clampL(l * 0.59),
+      c: clampC(c * 0.5),
+      h: leafH,
+    };
+
+    // ----------------------------------------------------
+    // PERFECTLY 10 DISTINCT DAFFODIL COLORS (ARRANGED FOR FLOW)
+    // ----------------------------------------------------
+    return [
+      // GROUP 1: BRIGHT YELLOWS
+      { name: "Bloom-Bright", value: bloomBright },
+      { name: "Bloom-Light", value: bloomLight },
+      { name: "Bloom", value: bloom },
+
+      // GROUP 2: PETALS & CORONA
+      { name: "Corona-Bright", value: coronaBright },
+      { name: "Bloom-Mid", value: bloomMid },
+      { name: "Bloom-Shadow", value: bloomShadow },
+      { name: "Bloom-Base", value: bloomBase },
+
+      // GROUP 3: CORONA DEPTH & GREENS
+      { name: "Corona-Deep", value: coronaDeep },
+      { name: "Green-Main", value: greenMain },
+      { name: "Green-Stem", value: greenStem },
+    ];
+  } else if (flowerType === "magnolia") {
+    // Base OKLCH set to: L: 0.96, C: 0.04, H: 100 (Cool Bright White)
+    const { l, c, h } = oklch;
+
+    // Helper functions
+    const clampL = (x) => Math.max(0.25, Math.min(0.98, x));
+    const clampC = (x) => Math.max(0.02, Math.min(0.25, x));
+
+    // --- Hue Relationships ---
+    // Shifts shadows COOLER (towards Blue-Green, H ~140) for depth
+    const bloomCoolH = (h + 40) % 360;
+    // Core accent: Soft green-yellow for pistil base
+    const coreH = 110; // Yellow-Green
+
+    // Base White Petal
+    const bloom = { l: l, c: c, h: h };
+
+    // ----------------------------------------------------
+    // Petal Colors (6 Shades)
+    // ----------------------------------------------------
+
+    // Bloom-Pure: Absolute whitest point
+    const bloomPure = {
+      l: 0.98,
+      c: 0.02,
+      h: h,
+    };
+
+    // Bloom-Light: Primary luminous tone (L ~0.97)
+    const bloomLight = {
+      l: clampL(l * 1.01),
+      c: clampC(c * 1.2),
+      h: h,
+    };
+
+    // Bloom-Mid: Subtle transition (L ~0.88)
+    const bloomMid = {
+      l: clampL(l * 0.92),
+      c: clampC(c * 1.8),
+      h: h,
+    };
+
+    // Bloom-Shadow: Cool shadow on petals (L ~0.82)
+    const bloomShadow = {
+      l: clampL(l * 0.85),
+      c: clampC(c * 2.5),
+      h: bloomCoolH,
+    };
+
+    // Bloom-Base: Deep crease/base shadow (L ~0.70)
+    const bloomBase = {
+      l: clampL(l * 0.73),
+      c: clampC(c * 3.0),
+      h: bloomCoolH,
+    };
+
+    // Petal-Edge: Very subtle pink/brown edge (some varieties)
+    const petalEdge = {
+      l: clampL(l * 0.8),
+      c: clampC(c * 2.0),
+      h: 340, // Subtle pink-brown
+    };
+
+    // ----------------------------------------------------
+    // Core & Foliage (4 Shades)
+    // ----------------------------------------------------
+
+    // Core-Pistil: Soft green-yellow center
+    const corePistil = {
+      l: 0.85,
+      c: 0.15,
+      h: coreH,
+    };
+
+    // Core-Stamen: Pale cream stamen tips
+    const coreStamen = {
+      l: 0.9,
+      c: 0.08,
+      h: 90, // Pale yellow
+    };
+
+    // Green Foliage: Large, glossy, dark leaves
+    const leafH = 150; // Standard Green
+    const stemH = 135; // Warmer Green
+
+    // Green-Main: Primary rich foliage (L ~0.50)
+    const greenMain = {
+      l: clampL(l * 0.52),
+      c: clampC(c * 5.0),
+      h: leafH,
+    };
+
+    // Green-Stem: Dark woody branch (L ~0.35)
+    const greenStem = {
+      l: clampL(l * 0.36),
+      c: clampC(c * 3.5),
+      h: stemH,
+    };
+
+    // ----------------------------------------------------
+    // PERFECTLY 10 DISTINCT MAGNOLIA COLORS (ARRANGED FOR FLOW)
+    // ----------------------------------------------------
+    return [
+      // GROUP 1: WHITE PETALS
+      { name: "Bloom-Pure", value: bloomPure },
+      { name: "Bloom-Light", value: bloomLight },
+      { name: "Bloom", value: bloom },
+      { name: "Bloom-Mid", value: bloomMid },
+
+      // GROUP 2: SHADOWS & CORE
+      { name: "Core-Stamen", value: coreStamen },
+      { name: "Bloom-Shadow", value: bloomShadow },
+      { name: "Bloom-Base", value: bloomBase },
+      { name: "Core-Pistil", value: corePistil },
+
+      // GROUP 3: EDGE & GREENS
+      { name: "Petal-Edge", value: petalEdge },
+      { name: "Green-Main", value: greenMain },
+      { name: "Green-Stem", value: greenStem },
+    ];
+  } else if (flowerType === "ranunculus") {
+    // Base OKLCH set to: L: 0.75, C: 0.22, H: 25 (Coral/Salmon Pink)
+    const { l, c, h } = oklch;
+
+    // Helper functions
+    const clampL = (x) => Math.max(0.2, Math.min(0.95, x));
+    const clampC = (x) => Math.max(0.05, Math.min(0.35, x));
+
+    // --- Hue Relationships ---
+    // Shifts shadows COOLER (towards Pink/Magenta, H ~350) for depth
+    const bloomCoolH = (h - 35 + 360) % 360;
+    // Shifts highlights WARMER (towards Peach/Orange, H ~40) for glow
+    const bloomWarmH = (h + 15) % 360;
+
+    // Core accent: Soft yellow-green center
+    const coreH = 100; // Yellow-Green
+
+    // Base Coral Petal
+    const bloom = { l: l, c: c, h: h };
+
+    // ----------------------------------------------------
+    // Petal Colors (6 Shades)
+    // ----------------------------------------------------
+
+    // Bloom-Bright: Softest, peachy highlight (L ~0.88)
+    const bloomBright = {
+      l: clampL(l * 1.17),
+      c: clampC(c * 0.75), // Lower C for soft pastel
+      h: bloomWarmH,
+    };
+
+    // Bloom-Light: Primary light tone (L ~0.82)
+    const bloomLight = {
+      l: clampL(l * 1.09),
+      c: clampC(c * 0.9),
+      h: h,
+    };
+
+    // Bloom-Mid: Transition tone (L ~0.65)
+    const bloomMid = {
+      l: clampL(l * 0.87),
+      c: clampC(c * 1.05),
+      h: h,
+    };
+
+    // Bloom-Shadow: Primary shadow (L ~0.55)
+    const bloomShadow = {
+      l: clampL(l * 0.73),
+      c: clampC(c * 1.2),
+      h: bloomCoolH,
+    };
+
+    // Bloom-Deep: Deepest petal fold (L ~0.42)
+    const bloomDeep = {
+      l: clampL(l * 0.56),
+      c: clampC(c * 1.35),
+      h: bloomCoolH,
+    };
+
+    // Bloom-Base: Darkest shadow at base (L ~0.32)
+    const bloomBase = {
+      l: clampL(l * 0.43),
+      c: clampC(c * 1.1),
+      h: bloomCoolH,
+    };
+
+    // ----------------------------------------------------
+    // Core & Foliage (4 Shades)
+    // ----------------------------------------------------
+
+    // Core-Center: Soft yellow-green button center
+    const coreCenter = {
+      l: 0.88,
+      c: 0.18,
+      h: coreH,
+    };
+
+    // Core-Shadow: Dark base of center
+    const coreShadow = {
+      l: 0.6,
+      c: 0.12,
+      h: coreH,
+    };
+
+    // Green Foliage: Delicate, ferny leaves
+    const leafH = 145; // Standard Green
+    const stemH = 155; // Blue-Green
+
+    // Green-Main: Primary foliage (L ~0.60)
+    const greenMain = {
+      l: clampL(l * 0.8),
+      c: clampC(c * 0.8),
+      h: leafH,
+    };
+
+    // Green-Stem: Darker stem (L ~0.45)
+    const greenStem = {
+      l: clampL(l * 0.6),
+      c: clampC(c * 0.55),
+      h: stemH,
+    };
+
+    // ----------------------------------------------------
+    // PERFECTLY 10 DISTINCT RANUNCULUS COLORS (ARRANGED FOR FLOW)
+    // ----------------------------------------------------
+    return [
+      // GROUP 1: SOFT HIGHLIGHTS
+      { name: "Bloom-Bright", value: bloomBright },
+      { name: "Bloom-Light", value: bloomLight },
+      { name: "Core-Center", value: coreCenter },
+
+      // GROUP 2: CORAL PETALS
+      { name: "Bloom", value: bloom },
+      { name: "Bloom-Mid", value: bloomMid },
+      { name: "Bloom-Shadow", value: bloomShadow },
+      { name: "Bloom-Deep", value: bloomDeep },
+
+      // GROUP 3: SHADOWS & GREENS
+      { name: "Bloom-Base", value: bloomBase },
+      { name: "Core-Shadow", value: coreShadow },
       { name: "Green-Main", value: greenMain },
       { name: "Green-Stem", value: greenStem },
     ];

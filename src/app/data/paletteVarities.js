@@ -69,7 +69,7 @@ export const paletteVariations = {
   //   "bluePoppy",
   //   "foliage",
   // ],
-  // gradient: [],
+
   monochromatic: ["classicMono", "vintageMono", "neutralMono", "kidsMono"],
   // nearComplementary: [],
   // seasonal: [

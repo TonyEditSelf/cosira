@@ -65,12 +65,7 @@ export const paletteTypes = [
     description:
       "Subtle colored grays (very low chroma) — sophisticated neutrals with color undertones",
   },
-  {
-    label: "Gradient / Transitional",
-    value: "gradient",
-    description:
-      "Continuous hue or lightness range rather than discrete steps — ideal for data or background transitions.",
-  },
+
   {
     label: "Seasonal",
     value: "seasonal",
