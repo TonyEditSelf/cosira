@@ -86,7 +86,7 @@ export default function AnalogousOptions() {
       <div>
         <h3 className="font-semibold mb-2">Palette Type</h3>
         {analogTypes.map(({ id, label }) => (
-          <div key={id} className="flex gap-4 items-center py-1">
+          <div key={id} className="flex gap-4 items-center py-0">
             <input
               type="radio"
               name="analogPal"
@@ -115,7 +115,7 @@ export default function AnalogousOptions() {
         />
         <button
           onClick={handleReset}
-          className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition-colors"
+          className="px-4 py-2 bg-background rounded-md border border-[var(--navBorder)] hover:border-[var(--muted-foreground)]"
         >
           Reset to Default (±{getBaseAngles(analogPalType)}°)
         </button>

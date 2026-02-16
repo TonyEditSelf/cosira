@@ -184,7 +184,7 @@ function oklchToHex(color) {
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`.toUpperCase();
 }
 
-// Compact UsageRole component
+// Compact UsageRole component with fixed UI
 function UsageRole({ name, scale, currentToken, onTokenChange, oldToken }) {
   const [copied, setCopied] = useState(false);
   const [isSelecting, setIsSelecting] = useState(false);
@@ -238,57 +238,57 @@ function UsageRole({ name, scale, currentToken, onTokenChange, oldToken }) {
     <div className="relative">
       <div
         onClick={() => setIsSelecting(!isSelecting)}
-        className={`group relative flex items-center gap-2 p-1 px-2 rounded text-xs bg-background border cursor-pointer transition-all ${
+        className={`group relative flex items-center gap-1.5 px-1.5 py-1 rounded text-xs bg-background border cursor-pointer transition-all hover:shadow-sm ${
           isSelecting
-            ? "border-blue-500 ring-1 ring-blue-500 shadow-sm"
+            ? "border-blue-500 ring-1 ring-blue-500 shadow-sm z-40"
             : hasChanged
               ? "border-blue-400"
               : "border-(--navBorder) hover:border-muted-foreground"
         }`}
       >
         <div
-          className="w-8 h-8 rounded border border-black/10 shrink-0 flex items-center justify-center font-bold text-[8px] shadow-sm"
+          className="w-6 h-6 rounded border border-black/10 shrink-0 flex items-center justify-center font-bold text-[7px] shadow-sm"
           style={{ backgroundColor: oklchToCss(color), color: contrastText }}
         >
           {currentToken}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="font-medium text-[9px] leading-tight truncate">
+          <div className="font-medium text-[8px] leading-tight truncate">
             {name}
           </div>
-          <div className="text-[7px] text-gray-400 font-mono">
+          <div className="text-[6px] text-gray-400 font-mono truncate">
             {oklchToHex(color)}
           </div>
         </div>
         {isLowContrast && (
-          <div className="flex items-center gap-0.5 bg-red-500/15 px-1 rounded">
-            <span className="text-[7px] font-black text-red-600">
+          <div className="flex items-center gap-0.5 bg-red-500/15 px-1 py-0.5 rounded shrink-0">
+            <span className="text-[6px] font-black text-red-600">
               {contrastRatio}
             </span>
           </div>
         )}
-        <div className="opacity-0 group-hover:opacity-100 absolute right-1 top-1 bottom-1 bg-background border border-(--navBorder) flex items-center gap-0.5 px-1 rounded shadow-sm">
+        <div className="opacity-0 group-hover:opacity-100 absolute right-1 top-1/2 -translate-y-1/2 bg-background border border-(--navBorder) flex items-center gap-0.5 px-1 py-0.5 rounded shadow-sm z-10">
           <button
             onClick={(e) => copy("hex", e)}
-            className="p-0.5 hover:bg-(--brand) rounded text-[7px] font-bold"
+            className="px-1 py-0.5 hover:bg-(--brand) rounded text-[6px] font-bold"
           >
             HEX
           </button>
           <button
             onClick={(e) => copy("oklch", e)}
-            className="p-0.5 hover:bg-(--brand) rounded text-[7px] font-bold"
+            className="px-1 py-0.5 hover:bg-(--brand) rounded text-[6px] font-bold"
           >
             LCH
           </button>
         </div>
         {copied && (
-          <div className="absolute inset-0 bg-green-500/15 flex items-center justify-center rounded text-[7px] font-bold text-green-700">
+          <div className="absolute inset-0 bg-green-500/15 flex items-center justify-center rounded text-[7px] font-bold text-green-700 pointer-events-none">
             ✓
           </div>
         )}
       </div>
       {isSelecting && (
-        <div className="absolute z-30 top-full left-0 right-0 mt-1 p-1.5 bg-gray-900 rounded shadow-xl border border-gray-700">
+        <div className="absolute z-50 top-full left-0 right-0 mt-1 p-1.5 bg-gray-900 rounded shadow-2xl border border-gray-700">
           <div className="flex gap-1">
             {alternatives.map((t) => {
               const basePreview = scale[t];
@@ -310,7 +310,7 @@ function UsageRole({ name, scale, currentToken, onTokenChange, oldToken }) {
                     onTokenChange(name, t);
                     setIsSelecting(false);
                   }}
-                  className={`flex-1 h-8 rounded border flex items-center justify-center text-[8px] font-bold transition-all hover:scale-105 ${
+                  className={`flex-1 h-7 rounded border flex items-center justify-center text-[7px] font-bold transition-all hover:scale-105 ${
                     t === Number(currentToken)
                       ? "border-white ring-1 ring-white"
                       : "border-transparent opacity-60 hover:opacity-100"
@@ -955,12 +955,11 @@ function ColorDetail({ expanded, selectedIdx, onSelect }) {
 
       {/* MAIN SPLIT PANEL */}
       <div className="flex flex-1 min-h-0 bg-background overflow-hidden">
-        {/* LEFT PANEL: Roles - 50% */}
-
-        <div className="flex-1 basis-0 w-1/2 border-r border-(--navBorder) flex flex-col min-w-0">
+        {/* LEFT PANEL: Roles - Narrower at 35% */}
+        <div className="w-[35%] border-r border-(--navBorder) flex flex-col min-w-0">
           {/* Role categories - scrollable */}
-          <div className="flex-1 overflow-y-auto custom-scrollbar p-3">
-            <div className="space-y-10">
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-2">
+            <div className="space-y-4">
               {Object.entries(currentRoleMap).map(([category, roles]) => {
                 const allRoles = Object.values(roleTokenMap).reduce(
                   (acc, r) => ({ ...acc, ...r }),
@@ -968,10 +967,10 @@ function ColorDetail({ expanded, selectedIdx, onSelect }) {
                 );
                 return (
                   <div key={category}>
-                    <h4 className="text-[8px] font-black uppercase tracking-wider text-foreground/40 mb-2 pb-1 border-b border-(--navBorder)">
+                    <h4 className="text-[7px] font-black uppercase tracking-wider text-foreground/40 mb-1.5 pb-0.5 border-b border-(--navBorder)">
                       {category}
                     </h4>
-                    <div className="space-y-1.5">
+                    <div className="space-y-1">
                       {roles.map((roleName) => {
                         const defaultToken = allRoles[roleName];
                         if (!defaultToken) return null;
@@ -996,8 +995,8 @@ function ColorDetail({ expanded, selectedIdx, onSelect }) {
           </div>
         </div>
 
-        {/* RIGHT PANEL: Live Component Preview - 50% */}
-        <div className="flex-1 basis-0 min-w-0 flex flex-col">
+        {/* RIGHT PANEL: Live Component Preview - Wider at 65% */}
+        <div className="flex-1 min-w-0 flex flex-col">
           <ComponentPreview getActiveColor={getActiveColor} />
         </div>
       </div>

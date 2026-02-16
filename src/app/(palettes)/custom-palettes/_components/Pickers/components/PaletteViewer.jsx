@@ -87,7 +87,7 @@ export default function PaletteViewer() {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: -200, opacity: 0 }}
               transition={{ duration: 0.3, ease: easeIn }}
-              className="flex gap-6 h-[calc(100vh-140px)] overflow-y-scroll flex-col items-center ml-3 mr-0 pt-5 py-4 px-6 w-[310px] rounded-md border border-[var(--navBorder)]"
+              className="flex gap-6 h-[calc(100vh-140px)] overflow-y-scroll flex-col items-center ml-3 mr-0 pt-5 py-4 px-4 w-[201px] rounded-md border border-[var(--navBorder)]"
             >
               <PalettteProperties />
             </motion.aside>
@@ -171,7 +171,7 @@ export default function PaletteViewer() {
               return (
                 <div
                   className={`h-full
-                  ${palette.length > 12 ? "w-[100px] flex-none" : "flex-1"}
+                  ${palette.length > 16 ? "w-[100px] flex-none" : "flex-1"}
                   ${shadesTintsTonesIndex === index ? "py-0" : "py-5"}
                   flex flex-col gap-2 justify-between items-center font-semibold
                   ${textColor === "white" ? "text-white" : "text-black"}

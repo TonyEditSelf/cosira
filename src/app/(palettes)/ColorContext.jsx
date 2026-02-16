@@ -206,6 +206,8 @@ export function ColorPaletteContextProvider({ children }) {
 
   const [tetradicAngle, setTetradicAngle] = useState(90);
 
+  const [tetradicForm, setTetradicForm] = useState("squareTetra");
+
   const [rgbcopied, setRgbCopied] = useState(false);
   const [csscopied, setCssCopied] = useState(false);
 
@@ -565,6 +567,8 @@ export function ColorPaletteContextProvider({ children }) {
     duplicatePalette,
     setDuplicatePalette,
     paletteHistory,
+    tetradicForm,
+    setTetradicForm,
     setPaletteHistory,
     paletteHistoryCounter,
     setPaletteHistoryCounter,

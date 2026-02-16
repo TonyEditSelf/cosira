@@ -1,342 +1,370 @@
-export default function monochromaticPalGen(
-  oklch,
-  monoPalType,
-  sliderLightValue = 0,
-  sliderChromaValue = 0,
-) {
-  // Helper function to clamp values
-  const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+/**
+ * monochromaticPalGen.js - World-class monochromatic palette generator
+ *
+ * Generates 8 perceptually-balanced monochromatic variants (Base-950 to Base-50)
+ * Color space: OKLCH (perceptually uniform lightness, chroma, hue)
+ *
+ * PALETTE TYPES:
+ *   classicMono   - Pure monochromatic, full dynamic range
+ *   vintageMono   - Desaturated, warm darks + cool lights, aged aesthetic
+ *   neutralMono   - Near-grays for UI, minimal saturation
+ *   pastelMono    - Soft, high-lightness, gentle chroma
+ *   luxuryMono    - Deep jewel tones, rich saturation, premium feel
+ *   earthMono     - Natural, warm-shifted, desaturated organics
+ *   neonMono      - Maximum chroma, digital-forward, electric
+ *   kidsMono      - Bright, vibrant, cheerful, playful
+ *
+ * OUTPUT per palette: 8 tokens (Base-950, 800, 700, 600, 400, 300, 200, 50)
+ * Each token carries:
+ *   - l, c, h (OKLCH values)
+ *   - contrastOnWhite / contrastOnBlack (WCAG ratios)
+ *   - wcagOnWhite / wcagOnBlack ("AAA" | "AA" | "AA Large" | "Fail")
+ *   - bestTextColor ("black" | "white")
+ *   - inSRGB (gamut safety flag)
+ *   - role (semantic usage hint: "text" | "border" | "background")
+ */
 
-  // Perceptual lightness scale - uses exponential curves for better visual distribution
-  const getLightnessScale = (baseL) => {
+// ============================================================================
+// PERCEPTUAL UTILITIES
+// ============================================================================
+
+/**
+ * Hue-lightness correction factor
+ * Yellows (h≈100) appear lighter, blues (h≈265) darker at same L
+ */
+function perceptualLightnessCorrection(h) {
+  const hueRad = ((h - 100) * Math.PI) / 180;
+  return -Math.sin(hueRad) * 0.055; // ±5.5% correction
+}
+
+function applyPerceptualCorrection(color) {
+  const delta = perceptualLightnessCorrection(color.h);
+  return {
+    ...color,
+    l: Math.min(0.99, Math.max(0.01, color.l + delta)),
+  };
+}
+
+/**
+ * Approximate sRGB gamut boundaries for OKLCH
+ */
+function approxMaxChroma(h, l) {
+  const lightnessBonus = 1 - Math.pow((l - 0.65) / 0.5, 2);
+  const baseMax = 0.33 * Math.max(0, lightnessBonus);
+
+  // Hue-dependent gamut width
+  if (h >= 80 && h < 140) return baseMax * 1.1; // Yellow-green
+  if (h >= 20 && h < 80) return baseMax * 1.0; // Red-orange
+  if (h >= 160 && h < 220) return baseMax * 0.75; // Cyan (narrowest)
+  if (h >= 220 && h < 300) return baseMax * 0.82; // Blue-violet
+  return baseMax;
+}
+
+function gamutClamp(color) {
+  const maxC = approxMaxChroma(color.h, color.l);
+  const wasInGamut = color.c <= maxC;
+  return {
+    ...color,
+    c: Math.min(color.c, maxC),
+    inSRGB: wasInGamut,
+  };
+}
+
+// ============================================================================
+// WCAG CONTRAST UTILITIES
+// ============================================================================
+
+function oklchToLuminance(l) {
+  return Math.pow(Math.max(0, Math.min(1, l)), 2.2);
+}
+
+function contrastRatio(l1, l2) {
+  const lum1 = oklchToLuminance(l1);
+  const lum2 = oklchToLuminance(l2);
+  const lighter = Math.max(lum1, lum2);
+  const darker = Math.min(lum1, lum2);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+function wcagRating(ratio) {
+  if (ratio >= 7) return "AAA";
+  if (ratio >= 4.5) return "AA";
+  if (ratio >= 3) return "AA Large";
+  return "Fail";
+}
+
+function getBestTextColor(bgL) {
+  const onWhite = contrastRatio(bgL, 1.0);
+  const onBlack = contrastRatio(bgL, 0.0);
+  return onBlack > onWhite ? "black" : "white";
+}
+
+/**
+ * Determine semantic role based on lightness and contrast
+ */
+function getColorRole(l, contrastOnWhite, contrastOnBlack) {
+  if (contrastOnWhite >= 4.5) return "text"; // Dark enough for text on white
+  if (contrastOnBlack >= 4.5) return "text"; // Light enough for text on black
+  if (l > 0.85 || l < 0.2) return "background"; // Very light or very dark
+  return "border"; // Mid-tones good for borders/dividers
+}
+
+function annotateColor(color) {
+  const onWhite = contrastRatio(color.l, 1.0);
+  const onBlack = contrastRatio(color.l, 0.0);
+  const clamped = gamutClamp(color);
+
+  return {
+    l: color.l,
+    c: color.c,
+    h: color.h,
+    contrastOnWhite: Math.round(onWhite * 100) / 100,
+    contrastOnBlack: Math.round(onBlack * 100) / 100,
+    wcagOnWhite: wcagRating(onWhite),
+    wcagOnBlack: wcagRating(onBlack),
+    bestTextColor: getBestTextColor(color.l),
+    role: getColorRole(color.l, onWhite, onBlack),
+    inSRGB: clamped.inSRGB,
+  };
+}
+
+// ============================================================================
+// PALETTE TYPE CONFIGURATIONS
+// ============================================================================
+
+const PALETTE_STRATEGIES = {
+  classicMono: {
+    name: "Classic",
+    description:
+      "Pure monochromatic - full dynamic range, only lightness varies",
+    chromaMultiplier: 1.0,
+    lightnessRange: [0.08, 0.98],
+    chromaRange: [0, 0.4],
+    hueShift: { dark: 0, light: 0 },
+    distribution: "exponential",
+  },
+
+  vintageMono: {
+    name: "Vintage",
+    description:
+      "Desaturated with warm darks, cool lights - aged poster aesthetic",
+    chromaMultiplier: 0.6,
+    lightnessRange: [0.22, 0.88],
+    chromaRange: [0.03, 0.2],
+    hueShift: { dark: 3, light: -3 },
+    distribution: "exponential",
+  },
+
+  neutralMono: {
+    name: "Neutral",
+    description: "Near-grays for UI - minimal saturation, maximum versatility",
+    chromaMultiplier: 0.28,
+    lightnessRange: [0.12, 0.98],
+    chromaRange: [0.005, 0.08],
+    hueShift: { dark: 0, light: 0 },
+    distribution: "linear",
+  },
+
+  pastelMono: {
+    name: "Pastel",
+    description: "Soft, high-lightness - gentle and approachable",
+    chromaMultiplier: 0.65,
+    lightnessRange: [0.58, 0.96],
+    chromaRange: [0.06, 0.2],
+    hueShift: { dark: 2, light: -1 },
+    distribution: "linear",
+  },
+
+  luxuryMono: {
+    name: "Luxury",
+    description: "Deep jewel tones - rich saturation, premium sophistication",
+    chromaMultiplier: 1.15,
+    lightnessRange: [0.15, 0.75], // ← Even wider: 60% range
+    chromaRange: [0.12, 0.35],
+    hueShift: { dark: 4, light: -2 },
+    distribution: "linear", // ← CHANGED to linear for even spacing
+  },
+
+  earthMono: {
+    name: "Earth",
+    description: "Natural, warm-shifted - terracotta, sage, organic tones",
+    chromaMultiplier: 0.48,
+    lightnessRange: [0.25, 0.85], // ← Slightly wider
+    chromaRange: [0.04, 0.18],
+    hueShift: { dark: 5, light: -3 },
+    warmShift: 8,
+    distribution: "linear", // ← CHANGED from "exponential"
+  },
+
+  neonMono: {
+    name: "Neon",
+    description: "Maximum chroma - electric, digital-forward, cyberpunk",
+    chromaMultiplier: 1.3,
+    lightnessRange: [0.45, 0.88],
+    chromaRange: [0.22, 0.38],
+    hueShift: { dark: 2, light: -2 },
+    distribution: "linear",
+  },
+
+  kidsMono: {
+    name: "Kids",
+    description: "Bright, vibrant - cheerful and playful, high energy",
+    chromaMultiplier: 1.25,
+    lightnessRange: [0.35, 0.92],
+    chromaRange: [0.14, 0.37],
+    hueShift: { dark: 0, light: 0 },
+    distribution: "exponential",
+  },
+};
+
+// ============================================================================
+// LIGHTNESS DISTRIBUTION FUNCTIONS
+// ============================================================================
+
+/**
+ * Generate 8 lightness values with proper distribution
+ *
+ * Exponential: More granularity at extremes (better for text/backgrounds)
+ * Linear: Even spacing (better for UI elements in tight ranges)
+ */
+function getLightnessScale(baseL, distribution, lMin, lMax) {
+  const clamp = (val) => Math.min(lMax, Math.max(lMin, val));
+
+  if (distribution === "linear") {
+    // Even spacing - ideal for pastels/neutrals/neon
+    const span = lMax - lMin;
     return {
-      // Darker shades - exponential darkening
-      darkest: baseL * 0.35,
-      darker: baseL * 0.55,
-      dark: baseL * 0.75,
-
-      // Base
-      base: baseL,
-
-      // Lighter shades - inverse exponential (more space near white)
-      light: baseL + (1 - baseL) * 0.25,
-      lighter: baseL + (1 - baseL) * 0.45,
-      lightest: baseL + (1 - baseL) * 0.65,
-    };
-  };
-
-  let palette = {};
-
-  // Use user's input as the TRUE base (with slider adjustments)
-  const userBaseColor = {
-    l: clamp(oklch.l + sliderLightValue, 0, 1),
-    c: clamp(oklch.c + sliderChromaValue, 0, 0.4),
-    h: oklch.h,
-  };
-
-  const lightnessScale = getLightnessScale(userBaseColor.l);
-
-  if (monoPalType === "classicMono") {
-    // Pure monochromatic - only lightness changes
-    palette = {
-      darkest: {
-        l: clamp(lightnessScale.darkest, 0, 1),
-        c: userBaseColor.c,
-        h: userBaseColor.h,
-      },
-      darker: {
-        l: clamp(lightnessScale.darker, 0, 1),
-        c: userBaseColor.c,
-        h: userBaseColor.h,
-      },
-      dark: {
-        l: clamp(lightnessScale.dark, 0, 1),
-        c: userBaseColor.c,
-        h: userBaseColor.h,
-      },
-      darkerNeutral: {
-        l: clamp(lightnessScale.darker, 0, 1),
-        c: clamp(userBaseColor.c * 0.3, 0, 0.4),
-        h: userBaseColor.h,
-      },
-      mutedDarker: {
-        l: clamp(lightnessScale.darker * 0.95, 0, 1),
-        c: clamp(userBaseColor.c * 0.6, 0, 0.4),
-        h: userBaseColor.h,
-      },
-      base: userBaseColor,
-      light: {
-        l: clamp(lightnessScale.light, 0, 1),
-        c: userBaseColor.c,
-        h: userBaseColor.h,
-      },
-      lighter: {
-        l: clamp(lightnessScale.lighter, 0, 1),
-        c: userBaseColor.c,
-        h: userBaseColor.h,
-      },
-      lightest: {
-        l: clamp(lightnessScale.lightest, 0, 1),
-        c: userBaseColor.c,
-        h: userBaseColor.h,
-      },
-      lighterNeutral: {
-        l: clamp(lightnessScale.lighter, 0, 1),
-        c: clamp(userBaseColor.c * 0.3, 0, 0.4),
-        h: userBaseColor.h,
-      },
-      mutedLighter: {
-        l: clamp(lightnessScale.light * 1.05, 0, 1),
-        c: clamp(userBaseColor.c * 0.6, 0, 0.4),
-        h: userBaseColor.h,
-      },
-    };
-  } else if (monoPalType === "vintageMono") {
-    // Vintage - slight hue shifts, chroma adjustments, warmer darks/cooler lights
-    palette = {
-      darkest: {
-        l: clamp(lightnessScale.darkest, 0.2, 0.9),
-        c: clamp(userBaseColor.c * 1.3, 0.04, 0.25),
-        h: (userBaseColor.h + 8 + 360) % 360, // Warmer darks
-      },
-      darker: {
-        l: clamp(lightnessScale.darker, 0.2, 0.9),
-        c: clamp(userBaseColor.c * 1.2, 0.04, 0.25),
-        h: (userBaseColor.h + 5 + 360) % 360,
-      },
-      dark: {
-        l: clamp(lightnessScale.dark, 0.2, 0.9),
-        c: clamp(userBaseColor.c * 1.1, 0.04, 0.25),
-        h: (userBaseColor.h + 3 + 360) % 360,
-      },
-      darkerNeutral: {
-        l: clamp(lightnessScale.darker, 0.2, 0.9),
-        c: clamp(userBaseColor.c * 0.4, 0.04, 0.25),
-        h: userBaseColor.h,
-      },
-      mutedDarker: {
-        l: clamp(lightnessScale.darker * 0.9, 0.2, 0.9),
-        c: clamp(userBaseColor.c * 0.7, 0.04, 0.25),
-        h: (userBaseColor.h + 2 + 360) % 360,
-      },
-      base: {
-        l: clamp(userBaseColor.l, 0.2, 0.9),
-        c: clamp(userBaseColor.c, 0.04, 0.25),
-        h: userBaseColor.h,
-      },
-      light: {
-        l: clamp(lightnessScale.light, 0.2, 0.9),
-        c: clamp(userBaseColor.c * 0.85, 0.04, 0.25),
-        h: (userBaseColor.h - 2 + 360) % 360, // Cooler lights
-      },
-      lighter: {
-        l: clamp(lightnessScale.lighter, 0.2, 0.9),
-        c: clamp(userBaseColor.c * 0.7, 0.04, 0.25),
-        h: (userBaseColor.h - 4 + 360) % 360,
-      },
-      lightest: {
-        l: clamp(lightnessScale.lightest, 0.2, 0.9),
-        c: clamp(userBaseColor.c * 0.55, 0.04, 0.25),
-        h: (userBaseColor.h - 6 + 360) % 360,
-      },
-      lighterNeutral: {
-        l: clamp(lightnessScale.lighter, 0.2, 0.9),
-        c: clamp(userBaseColor.c * 0.35, 0.04, 0.25),
-        h: userBaseColor.h,
-      },
-      mutedLighter: {
-        l: clamp(lightnessScale.light * 1.08, 0.2, 0.9),
-        c: clamp(userBaseColor.c * 0.6, 0.04, 0.25),
-        h: (userBaseColor.h - 1 + 360) % 360,
-      },
-    };
-  } else if (monoPalType === "neutralMono") {
-    // Neutral - very low chroma, subtle variations
-    palette = {
-      darkest: {
-        l: clamp(lightnessScale.darkest, 0.1, 0.98),
-        c: clamp(userBaseColor.c * 0.8, 0.01, 0.12),
-        h: userBaseColor.h,
-      },
-      darker: {
-        l: clamp(lightnessScale.darker, 0.1, 0.98),
-        c: clamp(userBaseColor.c * 0.9, 0.01, 0.12),
-        h: userBaseColor.h,
-      },
-      dark: {
-        l: clamp(lightnessScale.dark, 0.1, 0.98),
-        c: clamp(userBaseColor.c, 0.01, 0.12),
-        h: userBaseColor.h,
-      },
-      darkerNeutral: {
-        l: clamp(lightnessScale.darker, 0.1, 0.98),
-        c: clamp(userBaseColor.c * 0.3, 0.01, 0.12),
-        h: userBaseColor.h,
-      },
-      mutedDarker: {
-        l: clamp(lightnessScale.darker * 0.95, 0.1, 0.98),
-        c: clamp(userBaseColor.c * 0.55, 0.01, 0.12),
-        h: userBaseColor.h,
-      },
-      base: {
-        l: clamp(userBaseColor.l, 0.1, 0.98),
-        c: clamp(userBaseColor.c, 0.01, 0.12),
-        h: userBaseColor.h,
-      },
-      light: {
-        l: clamp(lightnessScale.light, 0.1, 0.98),
-        c: clamp(userBaseColor.c * 0.9, 0.01, 0.12),
-        h: userBaseColor.h,
-      },
-      lighter: {
-        l: clamp(lightnessScale.lighter, 0.1, 0.98),
-        c: clamp(userBaseColor.c * 0.75, 0.01, 0.12),
-        h: userBaseColor.h,
-      },
-      lightest: {
-        l: clamp(lightnessScale.lightest, 0.1, 0.98),
-        c: clamp(userBaseColor.c * 0.6, 0.01, 0.12),
-        h: userBaseColor.h,
-      },
-      lighterNeutral: {
-        l: clamp(lightnessScale.lighter, 0.1, 0.98),
-        c: clamp(userBaseColor.c * 0.25, 0.01, 0.12),
-        h: userBaseColor.h,
-      },
-      mutedLighter: {
-        l: clamp(lightnessScale.light * 1.05, 0.1, 0.98),
-        c: clamp(userBaseColor.c * 0.5, 0.01, 0.12),
-        h: userBaseColor.h,
-      },
-    };
-  } else if (monoPalType === "kidsMono") {
-    // Kids - vibrant, high chroma maintained
-    palette = {
-      darkest: {
-        l: clamp(lightnessScale.darkest, 0.25, 0.95),
-        c: clamp(userBaseColor.c * 1.15, 0.08, 0.35),
-        h: userBaseColor.h,
-      },
-      darker: {
-        l: clamp(lightnessScale.darker, 0.25, 0.95),
-        c: clamp(userBaseColor.c * 1.1, 0.08, 0.35),
-        h: userBaseColor.h,
-      },
-      dark: {
-        l: clamp(lightnessScale.dark, 0.25, 0.95),
-        c: clamp(userBaseColor.c * 1.05, 0.08, 0.35),
-        h: userBaseColor.h,
-      },
-      darkerNeutral: {
-        l: clamp(lightnessScale.darker, 0.25, 0.95),
-        c: clamp(userBaseColor.c * 0.5, 0.08, 0.35),
-        h: userBaseColor.h,
-      },
-      mutedDarker: {
-        l: clamp(lightnessScale.darker * 0.95, 0.25, 0.95),
-        c: clamp(userBaseColor.c * 0.75, 0.08, 0.35),
-        h: userBaseColor.h,
-      },
-      base: {
-        l: clamp(userBaseColor.l, 0.25, 0.95),
-        c: clamp(userBaseColor.c, 0.08, 0.35),
-        h: userBaseColor.h,
-      },
-      light: {
-        l: clamp(lightnessScale.light, 0.25, 0.95),
-        c: clamp(userBaseColor.c * 0.95, 0.08, 0.35),
-        h: userBaseColor.h,
-      },
-      lighter: {
-        l: clamp(lightnessScale.lighter, 0.25, 0.95),
-        c: clamp(userBaseColor.c * 0.85, 0.08, 0.35),
-        h: userBaseColor.h,
-      },
-      lightest: {
-        l: clamp(lightnessScale.lightest, 0.25, 0.95),
-        c: clamp(userBaseColor.c * 0.75, 0.08, 0.35),
-        h: userBaseColor.h,
-      },
-      lighterNeutral: {
-        l: clamp(lightnessScale.lighter, 0.25, 0.95),
-        c: clamp(userBaseColor.c * 0.5, 0.08, 0.35),
-        h: userBaseColor.h,
-      },
-      mutedLighter: {
-        l: clamp(lightnessScale.light * 1.05, 0.25, 0.95),
-        c: clamp(userBaseColor.c * 0.7, 0.08, 0.35),
-        h: userBaseColor.h,
-      },
-    };
-  } else {
-    // Default to classicMono
-    palette = {
-      darkest: {
-        l: clamp(lightnessScale.darkest, 0, 1),
-        c: userBaseColor.c,
-        h: userBaseColor.h,
-      },
-      darker: {
-        l: clamp(lightnessScale.darker, 0, 1),
-        c: userBaseColor.c,
-        h: userBaseColor.h,
-      },
-      dark: {
-        l: clamp(lightnessScale.dark, 0, 1),
-        c: userBaseColor.c,
-        h: userBaseColor.h,
-      },
-      darkerNeutral: {
-        l: clamp(lightnessScale.darker, 0, 1),
-        c: clamp(userBaseColor.c * 0.3, 0, 0.4),
-        h: userBaseColor.h,
-      },
-      mutedDarker: {
-        l: clamp(lightnessScale.darker * 0.95, 0, 1),
-        c: clamp(userBaseColor.c * 0.6, 0, 0.4),
-        h: userBaseColor.h,
-      },
-      base: userBaseColor,
-      light: {
-        l: clamp(lightnessScale.light, 0, 1),
-        c: userBaseColor.c,
-        h: userBaseColor.h,
-      },
-      lighter: {
-        l: clamp(lightnessScale.lighter, 0, 1),
-        c: userBaseColor.c,
-        h: userBaseColor.h,
-      },
-      lightest: {
-        l: clamp(lightnessScale.lightest, 0, 1),
-        c: userBaseColor.c,
-        h: userBaseColor.h,
-      },
-      lighterNeutral: {
-        l: clamp(lightnessScale.lighter, 0, 1),
-        c: clamp(userBaseColor.c * 0.3, 0, 0.4),
-        h: userBaseColor.h,
-      },
-      mutedLighter: {
-        l: clamp(lightnessScale.light * 1.05, 0, 1),
-        c: clamp(userBaseColor.c * 0.6, 0, 0.4),
-        h: userBaseColor.h,
-      },
+      l950: clamp(lMin + span * 0.05),
+      l800: clamp(lMin + span * 0.2),
+      l700: clamp(lMin + span * 0.35),
+      l600: clamp(lMin + span * 0.45),
+      l400: clamp(lMin + span * 0.62),
+      l300: clamp(lMin + span * 0.75),
+      l200: clamp(lMin + span * 0.88),
+      l50: clamp(lMin + span * 0.98),
     };
   }
 
-  // Return in proper darkest-to-lightest order
+  // Exponential distribution - more steps at extremes
+  // Uses user's base as anchor, scales around it
+  const darkestRatio = 0.3; // 950 is 30% of base
+  const darkerRatio = 0.5; // 800 is 50% of base
+  const darkRatio = 0.7; // 700 is 70% of base
+  const midDarkRatio = 0.85; // 600 is 85% of base
+
+  return {
+    l950: clamp(baseL * darkestRatio),
+    l800: clamp(baseL * darkerRatio),
+    l700: clamp(baseL * darkRatio),
+    l600: clamp(baseL * midDarkRatio),
+    l400: clamp(baseL + (1 - baseL) * 0.25),
+    l300: clamp(baseL + (1 - baseL) * 0.45),
+    l200: clamp(baseL + (1 - baseL) * 0.68),
+    l50: clamp(baseL + (1 - baseL) * 0.88),
+  };
+}
+
+// ============================================================================
+// MAIN EXPORT
+// ============================================================================
+
+/**
+ * @param {Object} oklch - Base color: { l: 0-1, c: 0-0.4, h: 0-360 }
+ * @param {string} monoPalType - One of PALETTE_STRATEGIES keys
+ * @param {number} sliderLightValue - Optional lightness adjustment
+ * @param {number} sliderChromaValue - Optional chroma adjustment
+ * @returns {Array} - 8 annotated color tokens
+ */
+export default function monochromaticPalGen(
+  oklch,
+  monoPalType = "classicMono",
+  sliderLightValue = 0,
+  sliderChromaValue = 0,
+) {
+  const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+  const strategy =
+    PALETTE_STRATEGIES[monoPalType] || PALETTE_STRATEGIES.classicMono;
+
+  const {
+    chromaMultiplier,
+    lightnessRange: [lMin, lMax],
+    chromaRange: [cMin, cMax],
+    hueShift,
+    warmShift = 0,
+    distribution,
+  } = strategy;
+
+  // User's base color with adjustments
+  const userBaseColor = {
+    l: clamp(oklch.l + sliderLightValue, 0, 1),
+    c: clamp(oklch.c + sliderChromaValue, 0, 0.4),
+    h: (oklch.h + warmShift + 360) % 360,
+  };
+
+  // Generate lightness scale
+  const scale = getLightnessScale(userBaseColor.l, distribution, lMin, lMax);
+
+  // Color creation helper
+  const createColor = (lightnessValue, chromaFactor, hueShiftVal) => {
+    const rawC = userBaseColor.c * chromaMultiplier * chromaFactor;
+    const rawH = (userBaseColor.h + hueShiftVal + 360) % 360;
+
+    const color = applyPerceptualCorrection({
+      l: lightnessValue,
+      c: clamp(rawC, cMin, cMax),
+      h: rawH,
+    });
+
+    return annotateColor(color);
+  };
+
+  // Generate 8-color palette with progressive hue shifts
   return [
-    { name: "Base-DDD", value: palette.darkest },
-    { name: "Base-DD", value: palette.darker },
-    { name: "Base-DN", value: palette.darkerNeutral },
-    { name: "Base-MD", value: palette.mutedDarker },
-    { name: "Base-D", value: palette.dark },
-    { name: "Base", value: palette.base },
-    { name: "Base-L", value: palette.light },
-    { name: "Base-ML", value: palette.mutedLighter },
-    { name: "Base-LN", value: palette.lighterNeutral },
-    { name: "Base-LL", value: palette.lighter },
-    { name: "Base-LLL", value: palette.lightest },
+    {
+      name: "Base-950",
+      value: createColor(scale.l950, 1.0, hueShift.dark * 1.0),
+    },
+    {
+      name: "Base-800",
+      value: createColor(scale.l800, 1.0, hueShift.dark * 0.7),
+    },
+    {
+      name: "Base-700",
+      value: createColor(scale.l700, 1.0, hueShift.dark * 0.4),
+    },
+    {
+      name: "Base-600",
+      value: createColor(scale.l600, 0.98, hueShift.dark * 0.2),
+    },
+    {
+      name: "Base-400",
+      value: createColor(scale.l400, 0.95, hueShift.light * 0.2),
+    },
+    {
+      name: "Base-300",
+      value: createColor(scale.l300, 0.88, hueShift.light * 0.4),
+    },
+    {
+      name: "Base-200",
+      value: createColor(scale.l200, 0.75, hueShift.light * 0.7),
+    },
+    {
+      name: "Base-50",
+      value: createColor(scale.l50, 0.6, hueShift.light * 1.0),
+    },
   ];
 }
+
+// ============================================================================
+// NAMED EXPORTS
+// ============================================================================
+
+export const MONO_PALETTE_TYPES = Object.keys(PALETTE_STRATEGIES);
+
+export const MONO_PALETTE_INFO = Object.entries(PALETTE_STRATEGIES).map(
+  ([key, config]) => ({
+    id: key,
+    name: config.name,
+    description: config.description,
+  }),
+);
