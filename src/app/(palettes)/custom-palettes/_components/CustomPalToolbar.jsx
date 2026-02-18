@@ -17,7 +17,7 @@ import {
   FaAnglesRight,
 } from "react-icons/fa6";
 import { FaSave, FaPlay } from "react-icons/fa";
-import { CgExport } from "react-icons/cg";
+// import { CgExport } from "cg-icons";
 import { LuFullscreen } from "react-icons/lu";
 import { useColorPaletteContext } from "../../ColorContext";
 
@@ -31,7 +31,9 @@ export default function CustomPalToolbar() {
     paletteHistoryCounter,
     setPaletteHistoryCounter,
     historyNavigation,
+    setOklch,
     setHistoryNavigation,
+    historyNavigationRef,
     setLeftPaletteAdjusterOpen,
     setMyColorPickerOpen,
     leftPaletteAdjusterOpen,
@@ -50,35 +52,48 @@ export default function CustomPalToolbar() {
     generateRandomPalette,
   } = useColorPaletteContext();
 
-  // console.log("Current pathname:", pathname);
-
-  // ADD THIS LINE - Define the variable
   const isRandomPalettesPage = pathname === "/random-palettes";
 
   const goBackPalHistory = () => {
     if (paletteHistoryCounter <= 0) return;
 
     const newCounter = paletteHistoryCounter - 1;
-    setHistoryNavigation(true);
-    setPaletteHistoryCounter(newCounter);
-    setPalette(paletteHistory[newCounter].palette);
-    setDuplicatePaletteType(paletteHistory[newCounter].type);
+    const historyEntry = paletteHistory[newCounter];
 
-    // Reset navigation flag after a short delay
-    setTimeout(() => setHistoryNavigation(false), 100);
+    historyNavigationRef.current = true;
+
+    setPaletteHistoryCounter(newCounter);
+    setPalette(historyEntry.palette);
+    setDuplicatePaletteType(historyEntry.type);
+    setSelectedPaletteType(historyEntry.type);
+    setOklch(historyEntry.oklch);
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        historyNavigationRef.current = false;
+      });
+    });
   };
 
   const goForwardPalHistory = () => {
     if (paletteHistoryCounter >= paletteHistory.length - 1) return;
 
     const newCounter = paletteHistoryCounter + 1;
-    setHistoryNavigation(true);
-    setPaletteHistoryCounter(newCounter);
-    setPalette(paletteHistory[newCounter].palette);
-    setDuplicatePaletteType(paletteHistory[newCounter].type);
+    const historyEntry = paletteHistory[newCounter];
 
-    // Reset navigation flag after a short delay
-    setTimeout(() => setHistoryNavigation(false), 100);
+    historyNavigationRef.current = true;
+
+    setPaletteHistoryCounter(newCounter);
+    setPalette(historyEntry.palette);
+    setDuplicatePaletteType(historyEntry.type);
+    setSelectedPaletteType(historyEntry.type);
+    setOklch(historyEntry.oklch);
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        historyNavigationRef.current = false;
+      });
+    });
   };
 
   return (
@@ -113,18 +128,13 @@ export default function CustomPalToolbar() {
 
       <SelectComp
         items={paletteTypes}
-        value={historyNavigation ? duplicatePaletteType : selectedPaletteType}
+        value={selectedPaletteType}
         onChange={(val) => {
-          // Only allow changes if NOT on random palettes page
           if (!isRandomPalettesPage) {
-            if (selectedPaletteType !== undefined && setSelectedPaletteType) {
-              setSelectedPaletteType(val);
-            } else if (setDuplicatePaletteType) {
-              setDuplicatePaletteType(val);
-            }
+            setSelectedPaletteType(val);
           }
         }}
-        disabled={isRandomPalettesPage} // Add this prop
+        disabled={isRandomPalettesPage}
       />
 
       <FaAnglesUp className="size-9 cursor-pointer border border-(--navBorder) py-2 px-2 rounded-md hover:border-muted-foreground" />
@@ -135,7 +145,7 @@ export default function CustomPalToolbar() {
           onClick={() => {
             setMyColorPickerOpen((prev) => !prev);
           }}
-          className="rounded-md h-8.75  py-1 px-20 cursor-pointer"
+          className="rounded-md h-8.75 py-1 px-20 cursor-pointer"
           style={{ backgroundColor: `${cssColor}` }}
         ></button>
       </section>
@@ -144,7 +154,6 @@ export default function CustomPalToolbar() {
         onClick={goBackPalHistory}
       />
 
-      {/* Conditionally render FaPlay only on random-palettes page */}
       {isRandomPalettesPage && (
         <FaPlay
           onClick={generateRandomPalette}
@@ -178,7 +187,7 @@ export default function CustomPalToolbar() {
         className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]"
       />
 
-      <CgExport className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]" />
+      {/* <CgExport className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]" /> */}
 
       {!databaseOpen ? (
         <FaDatabase

@@ -44,6 +44,7 @@ export default function MonochromaticOptions() {
           </div>
         ))}
       </div>
+      luxuryMono:
     </div>
   );
 }

@@ -10,7 +10,6 @@ import TetradicOptions from "../ColorPaletteUtils/TetradicOptions";
 import ComplementaryOptions from "../ColorPaletteUtils/ComplementaryOptions";
 import MonochromaticOptions from "../ColorPaletteUtils/MonochromaticOptions";
 
-import LandCStepper from "./Pickers/components/LandCStepper";
 import SeasonalOptions from "../ColorPaletteUtils/SeasonalOptions";
 import DataVizOptions from "../ColorPaletteUtils/DataVizOptions";
 import FlowerPalOptions from "../ColorPaletteUtils/FlowerPalOptions";

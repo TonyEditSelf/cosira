@@ -388,6 +388,8 @@ export function ColorPaletteContextProvider({ children }) {
 
   const [myColorPickerOpen, setMyColorPickerOpen] = useState(false);
   const pickerRef = useRef(null);
+  const paletteHistoryCounterRef = useRef(-2);
+  const historyNavigationRef = useRef(false);
 
   const [leftPaletteAdjusterOpen, setLeftPaletteAdjusterOpen] = useState(false);
   const [showHidePanelOpen, setShowHidePanelOpen] = useState(false);
@@ -429,6 +431,18 @@ export function ColorPaletteContextProvider({ children }) {
   const [duplicatePaletteType, setDuplicatePaletteType] = useState("");
   const [paletteHistory, setPaletteHistory] = useState([]);
   const [paletteHistoryCounter, setPaletteHistoryCounter] = useState(-2);
+
+  const setCounter = (valueOrUpdater) => {
+    setPaletteHistoryCounter((prev) => {
+      const next =
+        typeof valueOrUpdater === "function"
+          ? valueOrUpdater(prev)
+          : valueOrUpdater;
+      paletteHistoryCounterRef.current = next;
+      return next;
+    });
+  };
+
   const [historyNavigation, setHistoryNavigation] = useState(false);
   const [hoverOn, setHoverOn] = useState(false);
 
@@ -469,22 +483,26 @@ export function ColorPaletteContextProvider({ children }) {
   }, [favPalette]);
 
   useEffect(() => {
+    if (historyNavigationRef.current) return;
+
     setPaletteHistory((prevHistory) => {
-      if (palette && palette.length > 0) {
-        const lastEntry = prevHistory[prevHistory.length - 1];
+      if (!palette || palette.length === 0) return prevHistory;
 
-        if (JSON.stringify(lastEntry) !== JSON.stringify(palette)) {
-          const historyObject = {
-            palette: palette,
-            type: selectedPaletteType,
-          };
+      const currentIndex = paletteHistoryCounterRef.current;
+      const historyObject = { palette, type: selectedPaletteType, oklch };
 
-          return [...prevHistory, historyObject];
-        }
+      const currentEntry = prevHistory[currentIndex];
+      if (JSON.stringify(currentEntry) === JSON.stringify(historyObject)) {
+        return prevHistory;
       }
-      return prevHistory;
+
+      const insertAt = currentIndex + 1;
+      const newHistory = [...prevHistory];
+      newHistory.splice(insertAt, 0, historyObject);
+      return newHistory;
     });
-    setPaletteHistoryCounter((prev) => prev + 1);
+
+    setCounter((prev) => prev + 1);
   }, [duplicatePalette]);
 
   useEffect(() => {
@@ -576,6 +594,7 @@ export function ColorPaletteContextProvider({ children }) {
     setDuplicatePaletteType,
     historyNavigation,
     setHistoryNavigation,
+    historyNavigationRef,
     oklch,
     setOklch,
     cssColor,

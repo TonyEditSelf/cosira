@@ -1,6 +1,14 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import chroma from "chroma-js";
 import { useColorPaletteContext } from "../ColorContext";
+
+import OklchColorWheel from "../custom-palettes/_components/Pickers/components/OklchColorWheel";
+import OklchArea from "../custom-palettes/_components/Pickers/components/OklchArea";
+import HueSlider from "../custom-palettes/_components/Pickers/components/HueSlider";
+import LightnessSlider from "../custom-palettes/_components/Pickers/components/LightnessSlider";
+import ChromaSlider from "../custom-palettes/_components/Pickers/components/ChromaSlider";
+import AlphaSlider from "../custom-palettes/_components/Pickers/components/AlphaSlider";
+import HsvPicker from "./HsvPicker";
 
 const presetBlendColors = [
   { name: "Gold", hex: "#FFD700", category: "Metallic" },
@@ -27,11 +35,53 @@ export default function BlendColors() {
   const [copiedColor, setCopiedColor] = useState(null);
   const [copiedMessage, setCopiedMessage] = useState("");
 
+  // Picker popup state
+  const [showPickerPopup, setShowPickerPopup] = useState(false);
+  const [pickerTab, setPickerTab] = useState("hex"); // "hex" | "oklch"
+  const [oklchValues, setOklchValues] = useState({
+    l: 0.7,
+    c: 0.15,
+    h: 50,
+    a: 1,
+  });
+
+  const pickerPopupRef = useRef(null);
+  const swatchButtonRef = useRef(null);
+
   const handleBlendColorSelect = (hex, name) => {
     setBlendColor(hex);
     setBlendColorName(name);
     setCustomBlendInput("");
   };
+
+  const handleOklchChange = (newValues) => {
+    const updated = { ...oklchValues, ...newValues };
+    setOklchValues(updated);
+    try {
+      const hex = chroma.oklch(updated.l, updated.c, updated.h).hex();
+      setBlendColor(hex);
+      setBlendColorName("Custom");
+      setCustomBlendInput(hex);
+    } catch (err) {}
+  };
+
+  // Close popup when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (
+        pickerPopupRef.current &&
+        !pickerPopupRef.current.contains(e.target) &&
+        swatchButtonRef.current &&
+        !swatchButtonRef.current.contains(e.target)
+      ) {
+        setShowPickerPopup(false);
+      }
+    };
+    if (showPickerPopup) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showPickerPopup]);
 
   const handleCustomBlendChange = (e) => {
     const value = e.target.value;
@@ -72,11 +122,7 @@ export default function BlendColors() {
         };
       });
 
-      return {
-        baseHex,
-        colorIndex,
-        blends,
-      };
+      return { baseHex, colorIndex, blends };
     });
   }, [palette, blendColor]);
 
@@ -101,7 +147,6 @@ export default function BlendColors() {
         return vars;
       })
       .join("\n");
-
     navigator.clipboard.writeText(`:root {\n${css}\n}`);
     setCopiedMessage("Copied all blends as CSS variables!");
     setCopiedColor("css");
@@ -116,7 +161,6 @@ export default function BlendColors() {
         .join("\n");
       return `        '${colorName}': {\n${shades}\n        }`;
     });
-
     const tailwind = `// Add to your tailwind.config.js\ncolors: {\n${colors.join(",\n")}\n}`;
     navigator.clipboard.writeText(tailwind);
     setCopiedMessage("Copied as Tailwind config!");
@@ -132,14 +176,10 @@ export default function BlendColors() {
       variations: Object.fromEntries(
         color.blends.map((blend) => [
           `${blend.intensity}%`,
-          {
-            hex: blend.hex,
-            oklch: { l: blend.l, c: blend.c, h: blend.h },
-          },
+          { hex: blend.hex, oklch: { l: blend.l, c: blend.c, h: blend.h } },
         ]),
       ),
     }));
-
     navigator.clipboard.writeText(JSON.stringify(json, null, 2));
     setCopiedMessage("Copied as JSON!");
     setCopiedColor("json");
@@ -148,102 +188,151 @@ export default function BlendColors() {
 
   return (
     <div className="hidden bg-background lg:flex flex-col pt-3 h-full">
-      <div className="flex flex-col gap-3 flex-1 ml-2 mr-2 mb-2 bg-background overflow-hidden">
-        <div className="p-4 border border-(--navBorder) rounded-md bg-foreground/[0.015]">
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <div className="flex items-center gap-6 flex-wrap">
-              <div className="flex items-center gap-3">
-                <span className="text-[10px] font-bold text-foreground/40 uppercase tracking-widest">
-                  Palette Blender
-                </span>
-                <div className="h-4 w-[1px] bg-(--navBorder)" />
-                <span className="text-[9px] text-foreground/30">
-                  Create metallic, neon, or branded color variations
-                </span>
-              </div>
+      {/* Top header bar */}
+      <div className="mx-2 mb-2 ml-2 mr-2 p-4 border border-(--navBorder) rounded-md bg-foreground/[0.015] flex-shrink-0">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-4 flex-wrap">
+            <div className="flex items-center gap-3">
+              <span className="text-[10px] font-bold text-foreground/40 uppercase tracking-widest">
+                Palette Blender
+              </span>
               <div className="h-4 w-[1px] bg-(--navBorder)" />
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold text-foreground/40 uppercase">
-                  Blending with
-                </span>
-                <div
-                  className="w-6 h-6 rounded border border-(--navBorder) shadow-sm"
-                  style={{ backgroundColor: blendColor }}
-                />
-                <span className="text-[10px] font-bold text-(--brand)">
-                  {blendColorName}
-                </span>
-              </div>
-              <div className="h-4 w-[1px] bg-(--navBorder)" />
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold text-foreground/40 uppercase">
-                  Showing
-                </span>
-                <span className="text-[10px] font-mono font-bold bg-foreground/5 text-(--brand) px-2 py-0.5 rounded">
-                  {blendIntensities.join("%, ")}%
-                </span>
-              </div>
+              <span className="text-[9px] text-foreground/30">
+                Create metallic, neon, or branded color variations
+              </span>
             </div>
+            <div className="h-4 w-[1px] bg-(--navBorder)" />
             <div className="flex items-center gap-2">
-              <button
-                onClick={exportAsCSS}
-                className="px-3 py-1.5 text-[10px] font-bold border border-(--navBorder) rounded hover:bg-foreground/5 hover:border-(--brand) transition-colors"
-              >
-                Export CSS
-              </button>
-              <button
-                onClick={exportAsTailwind}
-                className="px-3 py-1.5 text-[10px] font-bold border border-(--navBorder) rounded hover:bg-foreground/5 hover:border-(--brand) transition-colors"
-              >
-                Tailwind
-              </button>
-              <button
-                onClick={exportAsJSON}
-                className="px-3 py-1.5 text-[10px] font-bold border border-(--navBorder) rounded hover:bg-foreground/5 hover:border-(--brand) transition-colors"
-              >
-                JSON
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div className="p-4 border border-(--navBorder) rounded-md bg-foreground/[0.015]">
-          <div className="flex gap-6 items-center h-10">
-            {["Metallic", "Neon", "Neutral"].map((category) => (
-              <div key={category} className="flex items-center gap-3 min-w-0">
-                <span className="text-[9px] font-bold text-foreground/40 uppercase tracking-widest whitespace-nowrap">
-                  {category}
-                </span>
-                <div className="flex gap-1.5">
-                  {presetBlendColors
-                    .filter((c) => c.category === category)
-                    .map((c) => (
-                      <button
-                        key={c.name}
-                        onClick={() => handleBlendColorSelect(c.hex, c.name)}
-                        className={`h-7 w-7 rounded-md transition-all flex-shrink-0 ${
-                          blendColor === c.hex
-                            ? "ring-2 ring-(--brand) ring-offset-2 ring-offset-background scale-110 shadow-lg"
-                            : "hover:scale-105 border border-(--navBorder)"
-                        }`}
-                        style={{ background: c.hex }}
-                        title={c.name}
-                      />
-                    ))}
-                </div>
-              </div>
-            ))}
-
-            <div className="h-full w-[1px] bg-(--navBorder) flex-shrink-0" />
-
-            <div className="flex items-center gap-3 flex-1 min-w-0">
-              <span className="text-[9px] font-bold text-foreground/40 uppercase tracking-widest whitespace-nowrap">
-                Palette
+              <span className="text-[10px] font-bold text-foreground/40 uppercase">
+                Blending with
               </span>
               <div
-                className="flex flex-wrap gap-1.5 content-start overflow-y-auto custom-scrollbar pr-2"
-                style={{ maxHeight: "28px" }}
-              >
+                className="w-5 h-5 rounded border border-(--navBorder) shadow-sm"
+                style={{ backgroundColor: blendColor }}
+              />
+              <span className="text-[10px] font-bold text-(--brand)">
+                {blendColorName}
+              </span>
+            </div>
+            <div className="h-4 w-[1px] bg-(--navBorder)" />
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold text-foreground/40 uppercase">
+                Intensities
+              </span>
+              <span className="text-[10px] font-mono font-bold bg-foreground/5 text-(--brand) px-2 py-0.5 rounded">
+                {blendIntensities.join("%, ")}%
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={exportAsCSS}
+              className="px-3 py-1.5 text-[10px] font-bold border border-(--navBorder) rounded hover:bg-foreground/5 hover:border-(--brand) transition-colors"
+            >
+              Export CSS
+            </button>
+            <button
+              onClick={exportAsTailwind}
+              className="px-3 py-1.5 text-[10px] font-bold border border-(--navBorder) rounded hover:bg-foreground/5 hover:border-(--brand) transition-colors"
+            >
+              Tailwind
+            </button>
+            <button
+              onClick={exportAsJSON}
+              className="px-3 py-1.5 text-[10px] font-bold border border-(--navBorder) rounded hover:bg-foreground/5 hover:border-(--brand) transition-colors"
+            >
+              JSON
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Main content area: left toolbar + right canvas */}
+      <div className="flex flex-1 gap-2 mx-2 mb-2 min-h-0">
+        {/* ── Left vertical toolbar ~20% width ── */}
+        <div
+          className="flex flex-col ml-2 border border-(--navBorder) rounded-md bg-foreground/[0.015] overflow-y-auto custom-scrollbar flex-shrink-0"
+          style={{ width: "20%" }}
+        >
+          {/* Metallic */}
+          <div className="p-5 border-b border-(--navBorder) flex-shrink-0">
+            <span className="text-[9px] font-bold text-foreground/40 uppercase tracking-widest block mb-2">
+              Metallic
+            </span>
+            <div className="grid grid-cols-3 gap-1.5">
+              {presetBlendColors
+                .filter((c) => c.category === "Metallic")
+                .map((c) => (
+                  <button
+                    key={c.name}
+                    onClick={() => handleBlendColorSelect(c.hex, c.name)}
+                    className={`h-8 w-full rounded-md transition-all ${
+                      blendColor === c.hex
+                        ? "ring-2 ring-(--brand) ring-offset-1 ring-offset-background scale-105 shadow-lg"
+                        : "hover:scale-105 border border-(--navBorder)"
+                    }`}
+                    style={{ background: c.hex }}
+                    title={c.name}
+                  />
+                ))}
+            </div>
+          </div>
+
+          {/* Neon */}
+          <div className="p-5 border-b border-(--navBorder) flex-shrink-0">
+            <span className="text-[9px] font-bold text-foreground/40 uppercase tracking-widest block mb-2">
+              Neon
+            </span>
+            <div className="grid grid-cols-3 gap-1.5">
+              {presetBlendColors
+                .filter((c) => c.category === "Neon")
+                .map((c) => (
+                  <button
+                    key={c.name}
+                    onClick={() => handleBlendColorSelect(c.hex, c.name)}
+                    className={`h-8 w-full rounded-md transition-all ${
+                      blendColor === c.hex
+                        ? "ring-2 ring-(--brand) ring-offset-1 ring-offset-background scale-105 shadow-lg"
+                        : "hover:scale-105 border border-(--navBorder)"
+                    }`}
+                    style={{ background: c.hex }}
+                    title={c.name}
+                  />
+                ))}
+            </div>
+          </div>
+
+          {/* Neutral */}
+          <div className="p-5 border-b border-(--navBorder) flex-shrink-0">
+            <span className="text-[9px] font-bold text-foreground/40 uppercase tracking-widest block mb-2">
+              Neutral
+            </span>
+            <div className="grid grid-cols-3 gap-1.5">
+              {presetBlendColors
+                .filter((c) => c.category === "Neutral")
+                .map((c) => (
+                  <button
+                    key={c.name}
+                    onClick={() => handleBlendColorSelect(c.hex, c.name)}
+                    className={`h-8 w-full rounded-md transition-all ${
+                      blendColor === c.hex
+                        ? "ring-2 ring-(--brand) ring-offset-1 ring-offset-background scale-105 shadow-lg"
+                        : "hover:scale-105 border border-(--navBorder)"
+                    }`}
+                    style={{ background: c.hex }}
+                    title={c.name}
+                  />
+                ))}
+            </div>
+          </div>
+
+          {/* Palette colors */}
+          {palette.length > 0 && (
+            <div className="p-5 border-b border-(--navBorder) flex-shrink-0">
+              <span className="text-[9px] font-bold text-foreground/40 uppercase tracking-widest block mb-2">
+                Palette
+              </span>
+              <div className="grid grid-cols-3 gap-1.5">
                 {palette.map((c, i) => {
                   const hex = chroma
                     .oklch(c.value.l, c.value.c, c.value.h)
@@ -254,9 +343,9 @@ export default function BlendColors() {
                       onClick={() =>
                         handleBlendColorSelect(hex, `Palette ${i + 1}`)
                       }
-                      className={`h-7 w-7 rounded-md transition-all flex-shrink-0 ${
+                      className={`h-8 w-full rounded-md transition-all ${
                         blendColor === hex
-                          ? "ring-2 ring-(--brand) ring-offset-2 ring-offset-background scale-110 shadow-lg"
+                          ? "ring-2 ring-(--brand) ring-offset-1 ring-offset-background scale-105 shadow-lg"
                           : "hover:scale-105 border border-(--navBorder)/50"
                       }`}
                       style={{ background: hex }}
@@ -266,36 +355,175 @@ export default function BlendColors() {
                 })}
               </div>
             </div>
+          )}
 
-            <div className="h-full w-[1px] bg-(--navBorder) flex-shrink-0" />
+          {/* Custom */}
+          <div className="p-3 flex-shrink-0">
+            <span className="text-[9px] font-bold text-foreground/40 uppercase tracking-widest block mb-2">
+              Custom
+            </span>
+            <div className="flex flex-col gap-2">
+              {/* Clicking this opens the unified picker popup */}
+              <button
+                ref={swatchButtonRef}
+                onClick={() => setShowPickerPopup((v) => !v)}
+                className={`h-9 w-full rounded-md border transition-all flex items-center overflow-hidden ${
+                  showPickerPopup
+                    ? "border-(--brand) ring-1 ring-(--brand)"
+                    : "border-(--navBorder) hover:border-(--brand)"
+                }`}
+                title="Open color picker"
+              >
+                <div
+                  className="h-full w-10 flex-shrink-0"
+                  style={{ backgroundColor: blendColor }}
+                />
+                <span className="text-[10px] font-mono text-foreground/50 px-2 truncate">
+                  {blendColor.toUpperCase()}
+                </span>
+              </button>
 
-            <div className="flex items-center gap-3 flex-shrink-0">
-              <span className="text-[9px] font-bold text-foreground/40 uppercase tracking-widest whitespace-nowrap">
-                Custom
-              </span>
-              <div className="flex gap-2 items-center">
-                <input
-                  type="color"
-                  value={blendColor}
-                  onChange={(e) =>
-                    handleBlendColorSelect(e.target.value, "Custom")
-                  }
-                  className="h-7 w-7 rounded-md border border-(--navBorder) cursor-pointer flex-shrink-0"
-                  title="Color Picker"
-                />
-                <input
-                  type="text"
-                  value={customBlendInput}
-                  onChange={handleCustomBlendChange}
-                  placeholder="HEX"
-                  className="w-20 px-2 py-1 text-[11px] font-mono border border-(--navBorder) rounded bg-background outline-none focus:border-(--brand)"
-                />
-              </div>
+              <input
+                type="text"
+                value={customBlendInput}
+                onChange={handleCustomBlendChange}
+                placeholder="Enter HEX…"
+                className="w-full px-2 py-1.5 text-[11px] font-mono border border-(--navBorder) rounded bg-background outline-none focus:border-(--brand) placeholder:text-foreground/20"
+              />
             </div>
           </div>
         </div>
 
-        <div className="flex-1 border border-(--navBorder) rounded-md overflow-hidden bg-gradient-to-br from-foreground/[0.01] to-foreground/[0.03] relative">
+        {/* ── Unified color picker popup — fixed, floats above everything ── */}
+        {showPickerPopup && (
+          <div
+            ref={pickerPopupRef}
+            className="fixed z-50 bg-background border border-(--navBorder) rounded-md shadow-2xl flex flex-col"
+            style={{
+              top: "60.5%",
+              left: "0.5%",
+              transform: "translateY(-50%)",
+              width: "500px",
+              maxHeight: "90vh",
+            }}
+          >
+            {/* Header: tabs + close */}
+            <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-(--navBorder) flex-shrink-0">
+              <div className="flex items-center gap-1 bg-foreground/5 rounded-lg p-1">
+                <button
+                  onClick={() => setPickerTab("hex")}
+                  className={`px-3 py-1 text-[10px] font-bold rounded-md transition-all ${
+                    pickerTab === "hex"
+                      ? "bg-background text-(--brand) border border-(--brand) shadow-sm"
+                      : "text-foreground/40 hover:text-foreground/70"
+                  }`}
+                >
+                  Hex Picker
+                </button>
+                <button
+                  onClick={() => setPickerTab("oklch")}
+                  className={`px-3 py-1 text-[10px] font-bold rounded-md transition-all ${
+                    pickerTab === "oklch"
+                      ? "bg-background text-(--brand) border border-(--brand) shadow-sm"
+                      : "text-foreground/40 hover:text-foreground/70"
+                  }`}
+                >
+                  OKLCH Picker
+                </button>
+              </div>
+              <button
+                onClick={() => setShowPickerPopup(false)}
+                className="text-[11px] text-foreground/40 hover:text-foreground transition-colors px-2 py-0.5 rounded hover:bg-foreground/5"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="overflow-y-auto custom-scrollbar p-4 flex flex-col gap-4">
+              {pickerTab === "hex" ? (
+                /* ── Inline HSV/Hex picker ── */
+                <HsvPicker
+                  color={blendColor}
+                  onChange={(hex) => handleBlendColorSelect(hex, "Custom")}
+                />
+              ) : (
+                /* ── OKLCH picker ── */
+                <div className="flex gap-5">
+                  <div className="flex flex-col gap-2 items-center flex-shrink-0">
+                    <OklchColorWheel
+                      hue={oklchValues.h}
+                      lightness={oklchValues.l}
+                      chroma={oklchValues.c}
+                      alpha={oklchValues.a}
+                      onChange={handleOklchChange}
+                    />
+                    <OklchArea
+                      lightness={oklchValues.l}
+                      chroma={oklchValues.c}
+                      hue={oklchValues.h}
+                      alpha={oklchValues.a}
+                      onChange={handleOklchChange}
+                    />
+                  </div>
+                  <div className="flex flex-col justify-center w-full gap-4">
+                    <div>
+                      <h4 className="text-[10px] font-bold text-foreground/40 uppercase tracking-widest mb-2">
+                        Hue
+                      </h4>
+                      <HueSlider
+                        hue={oklchValues.h}
+                        lightness={oklchValues.l}
+                        chroma={oklchValues.c}
+                        alpha={oklchValues.a}
+                        onChange={handleOklchChange}
+                      />
+                    </div>
+                    <div>
+                      <h4 className="text-[10px] font-bold text-foreground/40 uppercase tracking-widest mb-2">
+                        Lightness
+                      </h4>
+                      <LightnessSlider
+                        lightness={oklchValues.l}
+                        chroma={oklchValues.c}
+                        hue={oklchValues.h}
+                        alpha={oklchValues.a}
+                        onChange={handleOklchChange}
+                      />
+                    </div>
+                    <div>
+                      <h4 className="text-[10px] font-bold text-foreground/40 uppercase tracking-widest mb-2">
+                        Chroma
+                      </h4>
+                      <ChromaSlider
+                        lightness={oklchValues.l}
+                        chroma={oklchValues.c}
+                        hue={oklchValues.h}
+                        alpha={oklchValues.a}
+                        onChange={handleOklchChange}
+                      />
+                    </div>
+                    <div>
+                      <h4 className="text-[10px] font-bold text-foreground/40 uppercase tracking-widest mb-2">
+                        Alpha
+                      </h4>
+                      <AlphaSlider
+                        lightness={oklchValues.l}
+                        chroma={oklchValues.c}
+                        hue={oklchValues.h}
+                        alpha={oklchValues.a}
+                        onChange={handleOklchChange}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ── Right: blend results canvas ── */}
+        <div className="flex-1 mr-2 border border-(--navBorder) rounded-md overflow-hidden bg-gradient-to-br from-foreground/[0.01] to-foreground/[0.03] relative min-w-0">
           <div className="h-full overflow-y-auto custom-scrollbar p-6">
             <div className="space-y-8">
               {blendedPalette.map((colorData) => (
@@ -329,7 +557,6 @@ export default function BlendColors() {
                         BASE
                       </span>
                     </div>
-
                     {colorData.blends.map((blend) => (
                       <div
                         key={blend.intensity}
@@ -352,7 +579,6 @@ export default function BlendColors() {
                         chroma.contrast(blend.hex, "black")
                           ? "white"
                           : "black";
-
                       return (
                         <div
                           key={blend.intensity}
@@ -370,7 +596,6 @@ export default function BlendColors() {
                               {blend.intensity}%
                             </span>
                           </div>
-
                           <div className="space-y-2">
                             <div className="flex flex-col gap-0.5">
                               <span className="text-[11px] font-mono font-bold text-foreground/80">
@@ -382,7 +607,6 @@ export default function BlendColors() {
                                 <span>H:{blend.h}°</span>
                               </div>
                             </div>
-
                             <div className="flex flex-wrap gap-1 pt-2 border-t border-(--navBorder)">
                               {blend.wcagAAA && (
                                 <div className="px-1.5 py-0.5 bg-emerald-500/10 border border-emerald-500/30 rounded text-[8px] font-bold text-emerald-600 uppercase">
@@ -400,7 +624,6 @@ export default function BlendColors() {
                                 </div>
                               )}
                             </div>
-
                             <div className="flex flex-col gap-1 text-[8px] text-foreground/40">
                               <div className="flex items-center justify-between">
                                 <span>vs White</span>

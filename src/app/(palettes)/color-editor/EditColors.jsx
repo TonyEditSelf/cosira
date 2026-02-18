@@ -15,7 +15,6 @@ export default function EditColors() {
     h: 0,
   });
 
-  // Get the selected color with adjustments applied
   const originalColor = useMemo(() => {
     if (!palette[selectedColorIndex]) return null;
     return palette[selectedColorIndex].value;
@@ -23,35 +22,41 @@ export default function EditColors() {
 
   const adjustedColor = useMemo(() => {
     if (!originalColor) return null;
-
+    const active = batchMode ? batchAdjustments : adjustments;
     return {
-      l: Math.max(0, Math.min(1, originalColor.l + adjustments.l)),
-      c: Math.max(0, Math.min(0.4, originalColor.c + adjustments.c)),
-      h: (originalColor.h + adjustments.h + 360) % 360,
+      l: Math.max(0, Math.min(1, originalColor.l + active.l)),
+      c: Math.max(0, Math.min(0.4, originalColor.c + active.c)),
+      h: (originalColor.h + active.h + 360) % 360,
       a: originalColor.a || 1,
     };
-  }, [originalColor, adjustments]);
+  }, [originalColor, adjustments, batchAdjustments, batchMode]);
 
-  // Calculate suggestions for better contrast
+  // Compute adjusted version of every palette color (for batch preview)
+  const adjustedPalette = useMemo(() => {
+    return palette.map((colorObj) => {
+      const base = colorObj.value;
+      return {
+        l: Math.max(0, Math.min(1, base.l + batchAdjustments.l)),
+        c: Math.max(0, Math.min(0.4, base.c + batchAdjustments.c)),
+        h: (base.h + batchAdjustments.h + 360) % 360,
+        a: base.a || 1,
+      };
+    });
+  }, [palette, batchAdjustments]);
+
   const suggestions = useMemo(() => {
     if (!adjustedColor) return [];
-
     const suggestionsList = [];
     const color = chroma.oklch(
       adjustedColor.l,
       adjustedColor.c,
       adjustedColor.h,
     );
-    const white = chroma("#ffffff");
-    const black = chroma("#000000");
-    const contrastWhite = chroma.contrast(color, white);
-    const contrastBlack = chroma.contrast(color, black);
+    const contrastWhite = chroma.contrast(color, chroma("#ffffff"));
+    const contrastBlack = chroma.contrast(color, chroma("#000000"));
 
-    // Check if it fails WCAG AA on both
     if (contrastWhite < 4.5 && contrastBlack < 4.5) {
-      // Suggest lightness adjustment
       if (adjustedColor.l < 0.5) {
-        // Dark color, suggest darkening more
         const targetL = Math.max(0.1, adjustedColor.l - 0.15);
         const improvement = ((targetL - adjustedColor.l) * 100).toFixed(0);
         suggestionsList.push({
@@ -60,7 +65,6 @@ export default function EditColors() {
           adjustment: { l: targetL - adjustedColor.l, c: 0, h: 0 },
         });
       } else {
-        // Light color, suggest lightening more
         const targetL = Math.min(0.95, adjustedColor.l + 0.15);
         const improvement = ((targetL - adjustedColor.l) * 100).toFixed(0);
         suggestionsList.push({
@@ -70,8 +74,6 @@ export default function EditColors() {
         });
       }
     }
-
-    // Check if chroma is too low (grayish)
     if (adjustedColor.c < 0.05) {
       suggestionsList.push({
         type: "saturate",
@@ -79,8 +81,6 @@ export default function EditColors() {
         adjustment: { l: 0, c: 0.1, h: 0 },
       });
     }
-
-    // Check if chroma is too high (oversaturated)
     if (adjustedColor.c > 0.3) {
       suggestionsList.push({
         type: "desaturate",
@@ -88,9 +88,9 @@ export default function EditColors() {
         adjustment: { l: 0, c: -0.1, h: 0 },
       });
     }
-
     return suggestionsList;
   }, [adjustedColor]);
+
   const deltaE = useMemo(() => {
     if (!originalColor || !adjustedColor) return 0;
     try {
@@ -103,10 +103,8 @@ export default function EditColors() {
     }
   }, [originalColor, adjustedColor]);
 
-  // Find similar colors in palette
   const similarColors = useMemo(() => {
     if (!adjustedColor) return [];
-
     return palette
       .map((color, idx) => {
         if (idx === selectedColorIndex) return null;
@@ -124,22 +122,17 @@ export default function EditColors() {
       .sort((a, b) => a.delta - b.delta);
   }, [adjustedColor, palette, selectedColorIndex]);
 
-  // Contrast ratios
   const contrastInfo = useMemo(() => {
     if (!adjustedColor) return null;
-
     try {
       const color = chroma.oklch(
         adjustedColor.l,
         adjustedColor.c,
         adjustedColor.h,
       );
-      const white = chroma("#ffffff");
-      const black = chroma("#000000");
-
       return {
-        vsWhite: chroma.contrast(color, white).toFixed(2),
-        vsBlack: chroma.contrast(color, black).toFixed(2),
+        vsWhite: chroma.contrast(color, chroma("#ffffff")).toFixed(2),
+        vsBlack: chroma.contrast(color, chroma("#000000")).toFixed(2),
       };
     } catch {
       return { vsWhite: 0, vsBlack: 0 };
@@ -150,15 +143,11 @@ export default function EditColors() {
     setAdjustments((prev) => ({ ...prev, [type]: parseFloat(value) }));
   };
 
-  const handleReset = () => {
-    setAdjustments({ l: 0, c: 0, h: 0 });
-  };
+  const handleReset = () => setAdjustments({ l: 0, c: 0, h: 0 });
 
   const handleApply = () => {
     if (!adjustedColor) return;
-
     if (batchMode) {
-      // Apply to all colors
       const newPalette = palette.map((colorObj) => {
         const base = colorObj.value;
         return {
@@ -174,7 +163,6 @@ export default function EditColors() {
       setPalette(newPalette);
       setBatchAdjustments({ l: 0, c: 0, h: 0 });
     } else {
-      // Apply to selected color only
       const newPalette = [...palette];
       newPalette[selectedColorIndex] = {
         ...newPalette[selectedColorIndex],
@@ -183,7 +171,6 @@ export default function EditColors() {
       setPalette(newPalette);
       setAdjustments({ l: 0, c: 0, h: 0 });
     }
-
     setShowSuccess(true);
     setTimeout(() => setShowSuccess(false), 2000);
   };
@@ -256,40 +243,42 @@ export default function EditColors() {
           </div>
         </div>
 
-        {/* Color Selection */}
-        <div className="p-3 border-b border-(--navBorder) flex-shrink-0">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-[9px] font-bold text-foreground/50 uppercase tracking-widest">
-              Select Color
-            </span>
-            <span className="text-[8px] text-foreground/30 font-mono">
-              {selectedColorIndex + 1}/{palette.length}
-            </span>
+        {/* Color Selection — hidden in batch mode since all colors are affected */}
+        {!batchMode && (
+          <div className="p-3 border-b border-(--navBorder) flex-shrink-0">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-[9px] font-bold text-foreground/50 uppercase tracking-widest">
+                Select Color
+              </span>
+              <span className="text-[8px] text-foreground/30 font-mono">
+                {selectedColorIndex + 1}/{palette.length}
+              </span>
+            </div>
+            <div className="grid grid-cols-12 gap-1.5">
+              {palette.map((color, idx) => {
+                const hex = chroma
+                  .oklch(color.value.l, color.value.c, color.value.h)
+                  .hex();
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      setSelectedColorIndex(idx);
+                      setAdjustments({ l: 0, c: 0, h: 0 });
+                    }}
+                    className={`aspect-square rounded transition-all ${
+                      idx === selectedColorIndex
+                        ? "ring-2 ring-(--brand) ring-offset-1 ring-offset-background scale-110 shadow-lg"
+                        : "hover:scale-105 border border-(--navBorder)"
+                    }`}
+                    style={{ backgroundColor: hex }}
+                    title={`Color ${idx + 1}`}
+                  />
+                );
+              })}
+            </div>
           </div>
-          <div className="grid grid-cols-12 gap-1.5">
-            {palette.map((color, idx) => {
-              const hex = chroma
-                .oklch(color.value.l, color.value.c, color.value.h)
-                .hex();
-              return (
-                <button
-                  key={idx}
-                  onClick={() => {
-                    setSelectedColorIndex(idx);
-                    setAdjustments({ l: 0, c: 0, h: 0 });
-                  }}
-                  className={`aspect-square rounded transition-all ${
-                    idx === selectedColorIndex
-                      ? "ring-2 ring-(--brand) ring-offset-1 ring-offset-background scale-110 shadow-lg"
-                      : "hover:scale-105 border border-(--navBorder)"
-                  }`}
-                  style={{ backgroundColor: hex }}
-                  title={`Color ${idx + 1}`}
-                />
-              );
-            })}
-          </div>
-        </div>
+        )}
 
         {/* Scrollable Middle Section */}
         <div className="flex-1 overflow-y-auto custom-scrollbar">
@@ -298,7 +287,6 @@ export default function EditColors() {
             <div className="text-[9px] font-bold text-foreground/50 uppercase tracking-widest mb-3">
               Adjustments
             </div>
-
             <div className="space-y-4">
               {/* Lightness */}
               <div>
@@ -428,8 +416,8 @@ export default function EditColors() {
             </div>
           </div>
 
-          {/* Contrast Info */}
-          {contrastInfo && (
+          {/* Contrast Info — single mode only */}
+          {!batchMode && contrastInfo && (
             <div className="p-3 border-b border-(--navBorder)">
               <div className="flex items-center gap-1.5 mb-2">
                 <Info className="w-3 h-3 text-foreground/40" />
@@ -494,8 +482,8 @@ export default function EditColors() {
             </div>
           )}
 
-          {/* Similarity Warning */}
-          {similarColors.length > 0 && !batchMode && (
+          {/* Similarity Warning — single mode only */}
+          {!batchMode && similarColors.length > 0 && (
             <div className="p-3 border-b border-yellow-500/30 bg-yellow-500/5">
               <div className="flex items-center gap-1.5 mb-2">
                 <AlertTriangle className="w-4 h-4 text-yellow-600" />
@@ -538,8 +526,8 @@ export default function EditColors() {
             </div>
           )}
 
-          {/* AI Suggestions */}
-          {suggestions.length > 0 && !batchMode && (
+          {/* Suggestions — single mode only */}
+          {!batchMode && suggestions.length > 0 && (
             <div className="p-3 border-b border-blue-500/30 bg-blue-500/5">
               <div className="flex items-center gap-1.5 mb-2">
                 <Info className="w-4 h-4 text-blue-600" />
@@ -605,199 +593,336 @@ export default function EditColors() {
       {/* Right Panel - Preview */}
       <main className="flex-1 p-6 overflow-auto">
         <div className="max-w-4xl mx-auto">
-          {/* Preview Header */}
-          <div className="mb-6">
-            <div className="flex items-center gap-2 mb-2">
-              <h3 className="text-sm font-bold text-foreground/80 uppercase tracking-wider">
-                Live Preview
-              </h3>
-              {deltaE > 0 && (
-                <span className="text-[9px] font-mono bg-(--brand)/10 text-(--brand) px-2 py-0.5 rounded font-bold">
-                  ΔE: {deltaE.toFixed(1)}
-                </span>
-              )}
-            </div>
-            <p className="text-[10px] text-foreground/40">
-              Compare original and adjusted colors in real-time
-            </p>
-          </div>
-
-          {/* Before/After Comparison */}
-          <div className="grid grid-cols-2 gap-6">
-            {/* Original */}
-            <div>
-              <div className="text-[9px] font-bold text-foreground/40 uppercase tracking-wider mb-3">
-                Original
-              </div>
-              <div
-                className="h-32 rounded-xl border border-(--navBorder) shadow-lg flex items-center justify-center transition-all"
-                style={{
-                  backgroundColor: originalHex,
-                  color: getContrastText(originalColor),
-                }}
-              >
-                <div className="text-center">
-                  <div className="text-xl font-bold font-mono mb-1">
-                    {originalHex.toUpperCase()}
-                  </div>
-                  <div className="text-xs opacity-70 font-mono">
-                    L:{(originalColor.l * 100).toFixed(0)} C:
-                    {originalColor.c.toFixed(2)} H:{originalColor.h.toFixed(0)}°
-                  </div>
+          {batchMode ? (
+            /* ── Batch mode: full palette before/after ── */
+            <>
+              <div className="mb-6">
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="text-sm font-bold text-foreground/80 uppercase tracking-wider">
+                    Batch Preview
+                  </h3>
+                  {hasChanges && (
+                    <span className="text-[9px] font-mono bg-(--brand)/10 text-(--brand) px-2 py-0.5 rounded font-bold">
+                      Live
+                    </span>
+                  )}
                 </div>
-              </div>
-            </div>
-
-            {/* Adjusted */}
-            <div>
-              <div className="text-[9px] font-bold text-foreground/40 uppercase tracking-wider mb-3">
-                Adjusted
-              </div>
-              <div
-                className="h-32 rounded-xl border-2 shadow-2xl flex items-center justify-center transition-all"
-                style={{
-                  backgroundColor: adjustedHex,
-                  color: getContrastText(adjustedColor),
-                  borderColor: hasChanges ? "var(--brand)" : "var(--navBorder)",
-                }}
-              >
-                <div className="text-center">
-                  <div className="text-xl font-bold font-mono mb-1">
-                    {adjustedHex.toUpperCase()}
-                  </div>
-                  <div className="text-xs opacity-70 font-mono">
-                    L:{(adjustedColor.l * 100).toFixed(0)} C:
-                    {adjustedColor.c.toFixed(2)} H:{adjustedColor.h.toFixed(0)}°
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Large Preview */}
-          <div className="mt-6">
-            <div className="text-[9px] font-bold text-foreground/40 uppercase tracking-wider mb-3">
-              Full Preview
-            </div>
-            <div
-              className="h-48 rounded-xl border-2 shadow-xl flex items-center justify-center transition-all"
-              style={{
-                backgroundColor: adjustedHex,
-                color: getContrastText(adjustedColor),
-                borderColor: hasChanges ? "var(--brand)" : "var(--navBorder)",
-              }}
-            >
-              <div className="text-center">
-                <div className="text-4xl font-bold mb-4">Sample Text</div>
-                <p className="text-lg opacity-80">
-                  The quick brown fox jumps over the lazy dog
+                <p className="text-[10px] text-foreground/40">
+                  All palette colors — original vs adjusted in real time
                 </p>
               </div>
-            </div>
-          </div>
 
-          {/* UI Elements Preview */}
-          {!batchMode && (
-            <div className="mt-6">
-              <div className="text-[9px] font-bold text-foreground/40 uppercase tracking-wider mb-3">
-                UI Elements Preview
+              {/* Original palette row */}
+              <div className="mb-3">
+                <div className="text-[9px] font-bold text-foreground/40 uppercase tracking-wider mb-2">
+                  Original
+                </div>
+                <div className="flex gap-1 h-24 rounded-md overflow-hidden border border-(--navBorder) shadow-sm">
+                  {palette.map((colorObj, idx) => {
+                    const hex = chroma
+                      .oklch(
+                        colorObj.value.l,
+                        colorObj.value.c,
+                        colorObj.value.h,
+                      )
+                      .hex();
+                    return (
+                      <div
+                        key={idx}
+                        className="flex-1 flex items-end justify-center pb-2 group"
+                        style={{ backgroundColor: hex }}
+                        title={hex}
+                      >
+                        <span
+                          className="text-[8px] font-mono font-bold opacity-0 group-hover:opacity-100 transition-opacity"
+                          style={{ color: getContrastText(colorObj.value) }}
+                        >
+                          {idx + 1}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-              <div className="grid grid-cols-3 gap-4">
-                {/* Button */}
-                <div className="space-y-2">
-                  <div className="text-[8px] text-foreground/50 uppercase font-semibold">
-                    Button
+
+              {/* Adjusted palette row */}
+              <div className="mb-8">
+                <div className="text-[9px] font-bold text-foreground/40 uppercase tracking-wider mb-2">
+                  Adjusted
+                </div>
+                <div
+                  className={`flex gap-1 h-24 rounded-md overflow-hidden shadow-sm border-2 transition-all ${hasChanges ? "border-(--brand)" : "border-(--navBorder)"}`}
+                >
+                  {adjustedPalette.map((adjusted, idx) => {
+                    const hex = chroma
+                      .oklch(adjusted.l, adjusted.c, adjusted.h)
+                      .hex();
+                    return (
+                      <div
+                        key={idx}
+                        className="flex-1 flex items-end justify-center pb-2 group"
+                        style={{ backgroundColor: hex }}
+                        title={hex}
+                      >
+                        <span
+                          className="text-[8px] font-mono font-bold opacity-0 group-hover:opacity-100 transition-opacity"
+                          style={{ color: getContrastText(adjusted) }}
+                        >
+                          {idx + 1}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Per-color delta cards */}
+              <div>
+                <div className="text-[9px] font-bold text-foreground/40 uppercase tracking-wider mb-3">
+                  Per Color
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  {palette.map((colorObj, idx) => {
+                    const origHex = chroma
+                      .oklch(
+                        colorObj.value.l,
+                        colorObj.value.c,
+                        colorObj.value.h,
+                      )
+                      .hex();
+                    const adjusted = adjustedPalette[idx];
+                    const adjHex = chroma
+                      .oklch(adjusted.l, adjusted.c, adjusted.h)
+                      .hex();
+                    return (
+                      <div
+                        key={idx}
+                        className="flex items-center gap-3 p-2.5 rounded-lg border border-(--navBorder) bg-foreground/[0.01]"
+                      >
+                        <span className="text-[9px] font-bold text-foreground/30 w-4 flex-shrink-0">
+                          {idx + 1}
+                        </span>
+                        <div
+                          className="w-9 h-9 rounded-md border border-black/10 flex-shrink-0"
+                          style={{ backgroundColor: origHex }}
+                          title={origHex}
+                        />
+                        <span className="text-[9px] text-foreground/30">→</span>
+                        <div
+                          className={`w-9 h-9 rounded-md flex-shrink-0 transition-all border ${hasChanges ? "border-(--brand) shadow-sm" : "border-black/10"}`}
+                          style={{ backgroundColor: adjHex }}
+                          title={adjHex}
+                        />
+                        <div className="flex flex-col gap-0.5 min-w-0">
+                          <span className="text-[8px] font-mono text-foreground/40 truncate">
+                            {origHex.toUpperCase()}
+                          </span>
+                          <span className="text-[8px] font-mono text-(--brand) truncate">
+                            {adjHex.toUpperCase()}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </>
+          ) : (
+            /* ── Single color mode ── */
+            <>
+              <div className="mb-6">
+                <div className="flex items-center gap-2 mb-2">
+                  <h3 className="text-sm font-bold text-foreground/80 uppercase tracking-wider">
+                    Live Preview
+                  </h3>
+                  {deltaE > 0 && (
+                    <span className="text-[9px] font-mono bg-(--brand)/10 text-(--brand) px-2 py-0.5 rounded font-bold">
+                      ΔE: {deltaE.toFixed(1)}
+                    </span>
+                  )}
+                </div>
+                <p className="text-[10px] text-foreground/40">
+                  Compare original and adjusted colors in real-time
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <div className="text-[9px] font-bold text-foreground/40 uppercase tracking-wider mb-3">
+                    Original
                   </div>
-                  <button
-                    className="w-full px-4 py-2 rounded-lg font-semibold text-sm transition-all hover:opacity-90"
+                  <div
+                    className="h-32 rounded-xl border border-(--navBorder) shadow-lg flex items-center justify-center transition-all"
+                    style={{
+                      backgroundColor: originalHex,
+                      color: getContrastText(originalColor),
+                    }}
+                  >
+                    <div className="text-center">
+                      <div className="text-xl font-bold font-mono mb-1">
+                        {originalHex.toUpperCase()}
+                      </div>
+                      <div className="text-xs opacity-70 font-mono">
+                        L:{(originalColor.l * 100).toFixed(0)} C:
+                        {originalColor.c.toFixed(2)} H:
+                        {originalColor.h.toFixed(0)}°
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[9px] font-bold text-foreground/40 uppercase tracking-wider mb-3">
+                    Adjusted
+                  </div>
+                  <div
+                    className="h-32 rounded-xl border-2 shadow-2xl flex items-center justify-center transition-all"
                     style={{
                       backgroundColor: adjustedHex,
                       color: getContrastText(adjustedColor),
+                      borderColor: hasChanges
+                        ? "var(--brand)"
+                        : "var(--navBorder)",
                     }}
                   >
-                    Click Me
-                  </button>
-                </div>
-
-                {/* Badge */}
-                <div className="space-y-2">
-                  <div className="text-[8px] text-foreground/50 uppercase font-semibold">
-                    Badge
+                    <div className="text-center">
+                      <div className="text-xl font-bold font-mono mb-1">
+                        {adjustedHex.toUpperCase()}
+                      </div>
+                      <div className="text-xs opacity-70 font-mono">
+                        L:{(adjustedColor.l * 100).toFixed(0)} C:
+                        {adjustedColor.c.toFixed(2)} H:
+                        {adjustedColor.h.toFixed(0)}°
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span
-                      className="px-2 py-1 rounded text-xs font-semibold"
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <div className="text-[9px] font-bold text-foreground/40 uppercase tracking-wider mb-3">
+                  Full Preview
+                </div>
+                <div
+                  className="h-48 rounded-xl border-2 shadow-xl flex items-center justify-center transition-all"
+                  style={{
+                    backgroundColor: adjustedHex,
+                    color: getContrastText(adjustedColor),
+                    borderColor: hasChanges
+                      ? "var(--brand)"
+                      : "var(--navBorder)",
+                  }}
+                >
+                  <div className="text-center">
+                    <div className="text-4xl font-bold mb-4">Sample Text</div>
+                    <p className="text-lg opacity-80">
+                      The quick brown fox jumps over the lazy dog
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <div className="text-[9px] font-bold text-foreground/40 uppercase tracking-wider mb-3">
+                  UI Elements Preview
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <div className="text-[8px] text-foreground/50 uppercase font-semibold">
+                      Button
+                    </div>
+                    <button
+                      className="w-full px-4 py-2 rounded-lg font-semibold text-sm transition-all hover:opacity-90"
                       style={{
                         backgroundColor: adjustedHex,
                         color: getContrastText(adjustedColor),
                       }}
                     >
-                      New
-                    </span>
-                    <span
-                      className="px-2 py-1 rounded text-xs font-semibold"
-                      style={{
-                        backgroundColor: "transparent",
-                        color: adjustedHex,
-                        border: `2px solid ${adjustedHex}`,
-                      }}
-                    >
-                      Outlined
-                    </span>
+                      Click Me
+                    </button>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="text-[8px] text-foreground/50 uppercase font-semibold">
+                      Badge
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="px-2 py-1 rounded text-xs font-semibold"
+                        style={{
+                          backgroundColor: adjustedHex,
+                          color: getContrastText(adjustedColor),
+                        }}
+                      >
+                        New
+                      </span>
+                      <span
+                        className="px-2 py-1 rounded text-xs font-semibold"
+                        style={{
+                          backgroundColor: "transparent",
+                          color: adjustedHex,
+                          border: `2px solid ${adjustedHex}`,
+                        }}
+                      >
+                        Outlined
+                      </span>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="text-[8px] text-foreground/50 uppercase font-semibold">
+                      Icon
+                    </div>
+                    <div className="flex gap-2">
+                      <Check
+                        className="w-6 h-6"
+                        style={{ color: adjustedHex }}
+                      />
+                      <AlertTriangle
+                        className="w-6 h-6"
+                        style={{ color: adjustedHex }}
+                      />
+                      <Info
+                        className="w-6 h-6"
+                        style={{ color: adjustedHex }}
+                      />
+                    </div>
                   </div>
                 </div>
-
-                {/* Icon */}
-                <div className="space-y-2">
-                  <div className="text-[8px] text-foreground/50 uppercase font-semibold">
-                    Icon
-                  </div>
-                  <div className="flex gap-2">
-                    <Check className="w-6 h-6" style={{ color: adjustedHex }} />
-                    <AlertTriangle
-                      className="w-6 h-6"
-                      style={{ color: adjustedHex }}
-                    />
-                    <Info className="w-6 h-6" style={{ color: adjustedHex }} />
-                  </div>
-                </div>
-              </div>
-
-              {/* Card Preview */}
-              <div
-                className="mt-4 p-4 rounded-xl border-2 transition-all"
-                style={{ borderColor: adjustedHex }}
-              >
-                <div className="flex items-center gap-3 mb-3">
-                  <div
-                    className="w-10 h-10 rounded-lg"
-                    style={{ backgroundColor: adjustedHex }}
-                  />
-                  <div>
-                    <h3
-                      className="text-sm font-bold"
-                      style={{ color: adjustedHex }}
-                    >
-                      Card Title
-                    </h3>
-                    <p className="text-xs text-foreground/60">Subtitle text</p>
-                  </div>
-                </div>
-                <p className="text-xs text-foreground/70 mb-3">
-                  This card uses your adjusted color for accents, borders, and
-                  highlights.
-                </p>
-                <button
-                  className="px-3 py-1.5 rounded text-xs font-semibold"
-                  style={{
-                    backgroundColor: adjustedHex,
-                    color: getContrastText(adjustedColor),
-                  }}
+                <div
+                  className="mt-4 p-4 rounded-xl border-2 transition-all"
+                  style={{ borderColor: adjustedHex }}
                 >
-                  Card Action
-                </button>
+                  <div className="flex items-center gap-3 mb-3">
+                    <div
+                      className="w-10 h-10 rounded-lg"
+                      style={{ backgroundColor: adjustedHex }}
+                    />
+                    <div>
+                      <h3
+                        className="text-sm font-bold"
+                        style={{ color: adjustedHex }}
+                      >
+                        Card Title
+                      </h3>
+                      <p className="text-xs text-foreground/60">
+                        Subtitle text
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-foreground/70 mb-3">
+                    This card uses your adjusted color for accents, borders, and
+                    highlights.
+                  </p>
+                  <button
+                    className="px-3 py-1.5 rounded text-xs font-semibold"
+                    style={{
+                      backgroundColor: adjustedHex,
+                      color: getContrastText(adjustedColor),
+                    }}
+                  >
+                    Card Action
+                  </button>
+                </div>
               </div>
-            </div>
+            </>
           )}
         </div>
       </main>
@@ -806,7 +931,9 @@ export default function EditColors() {
       {showSuccess && (
         <div className="fixed bottom-6 right-6 bg-green-500 text-white px-4 py-3 rounded-lg shadow-2xl flex items-center gap-2 animate-in slide-in-from-bottom-2 z-50">
           <Check className="w-4 h-4" />
-          <span className="text-sm font-semibold">Color updated!</span>
+          <span className="text-sm font-semibold">
+            {batchMode ? "All colors updated!" : "Color updated!"}
+          </span>
         </div>
       )}
     </div>
