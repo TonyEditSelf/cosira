@@ -1,249 +1,162 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import chroma from "chroma-js";
+import { RotateCcw, Check, Info, Lock } from "lucide-react";
+
 import { useColorPaletteContext } from "../ColorContext";
-import { RotateCcw, Check, AlertTriangle, Info } from "lucide-react";
+import { useUndoRedo } from "./hooks/useUndoRedo";
+import { useColorAdjustments } from "./hooks/useColorAdjustments";
+import { useVariants } from "./hooks/useVariants";
+
+import { SidebarHeader } from "./components/SidebarHeader";
+import { VariantsPanel } from "./components/VariantsPanel";
+import { AdjustmentSliders } from "./components/AdjustmentSliders";
+import { ContrastBadge } from "./components/ContrastBadge";
+import { SimilarColorsWarning } from "./components/SimilarColorsWarning";
+import { SuggestionsPanel } from "./components/SuggestionsPanel";
+import { BatchPreview } from "./components/BatchPreview";
+import { SingleColorPreview } from "./components/SingleColorPreview";
+import { toHex } from "./utils";
+
+const ZERO = { l: 0, c: 0, h: 0 };
 
 export default function EditColors() {
   const { palette, setPalette } = useColorPaletteContext();
+
   const [selectedColorIndex, setSelectedColorIndex] = useState(0);
-  const [adjustments, setAdjustments] = useState({ l: 0, c: 0, h: 0 });
-  const [showSuccess, setShowSuccess] = useState(false);
+  const [adjustments, setAdjustments] = useState(ZERO);
   const [batchMode, setBatchMode] = useState(false);
-  const [batchAdjustments, setBatchAdjustments] = useState({
-    l: 0,
-    c: 0,
-    h: 0,
+  const [batchAdjustments, setBatchAdjustments] = useState(ZERO);
+  const [harmonyLock, setHarmonyLock] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  const { undoStack, redoStack, pushUndo, handleUndo, handleRedo } =
+    useUndoRedo(palette, setPalette);
+
+  const {
+    savedVariants,
+    activeVariant,
+    variantNameInput,
+    setVariantNameInput,
+    showVariantPanel,
+    setShowVariantPanel,
+    handleSaveVariant,
+    handleLoadVariant,
+    handleDeleteVariant,
+  } = useVariants(palette, setPalette, pushUndo);
+
+  const {
+    originalColor,
+    adjustedColor,
+    adjustedPalette,
+    deltaE,
+    contrastInfo,
+    suggestions,
+    similarColors,
+  } = useColorAdjustments({
+    palette,
+    selectedColorIndex,
+    adjustments,
+    batchAdjustments,
+    batchMode,
+    harmonyLock,
   });
 
-  const originalColor = useMemo(() => {
-    if (!palette[selectedColorIndex]) return null;
-    return palette[selectedColorIndex].value;
-  }, [palette, selectedColorIndex]);
+  const hasChanges = batchMode
+    ? Object.values(batchAdjustments).some((v) => v !== 0)
+    : Object.values(adjustments).some((v) => v !== 0);
 
-  const adjustedColor = useMemo(() => {
-    if (!originalColor) return null;
-    const active = batchMode ? batchAdjustments : adjustments;
-    return {
-      l: Math.max(0, Math.min(1, originalColor.l + active.l)),
-      c: Math.max(0, Math.min(0.4, originalColor.c + active.c)),
-      h: (originalColor.h + active.h + 360) % 360,
-      a: originalColor.a || 1,
-    };
-  }, [originalColor, adjustments, batchAdjustments, batchMode]);
+  if (!originalColor || !adjustedColor) return null;
 
-  // Compute adjusted version of every palette color (for batch preview)
-  const adjustedPalette = useMemo(() => {
-    return palette.map((colorObj) => {
-      const base = colorObj.value;
-      return {
-        l: Math.max(0, Math.min(1, base.l + batchAdjustments.l)),
-        c: Math.max(0, Math.min(0.4, base.c + batchAdjustments.c)),
-        h: (base.h + batchAdjustments.h + 360) % 360,
-        a: base.a || 1,
-      };
-    });
-  }, [palette, batchAdjustments]);
+  const originalHex = toHex(originalColor.l, originalColor.c, originalColor.h);
+  const adjustedHex = toHex(adjustedColor.l, adjustedColor.c, adjustedColor.h);
 
-  const suggestions = useMemo(() => {
-    if (!adjustedColor) return [];
-    const suggestionsList = [];
-    const color = chroma.oklch(
-      adjustedColor.l,
-      adjustedColor.c,
-      adjustedColor.h,
-    );
-    const contrastWhite = chroma.contrast(color, chroma("#ffffff"));
-    const contrastBlack = chroma.contrast(color, chroma("#000000"));
-
-    if (contrastWhite < 4.5 && contrastBlack < 4.5) {
-      if (adjustedColor.l < 0.5) {
-        const targetL = Math.max(0.1, adjustedColor.l - 0.15);
-        const improvement = ((targetL - adjustedColor.l) * 100).toFixed(0);
-        suggestionsList.push({
-          type: "lighten",
-          message: `Darken by ${Math.abs(improvement)}% for better contrast with white`,
-          adjustment: { l: targetL - adjustedColor.l, c: 0, h: 0 },
-        });
-      } else {
-        const targetL = Math.min(0.95, adjustedColor.l + 0.15);
-        const improvement = ((targetL - adjustedColor.l) * 100).toFixed(0);
-        suggestionsList.push({
-          type: "lighten",
-          message: `Brighten by ${improvement}% for better contrast with black`,
-          adjustment: { l: targetL - adjustedColor.l, c: 0, h: 0 },
-        });
-      }
-    }
-    if (adjustedColor.c < 0.05) {
-      suggestionsList.push({
-        type: "saturate",
-        message: "Increase saturation by 10% for more vibrant color",
-        adjustment: { l: 0, c: 0.1, h: 0 },
-      });
-    }
-    if (adjustedColor.c > 0.3) {
-      suggestionsList.push({
-        type: "desaturate",
-        message: "Reduce saturation by 10% for better balance",
-        adjustment: { l: 0, c: -0.1, h: 0 },
-      });
-    }
-    return suggestionsList;
-  }, [adjustedColor]);
-
-  const deltaE = useMemo(() => {
-    if (!originalColor || !adjustedColor) return 0;
-    try {
-      return chroma.deltaE(
-        chroma.oklch(originalColor.l, originalColor.c, originalColor.h),
-        chroma.oklch(adjustedColor.l, adjustedColor.c, adjustedColor.h),
-      );
-    } catch {
-      return 0;
-    }
-  }, [originalColor, adjustedColor]);
-
-  const similarColors = useMemo(() => {
-    if (!adjustedColor) return [];
-    return palette
-      .map((color, idx) => {
-        if (idx === selectedColorIndex) return null;
-        try {
-          const delta = chroma.deltaE(
-            chroma.oklch(adjustedColor.l, adjustedColor.c, adjustedColor.h),
-            chroma.oklch(color.value.l, color.value.c, color.value.h),
-          );
-          return { idx, delta };
-        } catch {
-          return null;
-        }
-      })
-      .filter((item) => item && item.delta < 15)
-      .sort((a, b) => a.delta - b.delta);
-  }, [adjustedColor, palette, selectedColorIndex]);
-
-  const contrastInfo = useMemo(() => {
-    if (!adjustedColor) return null;
-    try {
-      const color = chroma.oklch(
-        adjustedColor.l,
-        adjustedColor.c,
-        adjustedColor.h,
-      );
-      return {
-        vsWhite: chroma.contrast(color, chroma("#ffffff")).toFixed(2),
-        vsBlack: chroma.contrast(color, chroma("#000000")).toFixed(2),
-      };
-    } catch {
-      return { vsWhite: 0, vsBlack: 0 };
-    }
-  }, [adjustedColor]);
-
-  const handleSliderChange = (type, value) => {
-    setAdjustments((prev) => ({ ...prev, [type]: parseFloat(value) }));
+  const handleSliderChange = (key, value, isBatch) => {
+    if (isBatch) setBatchAdjustments((p) => ({ ...p, [key]: value }));
+    else setAdjustments((p) => ({ ...p, [key]: value }));
   };
 
-  const handleReset = () => setAdjustments({ l: 0, c: 0, h: 0 });
+  const handleReset = () =>
+    batchMode ? setBatchAdjustments(ZERO) : setAdjustments(ZERO);
 
   const handleApply = () => {
     if (!adjustedColor) return;
+    pushUndo(palette);
+
     if (batchMode) {
-      const newPalette = palette.map((colorObj) => {
-        const base = colorObj.value;
-        return {
-          ...colorObj,
-          value: {
-            l: Math.max(0, Math.min(1, base.l + batchAdjustments.l)),
-            c: Math.max(0, Math.min(0.4, base.c + batchAdjustments.c)),
-            h: (base.h + batchAdjustments.h + 360) % 360,
-            a: base.a || 1,
-          },
-        };
-      });
-      setPalette(newPalette);
-      setBatchAdjustments({ l: 0, c: 0, h: 0 });
+      const lFactor = 1 + batchAdjustments.l;
+      const cFactor = 1 + batchAdjustments.c;
+      setPalette(
+        palette.map((colorObj) => {
+          const base = colorObj.value;
+          const rawL = harmonyLock
+            ? base.l * lFactor
+            : base.l + batchAdjustments.l;
+          const rawC = harmonyLock
+            ? base.c * cFactor
+            : base.c + batchAdjustments.c;
+          return {
+            ...colorObj,
+            value: {
+              l: Math.max(0, Math.min(1, rawL)),
+              c: Math.max(0, Math.min(0.4, rawC)),
+              h: (base.h + batchAdjustments.h + 360) % 360,
+              a: base.a || 1,
+            },
+          };
+        }),
+      );
+      setBatchAdjustments(ZERO);
     } else {
-      const newPalette = [...palette];
-      newPalette[selectedColorIndex] = {
-        ...newPalette[selectedColorIndex],
-        value: adjustedColor,
-      };
-      setPalette(newPalette);
-      setAdjustments({ l: 0, c: 0, h: 0 });
+      const deltaL = adjustedColor.l - originalColor.l;
+      const deltaC = adjustedColor.c - originalColor.c;
+      const deltaH = adjustedColor.h - originalColor.h;
+      setPalette(
+        palette.map((colorObj, idx) => {
+          if (idx === selectedColorIndex)
+            return { ...colorObj, value: adjustedColor };
+          if (!harmonyLock) return colorObj;
+          const base = colorObj.value;
+          return {
+            ...colorObj,
+            value: {
+              l: Math.max(0, Math.min(1, base.l + deltaL)),
+              c: Math.max(0, Math.min(0.4, base.c + deltaC)),
+              h: (base.h + deltaH + 360) % 360,
+              a: base.a || 1,
+            },
+          };
+        }),
+      );
+      setAdjustments(ZERO);
     }
+
     setShowSuccess(true);
     setTimeout(() => setShowSuccess(false), 2000);
   };
 
-  const handleApplySuggestion = (suggestion) => {
-    setAdjustments((prev) => ({
-      l: prev.l + suggestion.adjustment.l,
-      c: prev.c + suggestion.adjustment.c,
-      h: prev.h + suggestion.adjustment.h,
-    }));
-  };
-
-  const hasChanges = batchMode
-    ? batchAdjustments.l !== 0 ||
-      batchAdjustments.c !== 0 ||
-      batchAdjustments.h !== 0
-    : adjustments.l !== 0 || adjustments.c !== 0 || adjustments.h !== 0;
-
-  const getContrastText = (color) => {
-    try {
-      const c = chroma.oklch(color.l, color.c, color.h);
-      return chroma.contrast(c, "white") > chroma.contrast(c, "black")
-        ? "#ffffff"
-        : "#000000";
-    } catch {
-      return "#000000";
-    }
-  };
-
-  if (!originalColor || !adjustedColor) return null;
-
-  const originalHex = chroma
-    .oklch(originalColor.l, originalColor.c, originalColor.h)
-    .hex();
-  const adjustedHex = chroma
-    .oklch(adjustedColor.l, adjustedColor.c, adjustedColor.h)
-    .hex();
-
   return (
-    <div className="hidden bg-background lg:flex h-full">
-      {/* Left Sidebar - Controls */}
-      <aside className="w-80 border-r border-(--navBorder) bg-background flex flex-col overflow-hidden">
-        {/* Header */}
-        <div className="p-3 border-b border-(--navBorder) flex-shrink-0">
-          <div className="flex items-center justify-between mb-2">
-            <div>
-              <h2 className="text-xs font-bold text-foreground/80 uppercase tracking-wider mb-1">
-                Color Editor
-              </h2>
-              <p className="text-[9px] text-foreground/40">
-                {batchMode
-                  ? "Adjust all colors at once"
-                  : "Adjust lightness, chroma, and hue"}
-              </p>
-            </div>
-            <button
-              onClick={() => {
-                setBatchMode(!batchMode);
-                setAdjustments({ l: 0, c: 0, h: 0 });
-                setBatchAdjustments({ l: 0, c: 0, h: 0 });
-              }}
-              className={`px-2 py-1 text-[8px] font-bold rounded transition-all ${
-                batchMode
-                  ? "bg-(--brand) text-white"
-                  : "border border-(--navBorder) hover:border-(--brand)"
-              }`}
-            >
-              {batchMode ? "Batch Mode ON" : "Batch Mode"}
-            </button>
-          </div>
-        </div>
+    <div className="hidden bg-background lg:flex h-full gap-2">
+      {/* ── Left Sidebar ── */}
+      <aside className="w-80 border border-(--navBorder) rounded-md bg-background flex flex-col overflow-hidden ml-2 mb-2 flex-shrink-0">
+        <SidebarHeader
+          batchMode={batchMode}
+          onToggleBatch={() => {
+            setBatchMode(!batchMode);
+            setAdjustments(ZERO);
+            setBatchAdjustments(ZERO);
+          }}
+          undoStack={undoStack}
+          redoStack={redoStack}
+          onUndo={handleUndo}
+          onRedo={handleRedo}
+          harmonyLock={harmonyLock}
+          onToggleHarmony={() => setHarmonyLock(!harmonyLock)}
+          showVariantPanel={showVariantPanel}
+          onToggleVariantPanel={() => setShowVariantPanel(!showVariantPanel)}
+          savedVariants={savedVariants}
+        />
 
-        {/* Color Selection — hidden in batch mode since all colors are affected */}
+        {/* Color selection — single mode */}
         {!batchMode && (
           <div className="p-3 border-b border-(--navBorder) flex-shrink-0">
             <div className="flex items-center gap-2 mb-2">
@@ -253,24 +166,23 @@ export default function EditColors() {
               <span className="text-[8px] text-foreground/30 font-mono">
                 {selectedColorIndex + 1}/{palette.length}
               </span>
+              {harmonyLock && (
+                <span className="ml-auto text-[8px] text-(--brand) font-bold flex items-center gap-0.5">
+                  <Lock className="w-2.5 h-2.5" /> All shift
+                </span>
+              )}
             </div>
             <div className="grid grid-cols-12 gap-1.5">
               {palette.map((color, idx) => {
-                const hex = chroma
-                  .oklch(color.value.l, color.value.c, color.value.h)
-                  .hex();
+                const hex = toHex(color.value.l, color.value.c, color.value.h);
                 return (
                   <button
                     key={idx}
                     onClick={() => {
                       setSelectedColorIndex(idx);
-                      setAdjustments({ l: 0, c: 0, h: 0 });
+                      setAdjustments(ZERO);
                     }}
-                    className={`aspect-square rounded transition-all ${
-                      idx === selectedColorIndex
-                        ? "ring-2 ring-(--brand) ring-offset-1 ring-offset-background scale-110 shadow-lg"
-                        : "hover:scale-105 border border-(--navBorder)"
-                    }`}
+                    className={`aspect-square rounded transition-all ${idx === selectedColorIndex ? "ring-2 ring-(--brand) ring-offset-1 ring-offset-background scale-110 shadow-lg" : "hover:scale-105 border border-(--navBorder)"}`}
                     style={{ backgroundColor: hex }}
                     title={`Color ${idx + 1}`}
                   />
@@ -280,143 +192,17 @@ export default function EditColors() {
           </div>
         )}
 
-        {/* Scrollable Middle Section */}
+        {/* Scrollable area */}
         <div className="flex-1 overflow-y-auto custom-scrollbar">
-          {/* Adjustment Sliders */}
-          <div className="p-3 border-b border-(--navBorder)">
-            <div className="text-[9px] font-bold text-foreground/50 uppercase tracking-widest mb-3">
-              Adjustments
-            </div>
-            <div className="space-y-4">
-              {/* Lightness */}
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-[9px] font-semibold text-foreground/70">
-                    Lightness
-                  </label>
-                  <span className="text-[9px] font-mono font-bold text-(--brand)">
-                    {(batchMode ? batchAdjustments.l : adjustments.l) > 0
-                      ? "+"
-                      : ""}
-                    {(
-                      (batchMode ? batchAdjustments.l : adjustments.l) * 100
-                    ).toFixed(0)}
-                    %
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="-0.3"
-                  max="0.3"
-                  step="0.01"
-                  value={batchMode ? batchAdjustments.l : adjustments.l}
-                  onChange={(e) =>
-                    batchMode
-                      ? setBatchAdjustments((prev) => ({
-                          ...prev,
-                          l: parseFloat(e.target.value),
-                        }))
-                      : handleSliderChange("l", e.target.value)
-                  }
-                  className="w-full h-1.5 rounded-lg appearance-none cursor-pointer bg-gradient-to-r from-black via-gray-400 to-white"
-                  style={{ accentColor: "var(--brand)" }}
-                />
-                <div className="flex justify-between text-[7px] text-foreground/30 mt-0.5">
-                  <span>Darken</span>
-                  <span>Brighten</span>
-                </div>
-              </div>
+          <AdjustmentSliders
+            adjustments={adjustments}
+            batchAdjustments={batchAdjustments}
+            batchMode={batchMode}
+            adjustedColor={adjustedColor}
+            onChange={handleSliderChange}
+          />
 
-              {/* Chroma */}
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-[9px] font-semibold text-foreground/70">
-                    Chroma
-                  </label>
-                  <span className="text-[9px] font-mono font-bold text-(--brand)">
-                    {(batchMode ? batchAdjustments.c : adjustments.c) > 0
-                      ? "+"
-                      : ""}
-                    {(
-                      (batchMode ? batchAdjustments.c : adjustments.c) * 100
-                    ).toFixed(0)}
-                    %
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="-0.15"
-                  max="0.15"
-                  step="0.005"
-                  value={batchMode ? batchAdjustments.c : adjustments.c}
-                  onChange={(e) =>
-                    batchMode
-                      ? setBatchAdjustments((prev) => ({
-                          ...prev,
-                          c: parseFloat(e.target.value),
-                        }))
-                      : handleSliderChange("c", e.target.value)
-                  }
-                  className="w-full h-1.5 rounded-lg appearance-none cursor-pointer"
-                  style={{
-                    background: batchMode
-                      ? "linear-gradient(to right, #888888, #ff00ff)"
-                      : `linear-gradient(to right, ${chroma.oklch(adjustedColor.l, 0.01, adjustedColor.h).hex()}, ${chroma.oklch(adjustedColor.l, 0.3, adjustedColor.h).hex()})`,
-                    accentColor: "var(--brand)",
-                  }}
-                />
-                <div className="flex justify-between text-[7px] text-foreground/30 mt-0.5">
-                  <span>Desaturate</span>
-                  <span>Saturate</span>
-                </div>
-              </div>
-
-              {/* Hue */}
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-[9px] font-semibold text-foreground/70">
-                    Hue Shift
-                  </label>
-                  <span className="text-[9px] font-mono font-bold text-(--brand)">
-                    {(batchMode ? batchAdjustments.h : adjustments.h) > 0
-                      ? "+"
-                      : ""}
-                    {(batchMode ? batchAdjustments.h : adjustments.h).toFixed(
-                      0,
-                    )}
-                    °
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="-180"
-                  max="180"
-                  step="1"
-                  value={batchMode ? batchAdjustments.h : adjustments.h}
-                  onChange={(e) =>
-                    batchMode
-                      ? setBatchAdjustments((prev) => ({
-                          ...prev,
-                          h: parseFloat(e.target.value),
-                        }))
-                      : handleSliderChange("h", e.target.value)
-                  }
-                  className="w-full h-1.5 rounded-lg appearance-none cursor-pointer"
-                  style={{
-                    background:
-                      "linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000)",
-                    accentColor: "var(--brand)",
-                  }}
-                />
-                <div className="flex justify-between text-[7px] text-foreground/30 mt-0.5">
-                  <span>-180°</span>
-                  <span>+180°</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Contrast Info — single mode only */}
+          {/* Contrast — single mode */}
           {!batchMode && contrastInfo && (
             <div className="p-3 border-b border-(--navBorder)">
               <div className="flex items-center gap-1.5 mb-2">
@@ -426,513 +212,140 @@ export default function EditColors() {
                 </span>
               </div>
               <div className="grid grid-cols-2 gap-2">
-                <div className="p-2 rounded bg-white border border-gray-200">
-                  <div className="text-[7px] text-gray-500 mb-0.5">
-                    vs White
-                  </div>
-                  <div className="text-sm font-bold font-mono">
-                    {contrastInfo.vsWhite}:1
-                  </div>
-                  <div className="mt-1">
-                    {parseFloat(contrastInfo.vsWhite) >= 7 && (
-                      <span className="text-[6px] bg-green-500 text-white px-1 py-0.5 rounded font-bold">
-                        AAA
-                      </span>
-                    )}
-                    {parseFloat(contrastInfo.vsWhite) >= 4.5 &&
-                      parseFloat(contrastInfo.vsWhite) < 7 && (
-                        <span className="text-[6px] bg-blue-500 text-white px-1 py-0.5 rounded font-bold">
-                          AA
-                        </span>
-                      )}
-                    {parseFloat(contrastInfo.vsWhite) < 4.5 && (
-                      <span className="text-[6px] bg-red-500 text-white px-1 py-0.5 rounded font-bold">
-                        FAIL
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div className="p-2 rounded bg-black border border-gray-700">
-                  <div className="text-[7px] text-gray-400 mb-0.5">
-                    vs Black
-                  </div>
-                  <div className="text-sm font-bold font-mono text-white">
-                    {contrastInfo.vsBlack}:1
-                  </div>
-                  <div className="mt-1">
-                    {parseFloat(contrastInfo.vsBlack) >= 7 && (
-                      <span className="text-[6px] bg-green-500 text-white px-1 py-0.5 rounded font-bold">
-                        AAA
-                      </span>
-                    )}
-                    {parseFloat(contrastInfo.vsBlack) >= 4.5 &&
-                      parseFloat(contrastInfo.vsBlack) < 7 && (
-                        <span className="text-[6px] bg-blue-500 text-white px-1 py-0.5 rounded font-bold">
-                          AA
-                        </span>
-                      )}
-                    {parseFloat(contrastInfo.vsBlack) < 4.5 && (
-                      <span className="text-[6px] bg-red-500 text-white px-1 py-0.5 rounded font-bold">
-                        FAIL
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Similarity Warning — single mode only */}
-          {!batchMode && similarColors.length > 0 && (
-            <div className="p-3 border-b border-yellow-500/30 bg-yellow-500/5">
-              <div className="flex items-center gap-1.5 mb-2">
-                <AlertTriangle className="w-4 h-4 text-yellow-600" />
-                <span className="text-[9px] font-bold text-yellow-700 uppercase tracking-widest">
-                  Similar Colors
-                </span>
-              </div>
-              <p className="text-[9px] text-yellow-700 mb-2">
-                Too similar to {similarColors.length} color
-                {similarColors.length > 1 ? "s" : ""}:
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {similarColors.map(({ idx, delta }) => {
-                  const hex = chroma
-                    .oklch(
-                      palette[idx].value.l,
-                      palette[idx].value.c,
-                      palette[idx].value.h,
-                    )
-                    .hex();
-                  return (
-                    <div
-                      key={idx}
-                      className="flex items-center gap-1.5 px-2 py-1 rounded bg-white/50 border border-yellow-500/30"
-                    >
-                      <div
-                        className="w-4 h-4 rounded border border-black/10"
-                        style={{ backgroundColor: hex }}
-                      />
-                      <span className="text-[9px] font-semibold text-yellow-800">
-                        #{idx + 1}
-                      </span>
-                      <span className="text-[9px] text-yellow-600 font-mono">
-                        {delta.toFixed(1)}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Suggestions — single mode only */}
-          {!batchMode && suggestions.length > 0 && (
-            <div className="p-3 border-b border-blue-500/30 bg-blue-500/5">
-              <div className="flex items-center gap-1.5 mb-2">
-                <Info className="w-4 h-4 text-blue-600" />
-                <span className="text-[9px] font-bold text-blue-700 uppercase tracking-widest">
-                  Suggestions
-                </span>
-              </div>
-              <div className="space-y-2">
-                {suggestions.map((suggestion, idx) => (
+                {[
+                  {
+                    bg: "white",
+                    textCls: "text-black",
+                    label: "vs White",
+                    value: contrastInfo.vsWhite,
+                    border: "border-gray-200",
+                  },
+                  {
+                    bg: "black",
+                    textCls: "text-white",
+                    label: "vs Black",
+                    value: contrastInfo.vsBlack,
+                    border: "border-gray-700",
+                  },
+                ].map(({ bg, textCls, label, value, border }) => (
                   <div
-                    key={idx}
-                    className="p-2 rounded bg-white/50 border border-blue-500/30"
+                    key={label}
+                    className={`p-2 rounded border ${border}`}
+                    style={{ backgroundColor: bg }}
                   >
-                    <p className="text-[9px] text-blue-700 mb-1.5">
-                      {suggestion.message}
-                    </p>
-                    <button
-                      onClick={() => handleApplySuggestion(suggestion)}
-                      className="px-2 py-1 text-[8px] font-bold bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                    <div
+                      className={`text-[7px] ${bg === "white" ? "text-gray-500" : "text-gray-400"} mb-0.5`}
                     >
-                      Apply This
-                    </button>
+                      {label}
+                    </div>
+                    <div className={`text-sm font-bold font-mono ${textCls}`}>
+                      {value}:1
+                    </div>
+                    <div className="mt-1">
+                      <ContrastBadge value={value} />
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
           )}
+
+          {!batchMode && (
+            <SimilarColorsWarning
+              similarColors={similarColors}
+              palette={palette}
+            />
+          )}
+
+          {!batchMode && (
+            <SuggestionsPanel
+              suggestions={suggestions}
+              onApply={(adj) =>
+                setAdjustments((prev) => ({
+                  l: prev.l + adj.l,
+                  c: prev.c + adj.c,
+                  h: prev.h + adj.h,
+                }))
+              }
+            />
+          )}
         </div>
 
-        {/* Action Buttons */}
+        {/* Action buttons */}
         <div className="p-3 border-t border-(--navBorder) flex gap-2 flex-shrink-0">
           <button
-            onClick={() =>
-              batchMode
-                ? setBatchAdjustments({ l: 0, c: 0, h: 0 })
-                : handleReset()
-            }
+            onClick={handleReset}
             disabled={!hasChanges}
-            className={`flex-1 px-3 py-2 text-[9px] font-bold border rounded transition-all flex items-center justify-center gap-1 ${
-              hasChanges
-                ? "border-(--navBorder) hover:border-(--brand) hover:bg-foreground/5"
-                : "border-(--navBorder) opacity-40 cursor-not-allowed"
-            }`}
+            className={`flex-1 px-3 py-2 text-[9px] font-bold border rounded transition-all flex items-center justify-center gap-1 ${hasChanges ? "border-(--navBorder) hover:border-(--brand) hover:bg-foreground/5" : "border-(--navBorder) opacity-40 cursor-not-allowed"}`}
           >
-            <RotateCcw className="w-3 h-3" />
-            Reset
+            <RotateCcw className="w-3 h-3" /> Reset
           </button>
           <button
             onClick={handleApply}
             disabled={!hasChanges}
-            className={`flex-1 px-3 py-2 text-[9px] font-bold rounded transition-all flex items-center justify-center gap-1 ${
-              hasChanges
-                ? "bg-(--brand) text-white hover:opacity-90"
-                : "bg-foreground/10 text-foreground/40 cursor-not-allowed"
-            }`}
+            className={`flex-1 px-3 py-2 text-[9px] font-bold rounded transition-all flex items-center justify-center gap-1 ${hasChanges ? "bg-(--brand) text-white hover:opacity-90" : "bg-foreground/10 text-foreground/40 cursor-not-allowed"}`}
           >
             <Check className="w-3 h-3" />
-            {batchMode ? "Apply to All" : "Apply"}
+            {batchMode
+              ? harmonyLock
+                ? "Apply Proportional"
+                : "Apply to All"
+              : "Apply"}
           </button>
         </div>
       </aside>
 
-      {/* Right Panel - Preview */}
-      <main className="flex-1 p-6 overflow-auto">
-        <div className="max-w-4xl mx-auto">
+      {/* ── Floating Variants Panel ── renders between sidebar and main */}
+      {showVariantPanel && (
+        <VariantsPanel
+          savedVariants={savedVariants}
+          activeVariant={activeVariant}
+          variantNameInput={variantNameInput}
+          setVariantNameInput={setVariantNameInput}
+          onSave={handleSaveVariant}
+          onLoad={handleLoadVariant}
+          onDelete={handleDeleteVariant}
+          onClose={() => setShowVariantPanel(false)}
+        />
+      )}
+
+      {/* ── Right Panel ── */}
+      <main className="flex-1 border border-(--navBorder) rounded-md overflow-hidden mr-2 mb-2">
+        <div
+          className={`h-full p-5 ${batchMode ? "overflow-auto" : "overflow-hidden"}`}
+        >
           {batchMode ? (
-            /* ── Batch mode: full palette before/after ── */
-            <>
-              <div className="mb-6">
-                <div className="flex items-center gap-2 mb-1">
-                  <h3 className="text-sm font-bold text-foreground/80 uppercase tracking-wider">
-                    Batch Preview
-                  </h3>
-                  {hasChanges && (
-                    <span className="text-[9px] font-mono bg-(--brand)/10 text-(--brand) px-2 py-0.5 rounded font-bold">
-                      Live
-                    </span>
-                  )}
-                </div>
-                <p className="text-[10px] text-foreground/40">
-                  All palette colors — original vs adjusted in real time
-                </p>
-              </div>
-
-              {/* Original palette row */}
-              <div className="mb-3">
-                <div className="text-[9px] font-bold text-foreground/40 uppercase tracking-wider mb-2">
-                  Original
-                </div>
-                <div className="flex gap-1 h-24 rounded-md overflow-hidden border border-(--navBorder) shadow-sm">
-                  {palette.map((colorObj, idx) => {
-                    const hex = chroma
-                      .oklch(
-                        colorObj.value.l,
-                        colorObj.value.c,
-                        colorObj.value.h,
-                      )
-                      .hex();
-                    return (
-                      <div
-                        key={idx}
-                        className="flex-1 flex items-end justify-center pb-2 group"
-                        style={{ backgroundColor: hex }}
-                        title={hex}
-                      >
-                        <span
-                          className="text-[8px] font-mono font-bold opacity-0 group-hover:opacity-100 transition-opacity"
-                          style={{ color: getContrastText(colorObj.value) }}
-                        >
-                          {idx + 1}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Adjusted palette row */}
-              <div className="mb-8">
-                <div className="text-[9px] font-bold text-foreground/40 uppercase tracking-wider mb-2">
-                  Adjusted
-                </div>
-                <div
-                  className={`flex gap-1 h-24 rounded-md overflow-hidden shadow-sm border-2 transition-all ${hasChanges ? "border-(--brand)" : "border-(--navBorder)"}`}
-                >
-                  {adjustedPalette.map((adjusted, idx) => {
-                    const hex = chroma
-                      .oklch(adjusted.l, adjusted.c, adjusted.h)
-                      .hex();
-                    return (
-                      <div
-                        key={idx}
-                        className="flex-1 flex items-end justify-center pb-2 group"
-                        style={{ backgroundColor: hex }}
-                        title={hex}
-                      >
-                        <span
-                          className="text-[8px] font-mono font-bold opacity-0 group-hover:opacity-100 transition-opacity"
-                          style={{ color: getContrastText(adjusted) }}
-                        >
-                          {idx + 1}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Per-color delta cards */}
-              <div>
-                <div className="text-[9px] font-bold text-foreground/40 uppercase tracking-wider mb-3">
-                  Per Color
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  {palette.map((colorObj, idx) => {
-                    const origHex = chroma
-                      .oklch(
-                        colorObj.value.l,
-                        colorObj.value.c,
-                        colorObj.value.h,
-                      )
-                      .hex();
-                    const adjusted = adjustedPalette[idx];
-                    const adjHex = chroma
-                      .oklch(adjusted.l, adjusted.c, adjusted.h)
-                      .hex();
-                    return (
-                      <div
-                        key={idx}
-                        className="flex items-center gap-3 p-2.5 rounded-lg border border-(--navBorder) bg-foreground/[0.01]"
-                      >
-                        <span className="text-[9px] font-bold text-foreground/30 w-4 flex-shrink-0">
-                          {idx + 1}
-                        </span>
-                        <div
-                          className="w-9 h-9 rounded-md border border-black/10 flex-shrink-0"
-                          style={{ backgroundColor: origHex }}
-                          title={origHex}
-                        />
-                        <span className="text-[9px] text-foreground/30">→</span>
-                        <div
-                          className={`w-9 h-9 rounded-md flex-shrink-0 transition-all border ${hasChanges ? "border-(--brand) shadow-sm" : "border-black/10"}`}
-                          style={{ backgroundColor: adjHex }}
-                          title={adjHex}
-                        />
-                        <div className="flex flex-col gap-0.5 min-w-0">
-                          <span className="text-[8px] font-mono text-foreground/40 truncate">
-                            {origHex.toUpperCase()}
-                          </span>
-                          <span className="text-[8px] font-mono text-(--brand) truncate">
-                            {adjHex.toUpperCase()}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </>
+            <BatchPreview
+              palette={palette}
+              adjustedPalette={adjustedPalette}
+              harmonyLock={harmonyLock}
+              hasChanges={hasChanges}
+            />
           ) : (
-            /* ── Single color mode ── */
-            <>
-              <div className="mb-6">
-                <div className="flex items-center gap-2 mb-2">
-                  <h3 className="text-sm font-bold text-foreground/80 uppercase tracking-wider">
-                    Live Preview
-                  </h3>
-                  {deltaE > 0 && (
-                    <span className="text-[9px] font-mono bg-(--brand)/10 text-(--brand) px-2 py-0.5 rounded font-bold">
-                      ΔE: {deltaE.toFixed(1)}
-                    </span>
-                  )}
-                </div>
-                <p className="text-[10px] text-foreground/40">
-                  Compare original and adjusted colors in real-time
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <div className="text-[9px] font-bold text-foreground/40 uppercase tracking-wider mb-3">
-                    Original
-                  </div>
-                  <div
-                    className="h-32 rounded-xl border border-(--navBorder) shadow-lg flex items-center justify-center transition-all"
-                    style={{
-                      backgroundColor: originalHex,
-                      color: getContrastText(originalColor),
-                    }}
-                  >
-                    <div className="text-center">
-                      <div className="text-xl font-bold font-mono mb-1">
-                        {originalHex.toUpperCase()}
-                      </div>
-                      <div className="text-xs opacity-70 font-mono">
-                        L:{(originalColor.l * 100).toFixed(0)} C:
-                        {originalColor.c.toFixed(2)} H:
-                        {originalColor.h.toFixed(0)}°
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <div className="text-[9px] font-bold text-foreground/40 uppercase tracking-wider mb-3">
-                    Adjusted
-                  </div>
-                  <div
-                    className="h-32 rounded-xl border-2 shadow-2xl flex items-center justify-center transition-all"
-                    style={{
-                      backgroundColor: adjustedHex,
-                      color: getContrastText(adjustedColor),
-                      borderColor: hasChanges
-                        ? "var(--brand)"
-                        : "var(--navBorder)",
-                    }}
-                  >
-                    <div className="text-center">
-                      <div className="text-xl font-bold font-mono mb-1">
-                        {adjustedHex.toUpperCase()}
-                      </div>
-                      <div className="text-xs opacity-70 font-mono">
-                        L:{(adjustedColor.l * 100).toFixed(0)} C:
-                        {adjustedColor.c.toFixed(2)} H:
-                        {adjustedColor.h.toFixed(0)}°
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-6">
-                <div className="text-[9px] font-bold text-foreground/40 uppercase tracking-wider mb-3">
-                  Full Preview
-                </div>
-                <div
-                  className="h-48 rounded-xl border-2 shadow-xl flex items-center justify-center transition-all"
-                  style={{
-                    backgroundColor: adjustedHex,
-                    color: getContrastText(adjustedColor),
-                    borderColor: hasChanges
-                      ? "var(--brand)"
-                      : "var(--navBorder)",
-                  }}
-                >
-                  <div className="text-center">
-                    <div className="text-4xl font-bold mb-4">Sample Text</div>
-                    <p className="text-lg opacity-80">
-                      The quick brown fox jumps over the lazy dog
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-6">
-                <div className="text-[9px] font-bold text-foreground/40 uppercase tracking-wider mb-3">
-                  UI Elements Preview
-                </div>
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <div className="text-[8px] text-foreground/50 uppercase font-semibold">
-                      Button
-                    </div>
-                    <button
-                      className="w-full px-4 py-2 rounded-lg font-semibold text-sm transition-all hover:opacity-90"
-                      style={{
-                        backgroundColor: adjustedHex,
-                        color: getContrastText(adjustedColor),
-                      }}
-                    >
-                      Click Me
-                    </button>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="text-[8px] text-foreground/50 uppercase font-semibold">
-                      Badge
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="px-2 py-1 rounded text-xs font-semibold"
-                        style={{
-                          backgroundColor: adjustedHex,
-                          color: getContrastText(adjustedColor),
-                        }}
-                      >
-                        New
-                      </span>
-                      <span
-                        className="px-2 py-1 rounded text-xs font-semibold"
-                        style={{
-                          backgroundColor: "transparent",
-                          color: adjustedHex,
-                          border: `2px solid ${adjustedHex}`,
-                        }}
-                      >
-                        Outlined
-                      </span>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="text-[8px] text-foreground/50 uppercase font-semibold">
-                      Icon
-                    </div>
-                    <div className="flex gap-2">
-                      <Check
-                        className="w-6 h-6"
-                        style={{ color: adjustedHex }}
-                      />
-                      <AlertTriangle
-                        className="w-6 h-6"
-                        style={{ color: adjustedHex }}
-                      />
-                      <Info
-                        className="w-6 h-6"
-                        style={{ color: adjustedHex }}
-                      />
-                    </div>
-                  </div>
-                </div>
-                <div
-                  className="mt-4 p-4 rounded-xl border-2 transition-all"
-                  style={{ borderColor: adjustedHex }}
-                >
-                  <div className="flex items-center gap-3 mb-3">
-                    <div
-                      className="w-10 h-10 rounded-lg"
-                      style={{ backgroundColor: adjustedHex }}
-                    />
-                    <div>
-                      <h3
-                        className="text-sm font-bold"
-                        style={{ color: adjustedHex }}
-                      >
-                        Card Title
-                      </h3>
-                      <p className="text-xs text-foreground/60">
-                        Subtitle text
-                      </p>
-                    </div>
-                  </div>
-                  <p className="text-xs text-foreground/70 mb-3">
-                    This card uses your adjusted color for accents, borders, and
-                    highlights.
-                  </p>
-                  <button
-                    className="px-3 py-1.5 rounded text-xs font-semibold"
-                    style={{
-                      backgroundColor: adjustedHex,
-                      color: getContrastText(adjustedColor),
-                    }}
-                  >
-                    Card Action
-                  </button>
-                </div>
-              </div>
-            </>
+            <SingleColorPreview
+              originalColor={originalColor}
+              adjustedColor={adjustedColor}
+              originalHex={originalHex}
+              adjustedHex={adjustedHex}
+              deltaE={deltaE}
+              harmonyLock={harmonyLock}
+              hasChanges={hasChanges}
+              contrastInfo={contrastInfo}
+            />
           )}
         </div>
       </main>
 
-      {/* Success Toast */}
+      {/* Success toast */}
       {showSuccess && (
         <div className="fixed bottom-6 right-6 bg-green-500 text-white px-4 py-3 rounded-lg shadow-2xl flex items-center gap-2 animate-in slide-in-from-bottom-2 z-50">
           <Check className="w-4 h-4" />
           <span className="text-sm font-semibold">
-            {batchMode ? "All colors updated!" : "Color updated!"}
+            {batchMode
+              ? "All colors updated!"
+              : harmonyLock
+                ? "Applied with harmony lock!"
+                : "Color updated!"}
           </span>
         </div>
       )}
