@@ -1,360 +1,1167 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import chroma from "chroma-js";
 import { useColorPaletteContext } from "../ColorContext";
 
-export default function BezierBlends() {
-  const { palette } = useColorPaletteContext();
-  const [steps, setSteps] = useState(12);
-  const [curve, setCurve] = useState("linear");
-  const [copiedColor, setCopiedColor] = useState(null);
-  const [copiedMessage, setCopiedMessage] = useState("");
+// ─── Color math ───────────────────────────────────────────────────────────────
+function oklchToLinear(l, c, h) {
+  const r = (h * Math.PI) / 180;
+  const a = c * Math.cos(r),
+    b = c * Math.sin(r);
+  const l_ = l + 0.3963377774 * a + 0.2158037573 * b;
+  const m_ = l - 0.1055613458 * a - 0.0638541728 * b;
+  const s_ = l - 0.0894841775 * a - 1.291485548 * b;
+  const lc = l_ ** 3,
+    mc = m_ ** 3,
+    sc = s_ ** 3;
+  return [
+    4.0767416621 * lc - 3.3077115913 * mc + 0.2309699292 * sc,
+    -1.2684380046 * lc + 2.6097574011 * mc - 0.3413193965 * sc,
+    -0.0041960863 * lc - 0.7034186147 * mc + 1.707614701 * sc,
+  ];
+}
+const toSRGB = (v) =>
+  v <= 0.0031308 ? 12.92 * v : 1.055 * v ** (1 / 2.4) - 0.055;
+const clamp = (v, mn = 0, mx = 1) => Math.max(mn, Math.min(mx, v));
 
-  // Helper: Convert palette objects to hex array
-  const paletteHex = useMemo(
+function oklchToHex(l, c, h) {
+  const [lr, lg, lb] = oklchToLinear(l, c, h);
+  return `#${[lr, lg, lb]
+    .map((v) =>
+      Math.round(clamp(toSRGB(v)) * 255)
+        .toString(16)
+        .padStart(2, "0"),
+    )
+    .join("")}`;
+}
+function oklchInGamut(l, c, h) {
+  const [lr, lg, lb] = oklchToLinear(l, c, h);
+  return [lr, lg, lb].map(toSRGB).every((v) => v >= -0.001 && v <= 1.001);
+}
+function hexToOklch(hex) {
+  const lin = (v) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
+  const [rv, gv, bv] = [1, 3, 5].map((i) =>
+    lin(parseInt(hex.slice(i, i + 2), 16) / 255),
+  );
+  const l_ = Math.cbrt(
+    0.4122214708 * rv + 0.5363325363 * gv + 0.0514459929 * bv,
+  );
+  const m_ = Math.cbrt(
+    0.2119034982 * rv + 0.6806995451 * gv + 0.1073969566 * bv,
+  );
+  const s_ = Math.cbrt(
+    0.0883024619 * rv + 0.2817188376 * gv + 0.6299787005 * bv,
+  );
+  const L = 0.2104542553 * l_ + 0.793617785 * m_ - 0.0040720468 * s_;
+  const a = 1.9779984951 * l_ - 2.428592205 * m_ + 0.4505937099 * s_;
+  const b = 0.0259040371 * l_ + 0.7827717662 * m_ - 0.808675766 * s_;
+  return [
+    L,
+    Math.sqrt(a * a + b * b),
+    ((Math.atan2(b, a) * 180) / Math.PI + 360) % 360,
+  ];
+}
+function relLum(hex) {
+  const lin = (v) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
+  return [1, 3, 5].reduce(
+    (sum, i, j) =>
+      sum +
+      [0.2126, 0.7152, 0.0722][j] *
+        lin(parseInt(hex.slice(i, i + 2), 16) / 255),
+    0,
+  );
+}
+function contrast(a, b) {
+  const [l1, l2] = [relLum(a), relLum(b)];
+  return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+}
+function bezierOklch(colors, t) {
+  if (colors.length === 1) return colors[0];
+  const lerped = [];
+  for (let i = 0; i < colors.length - 1; i++) {
+    const [l1, c1, h1] = colors[i],
+      [l2, c2, h2] = colors[i + 1];
+    let dh = h2 - h1;
+    if (dh > 180) dh -= 360;
+    if (dh < -180) dh += 360;
+    lerped.push([l1 + (l2 - l1) * t, c1 + (c2 - c1) * t, h1 + dh * t]);
+  }
+  return bezierOklch(lerped, t);
+}
+function cv(vals) {
+  if (vals.length < 2) return 0;
+  const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
+  if (!mean) return 0;
+  return (
+    Math.sqrt(vals.reduce((s, v) => s + (v - mean) ** 2, 0) / vals.length) /
+    mean
+  );
+}
+function getScaleKeys(count) {
+  const p = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950];
+  if (count <= p.length) return p.slice(0, count);
+  return Array.from(
+    { length: count },
+    (_, i) => (i + 1) * Math.round(1000 / (count + 1)),
+  );
+}
+
+// ─── Data ─────────────────────────────────────────────────────────────────────
+const EASINGS = {
+  linear: (t) => t,
+  "ease-in": (t) => t * t * t,
+  "ease-out": (t) => 1 - (1 - t) ** 3,
+  "ease-in-out": (t) => (t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2),
+};
+
+// ─── Breakpoint hook ──────────────────────────────────────────────────────────
+function useBreakpoint() {
+  const [w, setW] = useState(
+    typeof window !== "undefined" ? window.innerWidth : 1200,
+  );
+  useEffect(() => {
+    const fn = () => setW(window.innerWidth);
+    window.addEventListener("resize", fn);
+    return () => window.removeEventListener("resize", fn);
+  }, []);
+  return {
+    isMobile: w < 480,
+    isTablet: w >= 480 && w < 1024,
+    isDesktop: w >= 1024,
+  };
+}
+
+// ─── Sidebar ──────────────────────────────────────────────────────────────────
+function SidebarContent({
+  palette,
+  steps,
+  setSteps,
+  easing,
+  setEasing,
+  scaleName,
+  setScaleName,
+  exportFormat,
+  setExportFormat,
+  exportText,
+  analysis,
+  showToast,
+  onClose,
+  showDrawer,
+  handleAdd,
+  handleRemove,
+  handleMove,
+}) {
+  const [showAdd, setShowAdd] = useState(false);
+  const [newHex, setNewHex] = useState("#3b82f6");
+  const [newLabel, setNewLabel] = useState("");
+
+  const submitAdd = () => {
+    handleAdd(newHex, newLabel);
+    setShowAdd(false);
+    setNewLabel("");
+    setNewHex("#3b82f6");
+  };
+
+  const uColor = (v) =>
+    v > 0.8 ? "text-[#4ade80]" : v > 0.5 ? "text-[#facc15]" : "text-[#f87171]";
+
+  return (
+    // h-full + overflow-y-auto: sidebar scrolls independently within its fixed height
+    <div className="flex flex-col h-full overflow-y-auto bg-[#0d0d14]">
+      {showDrawer && (
+        <div className="flex items-center justify-between px-4 py-3.5 border-b border-[#1e1e2e] flex-shrink-0">
+          <span className="text-[10px] font-bold tracking-[0.15em] text-[#c084fc] uppercase">
+            Settings
+          </span>
+          <button
+            onClick={onClose}
+            className="w-7 h-7 flex items-center justify-center border border-[#2a2a3e] rounded text-[#9898b8] text-base bg-transparent cursor-pointer hover:border-[#c084fc] hover:text-white transition-colors"
+          >
+            ×
+          </button>
+        </div>
+      )}
+
+      {/* ── Source Colors ── */}
+      <Sec label="Source Colors">
+        <div className="flex flex-col gap-2">
+          {palette.map((color, idx) => (
+            <div
+              key={idx}
+              className="flex items-center gap-2 px-2 py-1.5 rounded-md border border-[#1e1e2e] bg-[#0a0a0f]"
+            >
+              {/* Color swatch — solid square using inline styles to guarantee size */}
+              <div
+                className="rounded-sm flex-shrink-0 border border-white/10"
+                style={{
+                  backgroundColor: color.hex,
+                  width: 32,
+                  height: 32,
+                  minWidth: 32,
+                  minHeight: 32,
+                }}
+              />
+              {/* Label + hex */}
+              <div className="flex-1 min-w-0">
+                <div className="text-[10px] text-[#9898b8] truncate">
+                  {color.label}
+                </div>
+                <div className="text-[9px] text-[#4b4b6b]">
+                  {color.hex.toUpperCase()}
+                </div>
+              </div>
+              {/* Move up/down */}
+              <div className="flex flex-col gap-0.5">
+                <IcoBtn
+                  onClick={() => handleMove(idx, -1)}
+                  disabled={idx === 0}
+                >
+                  ↑
+                </IcoBtn>
+                <IcoBtn
+                  onClick={() => handleMove(idx, 1)}
+                  disabled={idx === palette.length - 1}
+                >
+                  ↓
+                </IcoBtn>
+              </div>
+              {/* Remove */}
+              <IcoBtn onClick={() => handleRemove(idx)} danger>
+                ×
+              </IcoBtn>
+            </div>
+          ))}
+
+          {showAdd ? (
+            <div className="flex flex-col gap-1.5 p-2 border border-[#2a2a3e] rounded-md bg-[#0a0a0f]">
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={newHex}
+                  onChange={(e) => setNewHex(e.target.value)}
+                  className="w-8 h-7 border-none rounded cursor-pointer bg-transparent flex-shrink-0"
+                />
+                <input
+                  value={newLabel}
+                  onChange={(e) => setNewLabel(e.target.value)}
+                  placeholder="Label…"
+                  className="flex-1 text-[10px] bg-[#1a1a2e] border border-[#2a2a3e] rounded px-2 py-1 text-[#e8e8f0] outline-none placeholder-[#4b4b6b] min-w-0"
+                  style={{ fontFamily: "inherit" }}
+                />
+              </div>
+              <div className="flex gap-1.5">
+                <PillBtn onClick={submitAdd} accent>
+                  Add
+                </PillBtn>
+                <PillBtn onClick={() => setShowAdd(false)}>Cancel</PillBtn>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowAdd(true)}
+              className="text-[10px] font-bold tracking-[0.1em] text-[#c084fc] uppercase bg-transparent border border-dashed border-[#2a2a3e] rounded-md py-1.5 cursor-pointer hover:border-[#c084fc] transition-colors"
+              style={{ fontFamily: "inherit" }}
+            >
+              + Add Color
+            </button>
+          )}
+        </div>
+      </Sec>
+
+      {/* ── Scale Settings ── */}
+      <Sec label="Scale Settings">
+        <div className="flex flex-col gap-3.5">
+          <Fld label="Scale Name">
+            <input
+              value={scaleName}
+              onChange={(e) => setScaleName(e.target.value)}
+              className="w-full text-[11px] bg-[#1a1a2e] border border-[#2a2a3e] rounded px-2 py-1.5 text-[#e8e8f0] outline-none"
+              style={{ fontFamily: "inherit" }}
+            />
+          </Fld>
+          <Fld label={`Steps: ${steps}`}>
+            <input
+              type="range"
+              min={5}
+              max={24}
+              value={steps}
+              onChange={(e) => setSteps(+e.target.value)}
+              className="w-full cursor-pointer accent-[#c084fc]"
+            />
+          </Fld>
+          <Fld label="Easing">
+            <div className="flex flex-col gap-1">
+              {Object.keys(EASINGS).map((e) => (
+                <button
+                  key={e}
+                  onClick={() => setEasing(e)}
+                  className={`text-left px-2 py-1 text-[10px] font-bold tracking-[0.08em] uppercase rounded border transition-colors cursor-pointer
+                    ${
+                      easing === e
+                        ? "border-[#c084fc] bg-[#c084fc]/10 text-[#c084fc]"
+                        : "border-[#1e1e2e] bg-transparent text-[#4b4b6b] hover:text-[#e8e8f0]"
+                    }`}
+                  style={{ fontFamily: "inherit" }}
+                >
+                  {e}
+                </button>
+              ))}
+            </div>
+          </Fld>
+        </div>
+      </Sec>
+
+      {/* ── Analysis ── */}
+      {analysis && (
+        <Sec label="Analysis">
+          <div className="flex flex-col gap-2.5">
+            <MRow
+              label="Lightness CV"
+              value={`${(analysis.lU * 100).toFixed(0)}%`}
+              cls={uColor(analysis.lU)}
+            />
+            <MRow
+              label="Chroma CV"
+              value={`${(analysis.cU * 100).toFixed(0)}%`}
+              cls={uColor(analysis.cU)}
+            />
+            <MRow
+              label="Gamut Clips"
+              value={analysis.clips}
+              cls={analysis.clips > 0 ? "text-[#f87171]" : "text-[#4ade80]"}
+            />
+          </div>
+        </Sec>
+      )}
+
+      {/* ── Export ── */}
+      <Sec label="Export">
+        <div className="flex flex-col gap-2">
+          <div className="flex gap-1 flex-wrap">
+            {["css", "tailwind", "json", "scss"].map((f) => (
+              <button
+                key={f}
+                onClick={() => setExportFormat(f)}
+                className={`px-2 py-1 text-[9px] font-bold uppercase tracking-[0.1em] border rounded transition-colors cursor-pointer
+                  ${
+                    exportFormat === f
+                      ? "border-[#c084fc] bg-[#c084fc]/10 text-[#c084fc]"
+                      : "border-[#1e1e2e] bg-transparent text-[#4b4b6b] hover:text-[#e8e8f0]"
+                  }`}
+                style={{ fontFamily: "inherit" }}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+          <pre className="text-[9px] bg-[#060608] border border-[#1e1e2e] rounded p-2 overflow-x-auto text-[#7878a8] max-h-24 whitespace-pre m-0">
+            {exportText.slice(0, 260)}
+            {exportText.length > 260 ? "\n…" : ""}
+          </pre>
+          <PillBtn
+            onClick={() => {
+              navigator.clipboard.writeText(exportText);
+              showToast(`Copied as ${exportFormat.toUpperCase()}!`);
+            }}
+            accent
+          >
+            Copy {exportFormat.toUpperCase()}
+          </PillBtn>
+        </div>
+      </Sec>
+
+      {/* Bottom breathing room */}
+      <div className="flex-shrink-0 h-4" />
+    </div>
+  );
+}
+
+// ─── Root ─────────────────────────────────────────────────────────────────────
+export default function BezierBlends() {
+  const { isMobile, isTablet, isDesktop } = useBreakpoint();
+  const showDrawer = !isDesktop;
+
+  const { palette: ctxPalette, setPalette: ctxSetPalette } =
+    useColorPaletteContext();
+
+  const palette = useMemo(
     () =>
-      palette.map((c) => chroma.oklch(c.value.l, c.value.c, c.value.h).hex()),
+      ctxPalette.map((c, i) => ({
+        id: i,
+        label: c.name ?? "Color",
+        hex: chroma.oklch(c.value.l, c.value.c, c.value.h).hex(),
+      })),
+    [ctxPalette],
+  );
+
+  const handleRemove = useCallback(
+    (idx) => {
+      if (ctxPalette.length <= 2) return showToast("Need at least 2 colors");
+      ctxSetPalette(ctxPalette.filter((_, i) => i !== idx));
+    },
+    [ctxPalette, ctxSetPalette],
+  );
+
+  const handleMove = useCallback(
+    (idx, dir) => {
+      const next = idx + dir;
+      if (next < 0 || next >= ctxPalette.length) return;
+      const arr = [...ctxPalette];
+      [arr[idx], arr[next]] = [arr[next], arr[idx]];
+      ctxSetPalette(arr);
+    },
+    [ctxPalette, ctxSetPalette],
+  );
+
+  const handleAdd = useCallback(
+    (hex, label) => {
+      const [l, c, h] = hexToOklch(hex);
+      ctxSetPalette([
+        ...ctxPalette,
+        { name: label || hex, value: { l, c, h, a: 1 } },
+      ]);
+    },
+    [ctxPalette, ctxSetPalette],
+  );
+
+  const [steps, setSteps] = useState(11);
+  const [easing, setEasing] = useState("linear");
+  const [scaleName, setScaleName] = useState("brand");
+  const [exportFormat, setExportFormat] = useState("css");
+  const [toast, setToast] = useState(null);
+  const [activeTab, setActiveTab] = useState("scale");
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const showToast = useCallback((msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 2200);
+  }, []);
+
+  useEffect(() => {
+    if (isDesktop) setDrawerOpen(false);
+  }, [isDesktop]);
+
+  const palOklch = useMemo(
+    () => palette.map((c) => hexToOklch(c.hex)),
     [palette],
   );
 
-  // Generate the bezier color scale
-  const vizScale = useMemo(() => {
-    if (paletteHex.length < 2) return [];
+  const scale = useMemo(() => {
+    if (palOklch.length < 2) return [];
+    const fn = EASINGS[easing];
+    return Array.from({ length: steps }, (_, i) => {
+      const t = fn(i / (steps - 1));
+      const [l, c, h] = bezierOklch(palOklch, t);
+      const hex = oklchToHex(l, c, h);
+      return {
+        l,
+        c,
+        h,
+        hex,
+        inGamut: oklchInGamut(l, c, h),
+        cW: contrast(hex, "#ffffff"),
+        cB: contrast(hex, "#000000"),
+        t,
+      };
+    });
+  }, [palOklch, steps, easing]);
 
-    const bezierPath = chroma.bezier(paletteHex);
-    const scale = [];
+  const linearScale = useMemo(() => {
+    if (palette.length < 2) return [];
+    const f = palette[0].hex,
+      la = palette[palette.length - 1].hex;
+    const [r1, g1, b1] = [1, 3, 5].map((i) => parseInt(f.slice(i, i + 2), 16));
+    const [r2, g2, b2] = [1, 3, 5].map((i) => parseInt(la.slice(i, i + 2), 16));
+    return Array.from({ length: steps }, (_, i) => {
+      const t = i / (steps - 1);
+      return `#${[r1 + (r2 - r1) * t, g1 + (g2 - g1) * t, b1 + (b2 - b1) * t]
+        .map((v) => Math.round(v).toString(16).padStart(2, "0"))
+        .join("")}`;
+    });
+  }, [palette, steps]);
 
-    for (let i = 0; i < steps; i++) {
-      let t = i / (steps - 1);
-
-      // Apply easing
-      if (curve === "ease-in") {
-        t = t * t;
-      } else if (curve === "ease-out") {
-        t = t * (2 - t);
-      } else if (curve === "ease-in-out") {
-        t = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
-      }
-
-      scale.push(bezierPath(t).hex());
-    }
-
-    return scale;
-  }, [paletteHex, steps, curve]);
-
-  // Analyze perceptual uniformity
   const analysis = useMemo(() => {
-    if (vizScale.length === 0) return null;
-
-    const lightnessSteps = [];
-    const chromaSteps = [];
-
-    for (let i = 1; i < vizScale.length; i++) {
-      const [l1, c1] = chroma(vizScale[i - 1]).oklch();
-      const [l2, c2] = chroma(vizScale[i]).oklch();
-      lightnessSteps.push(Math.abs(l2 - l1));
-      chromaSteps.push(Math.abs(c2 - c1));
+    if (scale.length < 2) return null;
+    const lD = [],
+      cD = [];
+    for (let i = 1; i < scale.length; i++) {
+      lD.push(Math.abs(scale[i].l - scale[i - 1].l));
+      cD.push(Math.abs(scale[i].c - scale[i - 1].c));
     }
-
-    const avgLightness =
-      lightnessSteps.reduce((a, b) => a + b, 0) / lightnessSteps.length;
-    const avgChroma =
-      chromaSteps.reduce((a, b) => a + b, 0) / chromaSteps.length;
-
-    const lightnessVariance =
-      lightnessSteps.reduce(
-        (sum, val) => sum + Math.pow(val - avgLightness, 2),
-        0,
-      ) / lightnessSteps.length;
-    const chromaVariance =
-      chromaSteps.reduce((sum, val) => sum + Math.pow(val - avgChroma, 2), 0) /
-      chromaSteps.length;
-
     return {
-      lightnessUniformity: Math.max(0, 1 - lightnessVariance / avgLightness),
-      chromaUniformity: Math.max(0, 1 - chromaVariance / (avgChroma || 0.001)),
+      lU: Math.max(0, Math.min(1, 1 - cv(lD))),
+      cU: Math.max(0, Math.min(1, 1 - cv(cD))),
+      clips: scale.filter((s) => !s.inGamut).length,
+      cMax: Math.max(...scale.map((s) => s.c)),
     };
-  }, [vizScale]);
+  }, [scale]);
 
-  const handleColorClick = (hex) => {
-    navigator.clipboard.writeText(hex);
-    setCopiedColor(hex);
-    setCopiedMessage(`Copied ${hex}`);
-    setTimeout(() => setCopiedColor(null), 2000);
-  };
-
-  const exportAsCSS = () => {
-    const css = vizScale
-      .map((hex, i) => `  --scale-${i + 1}: ${hex};`)
+  const exportText = useMemo(() => {
+    const keys = getScaleKeys(steps);
+    if (exportFormat === "css")
+      return `:root {\n${scale.map((s, i) => `  --${scaleName}-${keys[i]}: ${s.hex};`).join("\n")}\n}`;
+    if (exportFormat === "tailwind")
+      return `colors: {\n  ${scaleName}: {\n${scale.map((s, i) => `    ${keys[i]}: '${s.hex}',`).join("\n")}\n  }\n}`;
+    if (exportFormat === "json")
+      return JSON.stringify(
+        scale.map((s, i) => ({
+          step: keys[i],
+          hex: s.hex,
+          oklch: { l: +s.l.toFixed(4), c: +s.c.toFixed(4), h: +s.h.toFixed(2) },
+          inGamut: s.inGamut,
+        })),
+        null,
+        2,
+      );
+    return scale
+      .map((s, i) => `$${scaleName}-${keys[i]}: ${s.hex};`)
       .join("\n");
+  }, [scale, scaleName, exportFormat, steps]);
 
-    const fullCSS = `:root {\n${css}\n}`;
-    navigator.clipboard.writeText(fullCSS);
-    setCopiedMessage("Copied scale as CSS variables!");
-    setCopiedColor("css");
-    setTimeout(() => setCopiedColor(null), 2000);
-  };
-
-  const exportAsJSON = () => {
-    const json = vizScale.map((hex, i) => ({
-      step: i + 1,
-      color: hex,
-      oklch: chroma(hex).oklch(),
-    }));
-
-    navigator.clipboard.writeText(JSON.stringify(json, null, 2));
-    setCopiedMessage("Copied scale as JSON!");
-    setCopiedColor("json");
-    setTimeout(() => setCopiedColor(null), 2000);
-  };
-
-  const exportAsTailwind = () => {
-    const tailwind = vizScale
-      .map((hex, i) => `        ${(i + 1) * 50}: '${hex}',`)
-      .join("\n");
-
-    const fullTailwind = `// Add to your tailwind.config.js\ncolors: {\n  custom: {\n${tailwind}\n  }\n}`;
-    navigator.clipboard.writeText(fullTailwind);
-    setCopiedMessage("Copied as Tailwind config!");
-    setCopiedColor("tailwind");
-    setTimeout(() => setCopiedColor(null), 2000);
+  const sp = {
+    palette,
+    steps,
+    setSteps,
+    easing,
+    setEasing,
+    scaleName,
+    setScaleName,
+    exportFormat,
+    setExportFormat,
+    exportText,
+    analysis,
+    showToast,
+    onClose: () => setDrawerOpen(false),
+    showDrawer,
+    handleAdd,
+    handleRemove,
+    handleMove,
   };
 
   return (
-    <div className="hidden bg-background lg:flex flex-col pt-3 h-full">
-      <div className="flex flex-col gap-3 flex-1 ml-2 mr-2 mb-2 bg-background overflow-hidden">
-        {/* Header Controls */}
-        <div className="p-4 border border-(--navBorder) rounded-md bg-foreground/[0.015]">
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <div className="flex items-center gap-6 flex-wrap">
-              {/* STEPS */}
-              <div className="flex items-center gap-3">
-                <span className="text-[10px] font-bold text-foreground/40 uppercase tracking-widest">
-                  Steps
-                </span>
-                <input
-                  type="range"
-                  min="5"
-                  max="30"
-                  value={steps}
-                  onChange={(e) => setSteps(parseInt(e.target.value))}
-                  className="w-28 h-1.5 cursor-pointer accent-(--brand)"
-                />
-                <span className="text-[10px] font-mono font-bold text-(--brand)">
-                  {steps}
-                </span>
-              </div>
-
-              {/* CURVE */}
-              <div className="flex items-center gap-3">
-                <span className="text-[10px] font-bold text-foreground/40 uppercase tracking-widest">
-                  Easing
-                </span>
-                <div className="flex bg-foreground/5 p-0.5 rounded-lg border border-(--navBorder)">
-                  {[
-                    { id: "linear", label: "Linear" },
-                    { id: "ease-in", label: "Ease In" },
-                    { id: "ease-out", label: "Ease Out" },
-                    { id: "ease-in-out", label: "In-Out" },
-                  ].map((c) => (
-                    <button
-                      key={c.id}
-                      onClick={() => setCurve(c.id)}
-                      className={`px-2.5 py-1 text-[10px] font-bold rounded-md transition-all uppercase ${
-                        curve === c.id
-                          ? "bg-background text-(--brand) shadow-sm"
-                          : "text-foreground/50 hover:text-foreground"
-                      }`}
-                    >
-                      {c.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* UNIFORMITY SCORE */}
-              {analysis && (
-                <div className="flex items-center gap-3 pl-4 border-l border-(--navBorder)">
-                  <span className="text-[8px] font-bold text-foreground/30 uppercase tracking-wider">
-                    Uniformity
-                  </span>
-                  <div className="px-3 py-1 bg-foreground/5 rounded-md border border-(--navBorder)">
-                    <span className="text-[11px] font-mono font-bold text-(--brand)">
-                      {(analysis.lightnessUniformity * 100).toFixed(0)}%
-                    </span>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* EXPORT BUTTONS */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={exportAsCSS}
-                className="px-3 py-1.5 text-[10px] font-bold border border-(--navBorder) rounded hover:bg-foreground/5 hover:border-(--brand) transition-colors"
-              >
-                Export CSS
-              </button>
-              <button
-                onClick={exportAsTailwind}
-                className="px-3 py-1.5 text-[10px] font-bold border border-(--navBorder) rounded hover:bg-foreground/5 hover:border-(--brand) transition-colors"
-              >
-                Tailwind
-              </button>
-              <button
-                onClick={exportAsJSON}
-                className="px-3 py-1.5 text-[10px] font-bold border border-(--navBorder) rounded hover:bg-foreground/5 hover:border-(--brand) transition-colors"
-              >
-                JSON
-              </button>
-            </div>
-          </div>
+    <div
+      className="flex flex-col h-full overflow-hidden bg-[#0a0a0f] text-[#e8e8f0]"
+      style={{ fontFamily: "'DM Mono','Fira Code','Courier New',monospace" }}
+    >
+      {/* ── Header ── */}
+      <header className="flex items-center justify-between gap-2 mx-2 mt-2 mb-2 border border-[#1e1e2e] rounded-md bg-[#0d0d14] flex-shrink-0 px-3 sm:px-6 py-3">
+        <div className="flex items-baseline gap-2.5 min-w-0">
+          <span className="text-[13px] font-bold tracking-[0.15em] text-[#c084fc] flex-shrink-0">
+            BEZIER
+          </span>
+          <span className="hidden sm:block text-[10px] text-[#4b4b6b] tracking-[0.1em] truncate">
+            OKLCH COLOR SCALE GENERATOR
+          </span>
         </div>
-
-        {/* Main Work Surface */}
-        <div className="flex-1 border border-(--navBorder) rounded-md overflow-hidden bg-gradient-to-br from-foreground/[0.01] to-foreground/[0.03] relative">
-          <div className="h-full overflow-y-auto custom-scrollbar p-6">
-            <div className="space-y-6">
-              {/* Perceptual Analysis */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 bg-foreground/[0.02] p-6 rounded-xl border border-(--navBorder)">
-                <div className="flex flex-col gap-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold text-foreground/40 uppercase tracking-widest">
-                      Lightness Distribution
-                    </span>
-                    <span className="text-[8px] font-mono text-foreground/30">
-                      Step consistency
-                    </span>
-                  </div>
-                  <div className="relative h-32 w-full flex items-end gap-[2px] bg-foreground/5 rounded-lg p-2">
-                    {vizScale.map((hex, i) => {
-                      const [l] = chroma(hex).oklch();
-                      return (
-                        <div
-                          key={i}
-                          className="flex-1 bg-(--brand) opacity-40 rounded-t transition-all hover:opacity-100 cursor-pointer"
-                          style={{ height: `${l * 100}%` }}
-                          title={`L: ${(l * 100).toFixed(1)}%`}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold text-foreground/40 uppercase tracking-widest">
-                      Chroma Distribution
-                    </span>
-                    <span className="text-[8px] font-mono text-foreground/30">
-                      Saturation curve
-                    </span>
-                  </div>
-                  <div className="relative h-32 w-full flex items-end gap-[2px] bg-foreground/5 rounded-lg p-2">
-                    {vizScale.map((hex, i) => {
-                      const [, c] = chroma(hex).oklch();
-                      const height = (c / 0.4) * 100;
-                      return (
-                        <div
-                          key={i}
-                          className="flex-1 bg-amber-400 opacity-40 rounded-t transition-all hover:opacity-100 cursor-pointer"
-                          style={{ height: `${Math.min(height, 100)}%` }}
-                          title={`C: ${c.toFixed(3)}`}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-
-              {/* Color Scale Grid with Accessibility */}
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-                {vizScale.map((hex, i) => {
-                  const contrastWhite = chroma.contrast(hex, "white");
-                  const contrastBlack = chroma.contrast(hex, "black");
-                  const passesWhite = contrastWhite >= 4.5;
-                  const passesBlack = contrastBlack >= 4.5;
-                  const [l, c, h] = chroma(hex).oklch();
-
-                  return (
-                    <div
-                      key={i}
-                      onClick={() => handleColorClick(hex)}
-                      className="group p-4 bg-background border border-(--navBorder) rounded-lg flex flex-col gap-3 transition-all hover:border-(--brand) hover:shadow-lg cursor-pointer"
-                    >
-                      {/* Color Swatch */}
-                      <div
-                        className="w-full h-20 rounded-md shadow-inner border border-black/5 transition-transform group-hover:scale-105"
-                        style={{ backgroundColor: hex }}
-                      />
-
-                      {/* Color Info */}
-                      <div className="flex flex-col gap-1">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[9px] font-bold text-foreground/40 uppercase">
-                            Step {i + 1}
-                          </span>
-                          <span className="text-[8px] font-mono text-foreground/30">
-                            {((i / (vizScale.length - 1)) * 100).toFixed(0)}%
-                          </span>
-                        </div>
-                        <span className="text-[11px] font-mono font-bold text-foreground/80">
-                          {hex.toUpperCase()}
-                        </span>
-                      </div>
-
-                      {/* OKLCH Values */}
-                      <div className="flex gap-2 text-[8px] font-mono text-foreground/40 pt-2 border-t border-(--navBorder)">
-                        <span>L:{(l * 100).toFixed(0)}</span>
-                        <span>C:{c.toFixed(2)}</span>
-                        <span>H:{h.toFixed(0)}°</span>
-                      </div>
-
-                      {/* Contrast Ratings */}
-                      <div className="flex flex-col gap-1.5">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[8px] font-bold text-foreground/30 uppercase">
-                            vs White
-                          </span>
-                          <div className="flex items-center gap-1.5">
-                            <span
-                              className={`text-[9px] font-mono font-bold ${passesWhite ? "text-emerald-500" : "text-foreground/40"}`}
-                            >
-                              {contrastWhite.toFixed(1)}
-                            </span>
-                            <div
-                              className={`w-1.5 h-1.5 rounded-full ${passesWhite ? "bg-emerald-500" : "bg-foreground/10"}`}
-                            />
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-[8px] font-bold text-foreground/30 uppercase">
-                            vs Black
-                          </span>
-                          <div className="flex items-center gap-1.5">
-                            <span
-                              className={`text-[9px] font-mono font-bold ${passesBlack ? "text-emerald-500" : "text-foreground/40"}`}
-                            >
-                              {contrastBlack.toFixed(1)}
-                            </span>
-                            <div
-                              className={`w-1.5 h-1.5 rounded-full ${passesBlack ? "bg-emerald-500" : "bg-foreground/10"}`}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          <div className="flex gap-1 sm:gap-1.5">
+            {["scale", "preview", "compare"].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-2 sm:px-3.5 py-1 text-[9px] sm:text-[10px] font-bold tracking-[0.1em] uppercase border rounded transition-colors cursor-pointer
+                  ${
+                    activeTab === tab
+                      ? "border-[#c084fc] bg-[#c084fc]/10 text-[#c084fc]"
+                      : "border-[#1e1e2e] bg-transparent text-[#4b4b6b] hover:text-[#e8e8f0]"
+                  }`}
+                style={{ fontFamily: "inherit" }}
+              >
+                {isMobile ? tab.slice(0, 3).toUpperCase() : tab}
+              </button>
+            ))}
           </div>
-
-          {copiedColor && (
-            <div className="absolute bottom-6 right-6 bg-foreground text-background px-4 py-2 rounded-full shadow-2xl z-50 text-[10px] font-bold uppercase tracking-widest animate-in slide-in-from-bottom-2">
-              {copiedMessage}
-            </div>
+          {showDrawer && (
+            <button
+              onClick={() => setDrawerOpen((o) => !o)}
+              className={`w-8 h-8 flex flex-col items-center justify-center gap-1 rounded border bg-transparent cursor-pointer transition-colors
+                ${drawerOpen ? "border-[#c084fc]" : "border-[#2a2a3e]"}`}
+            >
+              {[0, 1, 2].map((i) => (
+                <span
+                  key={i}
+                  className="block rounded-sm transition-all duration-200"
+                  style={{
+                    width: 14,
+                    height: 1.5,
+                    background: drawerOpen ? "#c084fc" : "#6b6b8b",
+                    transform: drawerOpen
+                      ? i === 0
+                        ? "rotate(45deg) translate(3.5px,3.5px)"
+                        : i === 2
+                          ? "rotate(-45deg) translate(3.5px,-3.5px)"
+                          : "scaleX(0)"
+                      : "none",
+                    opacity: drawerOpen && i === 1 ? 0 : 1,
+                  }}
+                />
+              ))}
+            </button>
           )}
         </div>
+      </header>
+
+      {/* ── Body ──────────────────────────────────────────────────────────────────
+          Layout strategy:
+          • Outer wrapper: flex row, flex-1, min-h-0, p-2, gap-2
+            - p-2 gives the outer margin (ml-2 left, mr-2 right, mb-2 bottom)
+            - gap-2 gives the middle gap between sidebar and main
+          • Sidebar aside: fixed width, rounded border, overflow-y-auto (scrolls internally)
+          • Main: flex-1, rounded border, overflow-y-auto (scrolls internally)
+          • Both panels are fully visible — nothing clips at the bottom
+      ──────────────────────────────────────────────────────────────────────────── */}
+      <div className="flex flex-1 gap-2 mx-2 mb-2 min-h-0 relative">
+        {/* Sidebar — desktop only, scrolls independently */}
+        {isDesktop && (
+          <aside
+            className="flex-shrink-0 flex flex-col rounded-lg border border-[#1e1e2e] overflow-hidden"
+            style={{ width: 248 }}
+          >
+            <SidebarContent {...sp} />
+          </aside>
+        )}
+
+        {/* Drawer overlay — mobile/tablet */}
+        {showDrawer && (
+          <>
+            <div
+              onClick={() => setDrawerOpen(false)}
+              className="absolute inset-0 z-40 transition-opacity duration-300"
+              style={{
+                background: "rgba(0,0,0,0.65)",
+                opacity: drawerOpen ? 1 : 0,
+                pointerEvents: drawerOpen ? "auto" : "none",
+              }}
+            />
+            <div
+              className="absolute top-0 left-0 bottom-0 z-50 flex flex-col rounded-r-lg border-r border-[#1e1e2e] bg-[#0d0d14] transition-transform duration-300"
+              style={{
+                width: isTablet ? 300 : "82%",
+                maxWidth: 340,
+                transform: drawerOpen ? "translateX(0)" : "translateX(-100%)",
+                boxShadow: drawerOpen ? "12px 0 40px rgba(0,0,0,0.7)" : "none",
+              }}
+            >
+              <SidebarContent {...sp} />
+            </div>
+          </>
+        )}
+
+        {/* Main content — scrolls independently, full height within p-2 bounds */}
+        <main className="flex-1 min-w-0 overflow-y-auto rounded-lg border border-[#1e1e2e] bg-[#0a0a0f]">
+          <div className="flex flex-col gap-4 sm:gap-5 lg:gap-6 p-3.5 sm:p-[18px] lg:p-6 pb-8">
+            {activeTab === "scale" && (
+              <ScaleTab
+                scale={scale}
+                analysis={analysis}
+                steps={steps}
+                scaleName={scaleName}
+                isMobile={isMobile}
+                isTablet={isTablet}
+                showToast={showToast}
+              />
+            )}
+            {activeTab === "preview" && (
+              <UIPreview scale={scale} steps={steps} isMobile={isMobile} />
+            )}
+            {activeTab === "compare" && (
+              <Compare
+                scale={scale}
+                linearScale={linearScale}
+                isMobile={isMobile}
+              />
+            )}
+          </div>
+        </main>
+      </div>
+
+      {/* Toast */}
+      {toast && (
+        <div
+          className="fixed bottom-5 right-5 z-[1000] px-4 py-2.5 rounded-full text-[10px] font-bold tracking-[0.12em] uppercase text-[#0a0a0f] bg-[#c084fc] shadow-[0_8px_32px_rgba(192,132,252,0.4)]"
+          style={{ animation: "fadeIn 0.2s ease" }}
+        >
+          {toast}
+        </div>
+      )}
+
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap');
+        html,body,#root{height:100%;margin:0;padding:0;overflow:hidden;}
+        *{box-sizing:border-box;}
+        ::-webkit-scrollbar{width:4px;height:4px;}
+        ::-webkit-scrollbar-track{background:#0a0a0f;}
+        ::-webkit-scrollbar-thumb{background:#2a2a3e;border-radius:2px;}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+        input[type=range]{-webkit-appearance:none;height:3px;border-radius:2px;background:#1e1e2e;width:100%;}
+        input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:#c084fc;cursor:pointer;}
+      `}</style>
+    </div>
+  );
+}
+
+// ─── Scale Tab ────────────────────────────────────────────────────────────────
+function ScaleTab({
+  scale,
+  analysis,
+  steps,
+  scaleName,
+  isMobile,
+  isTablet,
+  showToast,
+}) {
+  const keys = getScaleKeys(steps);
+  return (
+    <>
+      {analysis && (
+        <div
+          className={`grid gap-2.5 ${isMobile ? "grid-cols-2" : "grid-cols-3"}`}
+        >
+          <ChartBar
+            label="Lightness"
+            sub="L in OKLab"
+            color="#c084fc"
+            data={scale.map((s) => s.l)}
+            max={1}
+            unit="%"
+            mul={100}
+            dec={1}
+          />
+          <ChartBar
+            label="Chroma"
+            sub="Saturation"
+            color="#facc15"
+            data={scale.map((s) => s.c)}
+            max={analysis.cMax * 1.1 || 0.4}
+            unit=""
+            mul={1}
+            dec={3}
+          />
+          {!isMobile && (
+            <ChartBar
+              label="Hue"
+              sub="Hue travel °"
+              color="#34d399"
+              data={scale.map((s) => s.h)}
+              max={360}
+              unit="°"
+              mul={1}
+              dec={0}
+              norm
+            />
+          )}
+        </div>
+      )}
+
+      <div className="flex h-10 sm:h-12 rounded-lg overflow-hidden border border-[#1e1e2e] flex-shrink-0">
+        {scale.map((s, i) => (
+          <div
+            key={i}
+            className="flex-1"
+            style={{ background: s.hex }}
+            title={s.hex}
+          />
+        ))}
+      </div>
+
+      <div
+        className="grid gap-2 sm:gap-2.5"
+        style={{
+          gridTemplateColumns: `repeat(auto-fill,minmax(${isMobile ? 118 : 138}px,1fr))`,
+        }}
+      >
+        {scale.map((s, i) => {
+          const passes = s.cW >= 4.5 || s.cB >= 4.5;
+          return (
+            <div
+              key={i}
+              onClick={() => {
+                navigator.clipboard.writeText(s.hex);
+                showToast(`Copied ${s.hex.toUpperCase()}`);
+              }}
+              className="rounded-lg overflow-hidden cursor-pointer transition-transform duration-100 hover:-translate-y-0.5"
+              style={{
+                border: `1px solid ${s.inGamut ? "#1e1e2e" : "rgba(248,113,113,0.4)"}`,
+              }}
+            >
+              <div
+                className="flex items-start justify-between p-1.5"
+                style={{ background: s.hex, height: isMobile ? 44 : 60 }}
+              >
+                {!s.inGamut && (
+                  <span className="text-[8px] font-bold bg-[#f87171] text-white rounded px-1 py-0.5 tracking-[0.08em]">
+                    CLIP
+                  </span>
+                )}
+                {passes && (
+                  <span className="text-[8px] font-bold bg-[#4ade80] text-black rounded px-1 py-0.5 tracking-[0.08em] ml-auto">
+                    AA
+                  </span>
+                )}
+              </div>
+              <div className="bg-[#0d0d14] px-2.5 py-2 flex flex-col gap-1">
+                <span className="text-[9px] text-[#4b4b6b] font-bold tracking-[0.1em]">
+                  {scaleName}-{keys[i]}
+                </span>
+                <span className="text-[10px] font-bold text-[#e8e8f0]">
+                  {s.hex.toUpperCase()}
+                </span>
+                <div className="text-[8px] text-[#4b4b6b] flex gap-1.5">
+                  <span>L:{(s.l * 100).toFixed(0)}</span>
+                  <span>C:{s.c.toFixed(2)}</span>
+                  <span>H:{s.h.toFixed(0)}°</span>
+                </div>
+                <div className="text-[8px] flex gap-1.5">
+                  <span
+                    className={
+                      s.cW >= 4.5 ? "text-[#4ade80]" : "text-[#2a2a3e]"
+                    }
+                  >
+                    W:{s.cW.toFixed(1)}
+                  </span>
+                  <span
+                    className={
+                      s.cB >= 4.5 ? "text-[#4ade80]" : "text-[#2a2a3e]"
+                    }
+                  >
+                    B:{s.cB.toFixed(1)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </>
+  );
+}
+
+// ─── UI Preview ───────────────────────────────────────────────────────────────
+function UIPreview({ scale, steps, isMobile }) {
+  if (scale.length < 2) return null;
+  const light = scale[Math.floor(scale.length * 0.1)];
+  const accent = scale[Math.floor(scale.length * 0.5)];
+  const dark = scale[Math.floor(scale.length * 0.85)];
+  const btn = scale[Math.floor(scale.length * 0.7)];
+  return (
+    <div className="flex flex-col gap-4">
+      <p className="text-[10px] text-[#4b4b6b] tracking-[0.15em] uppercase">
+        UI Context Preview — how your scale behaves in real interfaces
+      </p>
+      <div
+        className={`grid gap-3.5 ${isMobile ? "grid-cols-1" : "grid-cols-2"}`}
+      >
+        <div className="bg-white rounded-xl p-4 border border-[#e5e7eb]">
+          <p className="text-[10px] text-[#9ca3af] uppercase tracking-[0.1em] mb-3">
+            Light Surface
+          </p>
+          <div className="flex flex-col gap-3">
+            <div className="flex gap-2 flex-wrap">
+              {scale
+                .filter((_, i) => i % Math.max(1, Math.floor(steps / 5)) === 0)
+                .map((s, i) => (
+                  <button
+                    key={i}
+                    className="px-3 py-1.5 rounded-md text-[10px] font-bold border-none cursor-default"
+                    style={{
+                      background: s.hex,
+                      color: s.cW >= s.cB ? "#fff" : "#000",
+                      fontFamily: "inherit",
+                    }}
+                  >
+                    Btn
+                  </button>
+                ))}
+            </div>
+            <div className="rounded-lg p-3" style={{ background: light.hex }}>
+              <p
+                className="text-[11px] font-bold mb-1"
+                style={{ color: dark.hex }}
+              >
+                Card Title
+              </p>
+              <p className="text-[10px]" style={{ color: accent.hex }}>
+                Supporting text in accent shade
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <div
+                className="w-8 h-8 rounded-full flex-shrink-0"
+                style={{ background: accent.hex }}
+              />
+              <div>
+                <p
+                  className="text-[11px] font-bold"
+                  style={{ color: dark.hex }}
+                >
+                  User Name
+                </p>
+                <p className="text-[9px] text-[#9ca3af]">@handle</p>
+              </div>
+              <div
+                className="ml-auto px-2.5 py-1 rounded-full text-[9px] font-bold text-white"
+                style={{ background: btn.hex, fontFamily: "inherit" }}
+              >
+                Follow
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="bg-[#0f0f14] rounded-xl p-4 border border-[#1e1e2e]">
+          <p className="text-[10px] text-[#4b4b6b] uppercase tracking-[0.1em] mb-3">
+            Dark Surface
+          </p>
+          <div className="flex flex-col gap-3">
+            <div
+              className="rounded-lg p-3"
+              style={{
+                background: `${accent.hex}18`,
+                border: `1px solid ${accent.hex}40`,
+              }}
+            >
+              <p
+                className="text-[11px] font-bold mb-1"
+                style={{ color: light.hex }}
+              >
+                Notification
+              </p>
+              <p className="text-[10px] text-[#9898b8]">
+                Palette generated successfully
+              </p>
+            </div>
+            <div className="flex gap-1">
+              {scale.slice(0, Math.min(6, scale.length)).map((s, i) => (
+                <div
+                  key={i}
+                  className="flex-1 h-5 rounded"
+                  style={{ background: s.hex }}
+                />
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <div
+                className="flex-1 rounded-md py-1.5 text-center text-[10px] font-bold"
+                style={{
+                  background: accent.hex,
+                  color: accent.cW >= accent.cB ? "#fff" : "#000",
+                  fontFamily: "inherit",
+                }}
+              >
+                Primary
+              </div>
+              <div
+                className="flex-1 rounded-md py-1.5 text-center text-[10px] font-bold"
+                style={{
+                  border: `1px solid ${accent.hex}`,
+                  color: accent.hex,
+                  fontFamily: "inherit",
+                }}
+              >
+                Ghost
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="rounded-xl overflow-hidden border border-[#1e1e2e]">
+        <div className={`flex ${isMobile ? "h-12" : "h-16"}`}>
+          {scale.map((s, i) => (
+            <div
+              key={i}
+              className="flex-1 flex items-center justify-center"
+              style={{ background: s.hex }}
+            >
+              <span
+                className="text-[7px] font-bold opacity-70"
+                style={{
+                  writingMode: "vertical-rl",
+                  color: s.cW >= s.cB ? "#fff" : "#000",
+                }}
+              >
+                {(s.l * 100).toFixed(0)}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Compare ──────────────────────────────────────────────────────────────────
+function Compare({ scale, linearScale, isMobile }) {
+  return (
+    <div className="flex flex-col gap-4">
+      <p className="text-[10px] text-[#4b4b6b] tracking-[0.15em] uppercase">
+        OKLCH Bezier vs Linear RGB — spot the muddy midpoints
+      </p>
+      {[
+        {
+          label: "Bezier OKLCH (your scale)",
+          cls: "text-[#c084fc]",
+          data: scale.map((s) => s.hex),
+        },
+        {
+          label: "Linear RGB (naïve)",
+          cls: "text-[#4b4b6b]",
+          data: linearScale,
+        },
+      ].map(({ label, cls, data }) => (
+        <div key={label}>
+          <p
+            className={`text-[10px] font-bold tracking-[0.1em] uppercase mb-1.5 ${cls}`}
+          >
+            {label}
+          </p>
+          <div
+            className={`flex ${isMobile ? "h-9" : "h-14"} rounded-lg overflow-hidden border border-[#1e1e2e]`}
+          >
+            {data.map((hex, i) => (
+              <div key={i} className="flex-1" style={{ background: hex }} />
+            ))}
+          </div>
+        </div>
+      ))}
+      <div
+        className="grid gap-1.5"
+        style={{
+          gridTemplateColumns: `repeat(auto-fill,minmax(${isMobile ? 70 : 88}px,1fr))`,
+        }}
+      >
+        {scale.map((s, i) => {
+          const lin = linearScale[i] || s.hex;
+          return (
+            <div
+              key={i}
+              className="rounded-md overflow-hidden border border-[#1e1e2e]"
+            >
+              <div
+                className="h-7"
+                style={{ background: s.hex }}
+                title={`OKLCH: ${s.hex}`}
+              />
+              <div
+                className="h-7"
+                style={{ background: lin }}
+                title={`Linear: ${lin}`}
+              />
+              <div className="bg-[#0d0d14] py-0.5 text-center text-[8px] text-[#4b4b6b]">
+                {i + 1}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div className="bg-[#0d0d14] border border-[#1e1e2e] rounded-lg p-3.5 text-[10px] text-[#4b4b6b] leading-relaxed">
+        <span className="text-[#c084fc] font-bold">Why this matters: </span>
+        Linear RGB travels through perceptually dark or muddy midpoints because
+        RGB channels don't map linearly to human perception. OKLCH stays in
+        perceptual space — each step looks like an equal visual jump, which is
+        exactly what design systems need.
+      </div>
+    </div>
+  );
+}
+
+// ─── Shared atoms ─────────────────────────────────────────────────────────────
+function Sec({ label, children }) {
+  return (
+    <div className="px-4 py-3.5 border-b border-[#1e1e2e] flex-shrink-0">
+      <p className="text-[9px] font-bold tracking-[0.18em] text-[#3a3a5a] uppercase mb-2.5">
+        {label}
+      </p>
+      {children}
+    </div>
+  );
+}
+function Fld({ label, children }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <p className="text-[9px] text-[#4b4b6b] tracking-[0.1em] uppercase">
+        {label}
+      </p>
+      {children}
+    </div>
+  );
+}
+function MRow({ label, value, cls }) {
+  return (
+    <div className="flex justify-between items-center">
+      <span className="text-[9px] text-[#4b4b6b] tracking-[0.08em] uppercase">
+        {label}
+      </span>
+      <span className={`text-[11px] font-bold ${cls}`}>{value}</span>
+    </div>
+  );
+}
+function IcoBtn({ onClick, disabled, danger, children }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`flex items-center justify-center border border-[#1e1e2e] rounded bg-transparent p-0 leading-none transition-colors
+        ${
+          disabled
+            ? "text-[#2a2a3e] cursor-default"
+            : danger
+              ? "text-[#f87171] cursor-pointer hover:border-[#f87171]"
+              : "text-[#4b4b6b] cursor-pointer hover:text-[#e8e8f0]"
+        }`}
+      style={{ width: 18, height: 18, fontSize: 11, fontFamily: "inherit" }}
+    >
+      {children}
+    </button>
+  );
+}
+function PillBtn({ onClick, children, accent }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex-1 py-1.5 px-2.5 text-[10px] font-bold tracking-[0.1em] uppercase border rounded transition-colors cursor-pointer
+        ${
+          accent
+            ? "border-[#c084fc] bg-[#c084fc]/15 text-[#c084fc] hover:bg-[#c084fc]/25"
+            : "border-[#1e1e2e] bg-transparent text-[#4b4b6b] hover:text-[#e8e8f0]"
+        }`}
+      style={{ fontFamily: "inherit" }}
+    >
+      {children}
+    </button>
+  );
+}
+function ChartBar({
+  label,
+  sub,
+  color,
+  data,
+  max,
+  unit,
+  mul = 1,
+  dec = 1,
+  norm,
+}) {
+  const vals = norm
+    ? data.map((v) => (v % 360) / 360)
+    : data.map((v) => Math.min((v * mul) / (max * mul), 1));
+  return (
+    <div className="bg-[#0d0d14] border border-[#1e1e2e] rounded-lg p-3">
+      <div className="flex justify-between items-center mb-2">
+        <span
+          className="text-[10px] font-bold tracking-[0.1em] uppercase"
+          style={{ color }}
+        >
+          {label}
+        </span>
+        <span className="text-[8px] text-[#3a3a5a]">{sub}</span>
+      </div>
+      <div className="h-14 flex items-end gap-0.5">
+        {vals.map((v, i) => (
+          <div
+            key={i}
+            className="flex-1 rounded-sm opacity-50 hover:opacity-100 transition-opacity"
+            style={{ background: color, height: `${Math.max(v * 100, 2)}%` }}
+            title={`${(data[i] * mul).toFixed(dec)}${unit}`}
+          />
+        ))}
       </div>
     </div>
   );
