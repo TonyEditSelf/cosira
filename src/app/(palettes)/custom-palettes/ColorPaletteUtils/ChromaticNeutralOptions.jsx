@@ -1,20 +1,20 @@
 import { useColorPaletteContext } from "../../ColorContext";
-import doubleSplitCompPalGen, {
-  DOUBLE_SPLIT_COMP_PALETTE_INFO,
-} from "./doubleSplitCompPalGen";
+import chromaticNeutralPalGen, {
+  CHROMATIC_NEUTRAL_PALETTE_INFO,
+} from "./chromaticNeutralPalGen";
 
-export default function DoubleSplitCompOptions() {
+export default function ChromaticNeutralOptions() {
   const {
     setPalette,
     setDuplicatePalette,
     oklch,
-    doubleSplitCompPalType,
-    setDoubleSplitCompPalType,
+    chromaticNeutralPalType,
+    setChromaticNeutralPalType,
   } = useColorPaletteContext();
 
-  const handleChange = (id) => {
-    setDoubleSplitCompPalType(id);
-    const pal = doubleSplitCompPalGen(oklch, id);
+  const handleChange = (value) => {
+    setChromaticNeutralPalType(value);
+    const pal = chromaticNeutralPalGen(oklch, value);
     setPalette(pal);
     setDuplicatePalette(pal);
   };
@@ -25,22 +25,22 @@ export default function DoubleSplitCompOptions() {
         <p className="text-[10px] font-bold uppercase tracking-widest opacity-50 mb-1">
           Palette Type
         </p>
-        {DOUBLE_SPLIT_COMP_PALETTE_INFO.map(({ id, name, description }) => (
+        {CHROMATIC_NEUTRAL_PALETTE_INFO.map(({ id, name, description }) => (
           <div key={id} className="flex flex-col gap-0.5">
             <div className="flex gap-3 items-center">
               <input
                 type="radio"
-                name="doubleSplitCompPal"
+                name="chromaticNeutralPal"
                 id={id}
                 value={id}
-                checked={doubleSplitCompPalType === id}
+                checked={chromaticNeutralPalType === id}
                 onChange={() => handleChange(id)}
               />
               <label htmlFor={id} className="font-medium">
                 {name}
               </label>
             </div>
-            {doubleSplitCompPalType === id && (
+            {chromaticNeutralPalType === id && (
               <p className="text-[9px] opacity-60 ml-6 mb-1">{description}</p>
             )}
           </div>

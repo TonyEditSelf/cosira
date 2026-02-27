@@ -97,7 +97,7 @@ export default function CustomPalToolbar() {
   };
 
   return (
-    <section className="flex gap-3 items-center justify-center border border-[var(--navBorder)] py-3 ml-3 mr-2 mb-2 mt-2 rounded-md">
+    <section className="flex gap-3 items-center justify-center border border-[var(--navBorder)] py-3 ml-2 mr-2 mb-2 mt-2 rounded-md">
       {!showHidePanelOpen ? (
         <SiShowtime
           onClick={() => setShowHidePanelOpen((prev) => !prev)}

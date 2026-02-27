@@ -413,6 +413,12 @@ export function ColorPaletteContextProvider({ children }) {
   const [flowerPalType, setFlowerPalType] = useState("sunflower");
   const [uiBrandPalType, setUiBrandPalType] = useState("light");
   const [arcPalType, setArcPalType] = useState("hues");
+  const [achroPalType, setAchroPalType] = useState("tinted");
+  const [chromaticNeutralPalType, setChromaticNeutralPalType] =
+    useState("standard");
+  const [splitCompPalType, setSplitCompPalType] = useState("standard");
+
+  const [nearCompPalType, setNearCompPalType] = useState("warm-lean");
 
   const [paletteState, setPaletteState] = useState([]);
 
@@ -539,6 +545,10 @@ export function ColorPaletteContextProvider({ children }) {
       arcPalType,
       triadicPalType,
       tetradicPalType,
+      achroPalType,
+      chromaticNeutralPalType,
+      splitCompPalType,
+      nearCompPalType,
     );
 
     if (pal && Array.isArray(pal) && pal.length > 0) {
@@ -565,7 +575,6 @@ export function ColorPaletteContextProvider({ children }) {
     monoPalType,
     analogPalType,
     doubleSplitCompPalType,
-
     seasonalPalType,
     dataVizPalType,
     flowerPalType,
@@ -573,6 +582,10 @@ export function ColorPaletteContextProvider({ children }) {
     arcPalType,
     triadicPalType,
     tetradicPalType,
+    achroPalType,
+    chromaticNeutralPalType,
+    splitCompPalType,
+    nearCompPalType,
   ]);
 
   const values = {
@@ -621,6 +634,8 @@ export function ColorPaletteContextProvider({ children }) {
     allShadesTintsTones,
     setAllShadesTintsTones,
     shadesTintsTonesFunction,
+    splitCompPalType,
+    setSplitCompPalType,
     pickedShadesOrTones,
     setPickedShadesOrTones,
     handleSplitCompAngleChange,
@@ -640,7 +655,6 @@ export function ColorPaletteContextProvider({ children }) {
     setAnalogPalType,
     doubleSplitCompPalType,
     setDoubleSplitCompPalType,
-
     seasonalPalType,
     setSeasonalPalType,
     dataVizPalType,
@@ -659,6 +673,10 @@ export function ColorPaletteContextProvider({ children }) {
     setFavPalette,
     generateRandomColor,
     generateRandomPalette,
+    chromaticNeutralPalType,
+    setChromaticNeutralPalType,
+    nearCompPalType,
+    setNearCompPalType,
     uiBrandPalType,
     setUiBrandPalType,
     arcPalType,
@@ -667,6 +685,8 @@ export function ColorPaletteContextProvider({ children }) {
     setTriadicPalType,
     tetradicPalType,
     setTetradicPalType,
+    achroPalType,
+    setAchroPalType,
   };
 
   return (

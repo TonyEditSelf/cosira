@@ -87,7 +87,7 @@ export default function PaletteViewer() {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: -200, opacity: 0 }}
               transition={{ duration: 0.3, ease: easeIn }}
-              className="flex gap-6 h-[calc(100vh-140px)] overflow-y-scroll flex-col items-center ml-3 mr-0 pt-5 py-4 px-4 w-[201px] rounded-md border border-[var(--navBorder)]"
+              className="flex gap-6 h-[calc(100vh-140px)] overflow-y-scroll flex-col items-center ml-2 mr-0 pt-5 py-4 px-4 w-[270px] rounded-md border border-[var(--navBorder)]"
             >
               <PalettteProperties />
             </motion.aside>

@@ -9,7 +9,7 @@ import { useColorPaletteContext } from "../../ColorContext";
 import TetradicOptions from "../ColorPaletteUtils/TetradicOptions";
 import ComplementaryOptions from "../ColorPaletteUtils/ComplementaryOptions";
 import MonochromaticOptions from "../ColorPaletteUtils/MonochromaticOptions";
-
+import ChromaticNeutralOptions from "../ColorPaletteUtils/ChromaticNeutralOptions";
 import SeasonalOptions from "../ColorPaletteUtils/SeasonalOptions";
 import DataVizOptions from "../ColorPaletteUtils/DataVizOptions";
 import FlowerPalOptions from "../ColorPaletteUtils/FlowerPalOptions";
@@ -18,6 +18,8 @@ import ArcPalOptions from "../ColorPaletteUtils/ArcPalOptions";
 import TriadicOptions from "../ColorPaletteUtils/TriadicOptions";
 import ClashpalOptions from "../ColorPaletteUtils/ClashpalOptions";
 import DoubleSplitCompOptions from "../ColorPaletteUtils/DoubleSplitCompOptions";
+import AchromaticOptions from "../ColorPaletteUtils/AchromaticOptions";
+import NearCompOptions from "../ColorPaletteUtils/NearCompOptions";
 
 export default function PalettteProperties() {
   const {
@@ -109,6 +111,12 @@ export default function PalettteProperties() {
       {selectedPaletteType === "uiBrand" && <UIBrandOptions />}
       {selectedPaletteType === "arcPal" && <ArcPalOptions />}
       {selectedPaletteType === "clash" && <ClashpalOptions />}
+      {selectedPaletteType === "achromatic" && <AchromaticOptions />}
+      {selectedPaletteType === "chromaticNeutral" && (
+        <ChromaticNeutralOptions />
+      )}
+
+      {selectedPaletteType === "nearComplementary" && <NearCompOptions />}
     </div>
   );
 }

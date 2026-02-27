@@ -41,6 +41,10 @@ export default function paletteDecider(
   arcPalType,
   triadicPalType,
   tetradicPalType,
+  achroPalType,
+  chromaticNeutralPalType,
+  splitCompPalType,
+  nearCompPalType,
 ) {
   if (selectedPaletteType === "complementary") {
     return complementaryPalGen(oklch, compPalType);
@@ -49,7 +53,7 @@ export default function paletteDecider(
   } else if (selectedPaletteType === "analogous") {
     return analogousPalGen(oklch, analogOptions, analogPalType);
   } else if (selectedPaletteType === "splitComplementary") {
-    return splitCompPalGen(oklch, splitCompOptions);
+    return splitCompPalGen(oklch, splitCompOptions, splitCompPalType);
   } else if (selectedPaletteType === "triadic") {
     return triadicPalGen(oklch, triadicPalType);
   } else if (selectedPaletteType === "tetradic") {
@@ -63,15 +67,15 @@ export default function paletteDecider(
   } else if (selectedPaletteType === "warmCool") {
     return warmCoolPalGen(oklch, true);
   } else if (selectedPaletteType === "chromaticNeutral") {
-    return chromaticNeutralPalGen(oklch);
+    return chromaticNeutralPalGen(oklch, chromaticNeutralPalType);
   } else if (selectedPaletteType === "doubleSplitComp") {
     return doubleSplitCompPalGen(oklch, doubleSplitCompPalType);
   } else if (selectedPaletteType === "nearComplementary") {
-    return nearCompPalGen(oklch);
+    return nearCompPalGen(oklch, nearCompPalType);
   } else if (selectedPaletteType === "clash") {
     return clashPalGen(oklch);
   } else if (selectedPaletteType === "achromatic") {
-    return achromaticPalGen(oklch);
+    return achromaticPalGen(oklch, achroPalType);
   } else if (selectedPaletteType === "brandPalette") {
     return brandPalGen(oklch);
   } else if (selectedPaletteType === "seasonal") {
