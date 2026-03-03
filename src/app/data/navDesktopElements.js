@@ -12,6 +12,7 @@ export const navDesktopElements = [
       { label: "Bezier Blend", path: "/bezier-blend" },
       { label: "Color Adjust", path: "/color-adjust" },
       { label: "Gradient Generator", path: "/gradient-tool" },
+      { label: "Temperature Shifter", path: "/temp-shifter" },
     ],
   },
   {

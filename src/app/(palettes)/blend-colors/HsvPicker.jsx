@@ -112,7 +112,8 @@ export default function HsvPicker({ color, onChange }) {
       {/* SV area */}
       <div
         className="relative rounded-md overflow-hidden cursor-crosshair"
-        style={{ height: 220 }}
+        style={{ height: 220 }
+     }
       >
         <canvas
           ref={svCanvasRef}
