@@ -1,0 +1,19 @@
+Built a mood-constrained color palette generator for my brand creation tool.
+Instead of spinning a random hex wheel, you pick a mood and the generator works within that mood's hue range, chroma limits, and lightness bounds. Every result feels intentional, not accidental.
+8 moods to explore:
+🌿 Warm & Earthy — terracotta, rust, sand, sage
+🌊 Ocean & Calm — deep navy, teal, seafoam, mist
+⚡ Bold & Electric — vivid, high-energy, saturated
+🌆 Dusk & Moody — deep purples, mauve, dusty rose
+🌸 Fresh & Minimal — soft pastels, airy, light
+✦ Luxe & Dark — ebony, deep gold, midnight
+🔮 Neon Cyber — acid greens, hot pinks, glows
+❄️ Nordic Frost — ice blue, white birch, pale grey
+A few things that make it actually useful:
+→ Harmony modes (analogous, complementary, triadic) that constrain hue relationships across the whole palette
+→ Contrast lock — guarantee every color passes WCAG AA or AAA before it even appears
+→ Lock individual colors you like, regenerate the rest
+→ Tonal range explorer for any generated color
+→ Full generation history so you never lose a palette you liked
+Built with chroma.js + OKLCH color space, which handles perceptual uniformity way better than HSL for this kind of work.
+Randomness within rules beats pure randomness every time.

@@ -67,6 +67,8 @@ export function ColorPaletteContextProvider({ children }) {
     };
   };
 
+  const manualPaletteRef = useRef(false);
+
   // Function to generate random palette
   const generateRandomPalette = () => {
     // Generate random base color

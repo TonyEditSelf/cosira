@@ -237,14 +237,9 @@ function UsageRole({ name, scale, currentToken, onTokenChange, oldToken, isHighl
   const hasChanged = oldToken && oldToken !== currentToken;
 
   // FIXED: Wider token range — ±2 steps
-  const tokens = Object.keys(scale)
-    .map(Number)
-    .sort((a, b) => a - b);
-  const currentIndex = tokens.indexOf(Number(currentToken));
-  const alternatives = tokens.slice(
-    Math.max(0, currentIndex - 2),
-    currentIndex + 3,
-  );
+const alternatives = Object.keys(scale)
+  .map(Number)
+  .sort((a, b) => a - b);
 
   const copy = (type, e) => {
     e.stopPropagation();
@@ -935,13 +930,8 @@ function ColorDetail({ expanded, selectedIdx, onSelect, darkModeFloor, onDarkMod
       resolved = baseColor;
     }
 
-    if (TEXT_ON_BG_ROLES.has(role)) {
-      const bg = scale[allRoles["background"] || 50];
-      resolved = ensureContrast(resolved, bg, 4.5);
-    }
-
-    return resolved;
-  };
+return resolved;
+ };
 
   // For roles used as button/fill backgrounds, pick white or black text
   // based on actual contrast — so floor/ceiling changes are fully respected
