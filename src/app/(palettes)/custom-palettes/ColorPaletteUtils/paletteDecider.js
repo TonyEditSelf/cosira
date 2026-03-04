@@ -45,11 +45,13 @@ export default function paletteDecider(
   chromaticNeutralPalType,
   splitCompPalType,
   nearCompPalType,
+   monoColorCount = 8,
+  monoHueDrift = null,
 ) {
   if (selectedPaletteType === "complementary") {
     return complementaryPalGen(oklch, compPalType);
   } else if (selectedPaletteType === "monochromatic") {
-    return monochromaticPalGen(oklch, monoPalType);
+    return monochromaticPalGen(oklch, monoPalType, monoColorCount, monoHueDrift);
   } else if (selectedPaletteType === "analogous") {
     return analogousPalGen(oklch, analogOptions, analogPalType);
   } else if (selectedPaletteType === "splitComplementary") {

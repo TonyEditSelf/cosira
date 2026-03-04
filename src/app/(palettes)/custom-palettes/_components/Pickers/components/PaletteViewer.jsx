@@ -75,10 +75,6 @@ export default function PaletteViewer() {
     { key: "addColor", label: "Show Add Color" },
   ];
 
-const shouldScroll =
-  palette.length > 12 ||
-  leftPaletteAdjusterOpen ||
-  showHidePanelOpen;
 
   return (
     <main className="hidden lg:flex flex-col pt-3 h-full">
@@ -137,14 +133,14 @@ const shouldScroll =
           }}
           exit={{ width: "100%" }}
           transition={{ duration: 0.9, ease: "easeIn" }}
-          className="relative flex-1 ml-3 mr-2 mb-0 border rounded-md border-[var(--navBorder)] flex-col p-2 overflow-x-scroll "
+          className="relative flex-1 min-w-0 ml-3 mr-2 mb-0 border rounded-md border-[var(--navBorder)] p-2 overflow-x-scroll"
         >
-          <div
+<div
   role="palette viewer"
-  className={`flex h-full ${
-    shouldScroll
+  className={`flex h-full w-full ${
+    palette.length > 10
       ? "overflow-x-auto overflow-y-hidden flex-nowrap"
-      : "overflow-x-hidden flex-wrap"
+      : "overflow-hidden flex-nowrap"
   }`}
 >
             {palette?.map((colorObj, index) => {
@@ -183,8 +179,8 @@ const shouldScroll =
               return (
                 <div
                   className={`h-full
-                  ${shouldScroll ? "w-[100px] flex-none" : "flex-1"}
-                  ${shadesTintsTonesIndex === index ? "py-0" : "py-5"}
+  ${palette.length > 10 ? "w-[100px] flex-none" : "flex-1 min-w-0"}
+  ${shadesTintsTonesIndex === index ? "py-0" : "py-5"}
                   flex flex-col gap-2 justify-between items-center font-semibold
                   ${textColor === "white" ? "text-white" : "text-black"}
                 `}

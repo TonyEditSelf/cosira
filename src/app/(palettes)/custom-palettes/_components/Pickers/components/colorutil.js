@@ -142,3 +142,19 @@ export function oklchToCss(l, c, h, a = 1) {
   }
   return `oklch(${(l * 100).toFixed(1)}% ${c.toFixed(3)} ${h.toFixed(1)}deg)`;
 }
+
+// WCAG 2.x contrast ratio between two hex colors
+export function wcagContrast(hex1, hex2) {
+  const luminance = (hex) => {
+    hex = hex.replace("#", "");
+    const r = srgbToLinear(parseInt(hex.substr(0, 2), 16) / 255);
+    const g = srgbToLinear(parseInt(hex.substr(2, 2), 16) / 255);
+    const b = srgbToLinear(parseInt(hex.substr(4, 2), 16) / 255);
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  };
+  const l1 = luminance(hex1);
+  const l2 = luminance(hex2);
+  const lighter = Math.max(l1, l2);
+  const darker  = Math.min(l1, l2);
+  return (lighter + 0.05) / (darker + 0.05);
+}

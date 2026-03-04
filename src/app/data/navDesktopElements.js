@@ -13,7 +13,8 @@ export const navDesktopElements = [
       { label: "Color Adjust", path: "/color-adjust" },
       { label: "Gradient Generator", path: "/gradient-tool" },
       { label: "Temperature Shifter", path: "/temp-shifter" },
-      {label: "Palette Randomizer", path: "/palette-randomizer"}
+      { label: "Mood Palettes", path: "/mood-palettes" },
+      { label: "Culture & Festival Palettes", path: "/culture-palettes" },
     ],
   },
   {

@@ -1,12 +1,12 @@
 "use client";
 
 import PageWrapper from "@/components/ui/PageWrapper";
-import SmartRandomize from "./SmartRandomize";
+import MoodRandomize from "./MoodRandomize";
 
-export default function PaletteRandomizer() {
+export default function MoodRandomizer() {
   return (
     <PageWrapper>
-      <SmartRandomize />
+      <MoodRandomize />
     </PageWrapper>
   );
 }

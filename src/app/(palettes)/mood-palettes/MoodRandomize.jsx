@@ -1,7 +1,6 @@
 import { useState, useMemo, useCallback, useRef } from "react";
-import chroma from "chroma-js";
-
-
+import { oklchToHex, wcagContrast, hexToOklch  } from "../custom-palettes/_components/Pickers/components/colorutil";
+import { rand, clampOklch, generateHarmonyHues, meetsContrast, getContrastInfo, stratifiedHues, generatePalette } from "../culture-palettes/paletteUtils";
 
 // ─── Mood definitions: hue range, chroma range, lightness range ───
 const MOODS = {
@@ -206,151 +205,6 @@ const HARMONY_MODES = [
   { id: "split", label: "Split Comp", desc: "Split complementary" },
 ];
 
-// ─── Utility: random in range ───
-function rand(min, max) {
-  return min + Math.random() * (max - min);
-}
-
-function pickFromRanges(ranges) {
-  const range = ranges[Math.floor(Math.random() * ranges.length)];
-  return rand(range[0], range[1]);
-}
-
-// Stratified hue sampling — divides range into n slots, picks randomly within each
-// Guarantees no two hues are too close while keeping randomness within each slot
-function stratifiedHues(ranges, count) {
-  // Flatten all ranges into total span
-  const totalSpan = ranges.reduce((sum, [a, b]) => sum + (b - a), 0);
-  const slotSize = totalSpan / count;
-
-  // Assign each slot a random offset within it
-  const hues = Array.from({ length: count }, (_, i) => {
-    const slotStart = i * slotSize;
-    const slotEnd = slotStart + slotSize;
-    const rawHue = rand(slotStart, slotEnd);
-
-    // Map back to actual range
-    let remaining = rawHue;
-    for (const [a, b] of ranges) {
-      const span = b - a;
-      if (remaining <= span) return a + remaining;
-      remaining -= span;
-    }
-    return ranges[ranges.length - 1][1];
-  });
-
-  // Shuffle so slot order doesn't predict color order
-  for (let i = hues.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [hues[i], hues[j]] = [hues[j], hues[i]];
-  }
-
-  return hues;
-}
-
-function clampOklch(l, c, h) {
-  // Clamp h to 0-360
-  h = ((h % 360) + 360) % 360;
-  // Try to get valid hex
-  try {
-    const hex = chroma.oklch(l, c, h).hex();
-    if (hex && (hex !== "#000000" || l < 0.1)) return { l, c, h, hex };
-  } catch (e) {}
-  // Reduce chroma until valid
-  let cc = c;
-  while (cc > 0.01) {
-    try {
-      const hex = chroma.oklch(l, cc, h).hex();
-      return { l, c: cc, h, hex };
-    } catch (e) {
-      cc -= 0.01;
-    }
-  }
-  return { l, c: 0, h, hex: chroma.oklch(l, 0, h).hex() };
-}
-
-function generateHarmonyHues(baseHue, harmony, count) {
-  switch (harmony) {
-    case "analogous":
-      return Array.from({ length: count }, (_, i) => baseHue + (i - Math.floor(count / 2)) * 28);
-    case "complementary": {
-      const hues = [];
-      for (let i = 0; i < count; i++) {
-        hues.push(i % 2 === 0 ? baseHue + rand(-15, 15) : baseHue + 180 + rand(-15, 15));
-      }
-      return hues;
-    }
-    case "triadic": {
-      const hues = [];
-      const bases = [baseHue, baseHue + 120, baseHue + 240];
-      for (let i = 0; i < count; i++) hues.push(bases[i % 3] + rand(-10, 10));
-      return hues;
-    }
-    case "split": {
-      const hues = [];
-      const bases = [baseHue, baseHue + 150, baseHue + 210];
-      for (let i = 0; i < count; i++) hues.push(bases[i % 3] + rand(-10, 10));
-      return hues;
-    }
-    default:
-      return null; // free
-  }
-}
-
-function meetsContrast(hex, mode) {
-  if (mode === "none") return true;
-  const minRatio = mode === "aaa" ? 7 : 4.5;
-  const cw = chroma.contrast(hex, "white");
-  const cb = chroma.contrast(hex, "black");
-  return cw >= minRatio || cb >= minRatio;
-}
-
-function generatePalette(mood, harmony, contrastMode, count, locks) {
-  const m = MOODS[mood];
-  const baseHue = pickFromRanges(m.hues);
-  const harmonyHues = harmony !== "free" ? generateHarmonyHues(baseHue, harmony, count) : null;
-
-  // For free mode, pre-generate stratified hues for all slots
-  const freeHues = !harmonyHues ? stratifiedHues(m.hues, count) : null;
-
-  const colors = [];
-  for (let i = 0; i < count; i++) {
-    if (locks[i]) {
-      colors.push(locks[i]);
-      continue;
-    }
-
-    const fixedH = harmonyHues
-      ? ((harmonyHues[i] % 360) + 360) % 360
-      : freeHues[i];
-
-    let attempts = 0;
-    let color;
-    do {
-      const c = rand(m.chroma[0], m.chroma[1]);
-      const l = rand(m.lightness[0], m.lightness[1]);
-      color = clampOklch(l, c, fixedH);
-      attempts++;
-    } while (!meetsContrast(color.hex, contrastMode) && attempts < 40);
-    colors.push(color);
-  }
-  return colors;
-}
-
-function getContrastInfo(hex) {
-  const cw = chroma.contrast(hex, "white");
-  const cb = chroma.contrast(hex, "black");
-  const best = Math.max(cw, cb);
-  return {
-    cw: cw.toFixed(1),
-    cb: cb.toFixed(1),
-    best: best.toFixed(1),
-    aa: best >= 4.5,
-    aaa: best >= 7,
-    textColor: cw > cb ? "white" : "black",
-  };
-}
-
 // ─── Sub-components ───
 
 function MoodCard({ moodKey, mood, isSelected, onSelect }) {
@@ -380,7 +234,7 @@ function MoodCard({ moodKey, mood, isSelected, onSelect }) {
 
 function ColorSwatch({ color, index, isLocked, onLock, onCopy, copied }) {
   const info = getContrastInfo(color.hex);
-  const [l, c, h] = chroma(color.hex).oklch();
+  const { l, c, h } = hexToOklch(color.hex);
 
   return (
     <div className="group flex flex-col rounded-lg border border-(--navBorder) overflow-hidden hover:border-foreground/20 transition-all hover:shadow-lg bg-background">
@@ -473,7 +327,8 @@ function VariationStrip({ baseColor, mood }) {
   const m = MOODS[mood];
   const variations = useMemo(() => {
     if (!baseColor) return [];
-    const [, , h] = chroma(baseColor.hex).oklch();
+
+const { h } = hexToOklch(baseColor.hex);
     // Generate lightness variations
     return [0.15, 0.3, 0.45, 0.6, 0.75, 0.88].map((l) => {
       const c = rand(m.chroma[0], m.chroma[1]);
@@ -508,10 +363,10 @@ function VariationStrip({ baseColor, mood }) {
 }
 
 // ─── History ───
-const MAX_HISTORY = 6;
+const MAX_HISTORY = 7;
 
 // ─── Main Component ───
-export default function SmartRandomize() {
+export default function MoodRandomize() {
 
   const [selectedMood, setSelectedMood] = useState("Warm & Earthy");
   const [harmony, setHarmony] = useState("free");
@@ -535,7 +390,7 @@ export default function SmartRandomize() {
   const generate = useCallback(() => {
     setIsGenerating(true);
     setTimeout(() => {
-      const colors = generatePalette(selectedMood, harmony, contrastMode, count, lockedColors);
+      const colors = generatePalette(MOODS[selectedMood], harmony, contrastMode, count, lockedColors);
       setGenerated(colors);
       setHistory((prev) => {
         const entry = { mood: selectedMood, colors, id: Date.now() };
@@ -571,8 +426,8 @@ export default function SmartRandomize() {
       navigator.clipboard.writeText(`:root {\n${vars}\n}`);
     } else if (format === "json") {
       const json = generated.map((c) => {
-        const [l, cc, h] = chroma(c.hex).oklch();
-        return { hex: c.hex, oklch: { l: +(l).toFixed(3), c: +(cc).toFixed(3), h: +(h).toFixed(1) } };
+        const { l, c: cc, h } = hexToOklch(c.hex);
+return { hex: c.hex, oklch: { l: +(l).toFixed(3), c: +(cc).toFixed(3), h: +(h).toFixed(1) } };
       });
       navigator.clipboard.writeText(JSON.stringify(json, null, 2));
     }
@@ -692,7 +547,7 @@ export default function SmartRandomize() {
                   if (generated.length > 0) {
                     setIsGenerating(true);
                     setTimeout(() => {
-                      const colors = generatePalette(moodKey, harmony, contrastMode, count, {});
+                      const colors = generatePalette(MOODS[moodKey], harmony, contrastMode, count, {});
                       setGenerated(colors);
                       setHistory((prev) => [{ mood: moodKey, colors, id: Date.now() }, ...prev].slice(0, MAX_HISTORY));
                       setIsGenerating(false);
@@ -724,7 +579,7 @@ export default function SmartRandomize() {
                     if (generated.length > 0) {
                       setIsGenerating(true);
                       setTimeout(() => {
-                        const colors = generatePalette(selectedMood, harmony, contrastMode, n, {});
+                        const colors = generatePalette(MOODS[selectedMood], harmony, contrastMode, n, {});
                         setGenerated(colors);
                         setHistory((prev) => [{ mood: selectedMood, colors, id: Date.now() }, ...prev].slice(0, MAX_HISTORY));
                         setIsGenerating(false);
@@ -761,7 +616,7 @@ export default function SmartRandomize() {
                   if (generated.length > 0) {
                     setIsGenerating(true);
                     setTimeout(() => {
-                      const colors = generatePalette(selectedMood, h.id, contrastMode, count, lockedColors);
+                      const colors = generatePalette(MOODS[selectedMood], h.id, contrastMode, count, lockedColors);
                       setGenerated(colors);
                       setHistory((prev) => [{ mood: selectedMood, colors, id: Date.now() }, ...prev].slice(0, MAX_HISTORY));
                       setIsGenerating(false);
@@ -798,7 +653,7 @@ export default function SmartRandomize() {
                   if (generated.length > 0) {
                     setIsGenerating(true);
                     setTimeout(() => {
-                      const colors = generatePalette(selectedMood, harmony, cm.id, count, lockedColors);
+                      const colors = generatePalette(MOODS[selectedMood], harmony, cm.id, count, lockedColors);
                       setGenerated(colors);
                       setHistory((prev) => [{ mood: selectedMood, colors, id: Date.now() }, ...prev].slice(0, MAX_HISTORY));
                       setIsGenerating(false);

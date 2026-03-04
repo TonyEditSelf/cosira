@@ -402,7 +402,11 @@ export function ColorPaletteContextProvider({ children }) {
   const [selectedPaletteType, setSelectedPaletteType] = useState("");
 
   const [compPalType, setCompPalType] = useState("classic");
+
   const [monoPalType, setMonoPalType] = useState("classicMono");
+  const [monoColorCount, setMonoColorCount] = useState(8);
+const [monoHueDrift, setMonoHueDrift] = useState(null);
+
   const [analogPalType, setAnalogPalType] = useState("classicCenteredAnalog");
   const [doubleSplitCompPalType, setDoubleSplitCompPalType] =
     useState("balanced");
@@ -551,6 +555,8 @@ const setPalette = useCallback((newPalette) => {
       chromaticNeutralPalType,
       splitCompPalType,
       nearCompPalType,
+       monoColorCount,
+  monoHueDrift,
     );
 
     if (pal && Array.isArray(pal) && pal.length > 0) {
@@ -588,7 +594,9 @@ const setPalette = useCallback((newPalette) => {
     achroPalType,
     chromaticNeutralPalType,
     splitCompPalType,
-    nearCompPalType,
+    nearCompPalType,  
+    monoColorCount,
+monoHueDrift, 
   ]);
 
   const values = {
@@ -690,6 +698,10 @@ const setPalette = useCallback((newPalette) => {
     setTetradicPalType,
     achroPalType,
     setAchroPalType,
+    monoColorCount,
+setMonoColorCount,
+monoHueDrift,
+setMonoHueDrift,
   };
 
   return (
