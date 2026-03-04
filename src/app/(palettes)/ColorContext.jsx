@@ -67,9 +67,7 @@ export function ColorPaletteContextProvider({ children }) {
     };
   };
 
-  const manualPaletteRef = useRef(false);
-
-  // Function to generate random palette
+    // Function to generate random palette
   const generateRandomPalette = () => {
     // Generate random base color
     const randomColor = generateRandomColor();
@@ -150,6 +148,7 @@ export function ColorPaletteContextProvider({ children }) {
           generatedPalette = splitCompPalGen(randomColor);
           break;
         // Add other palette types without variations
+
         default:
           generatedPalette = [{ name: "Base", value: randomColor }];
       }
@@ -424,14 +423,14 @@ export function ColorPaletteContextProvider({ children }) {
 
   const [paletteState, setPaletteState] = useState([]);
 
-  const setPalette = useCallback((newPalette) => {
-    if (newPalette !== undefined && newPalette !== null) {
-      setPaletteState(newPalette);
-    } else {
-      console.error("Attempted to set palette to undefined/null - blocked");
-      console.trace(); // This will show the call stack
-    }
-  }, []);
+const setPalette = useCallback((newPalette) => {
+  if (newPalette !== undefined && newPalette !== null) {
+    setPaletteState(newPalette);
+  } else {
+    console.error("Attempted to set palette to undefined/null - blocked");
+    console.trace();
+  }
+}, []);
 
   const palette = paletteState;
 
@@ -530,6 +529,7 @@ export function ColorPaletteContextProvider({ children }) {
     // Skip if no palette type selected yet (initial load)
     if (!selectedPaletteType) return; // This exits early, so no error below
 
+
     const pal = paletteDecider(
       oklch,
       analogOptions,
@@ -555,6 +555,7 @@ export function ColorPaletteContextProvider({ children }) {
 
     if (pal && Array.isArray(pal) && pal.length > 0) {
       setPalette(pal);
+      
 
       if (
         selectedPaletteType === "analogous" &&
@@ -566,7 +567,7 @@ export function ColorPaletteContextProvider({ children }) {
         setDuplicatePalette(pal);
       }
     }
-    // Remove the else block with console.error - it's not needed anymore
+    
   }, [
     oklch,
     analogOptions,

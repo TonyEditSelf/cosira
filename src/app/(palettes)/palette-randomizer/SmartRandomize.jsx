@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useRef } from "react";
 import chroma from "chroma-js";
-import { useColorPaletteContext } from "../ColorContext";
+
 
 
 // ─── Mood definitions: hue range, chroma range, lightness range ───
@@ -27,7 +27,7 @@ const MOODS = {
   "Bold & Electric": {
     emoji: "⚡",
     description: "Vivid, high-energy, saturated",
-    hues: [[260, 330], [180, 220]],
+    hues: [[260, 330], [180, 220], [0, 30], [300, 360]],
     chroma: [0.18, 0.32],
     lightness: [0.42, 0.65],
     accent: "#7C3AED",
@@ -54,7 +54,7 @@ const MOODS = {
   "Luxe & Dark": {
     emoji: "✦",
     description: "Ebony, deep gold, midnight",
-    hues: [[30, 60], [250, 280]],
+    hues: [[30, 60], [250, 280], [340, 20]],
     chroma: [0.04, 0.16],
     lightness: [0.18, 0.48],
     accent: "#8B7355",
@@ -83,7 +83,7 @@ const MOODS = {
   "Sunrise & Hopeful": {
     emoji: "🌅",
     description: "Soft coral, pale yellow, warm peach, light lavender",
-    hues: [[20, 50], [320, 345]],
+    hues: [[0, 60], [300, 360]],
     chroma: [0.07, 0.16],
     lightness: [0.72, 0.88],
     accent: "#F4A97F",
@@ -101,7 +101,7 @@ const MOODS = {
   "Vintage & Retro": {
     emoji: "📻",
     description: "Mustard, burnt orange, olive, muted teal",
-    hues: [[55, 90], [170, 195]],
+    hues: [[0, 360]],
     chroma: [0.07, 0.17],
     lightness: [0.38, 0.62],
     accent: "#C9943A",
@@ -110,7 +110,7 @@ const MOODS = {
   "Candy & Playful": {
     emoji: "🍬",
     description: "Bubblegum pink, lemon yellow, mint, sky blue",
-    hues: [[0, 30], [150, 215]],
+    hues: [[0, 360]],
     chroma: [0.12, 0.22],
     lightness: [0.68, 0.86],
     accent: "#F472B6",
@@ -119,7 +119,7 @@ const MOODS = {
   "Industrial & Urban": {
     emoji: "🏭",
     description: "Steel grey, concrete, muted navy, brick red",
-    hues: [[205, 240], [15, 30]],
+    hues: [[0, 360]],
     chroma: [0.02, 0.1],
     lightness: [0.25, 0.58],
     accent: "#7A8A9A",
@@ -173,7 +173,7 @@ const MOODS = {
   "Fire & Passion": {
     emoji: "🔥",
     description: "Scarlet, crimson, bright orange, molten gold",
-    hues: [[10, 45]],
+    hues: [[350, 360], [0, 45]],
     chroma: [0.18, 0.32],
     lightness: [0.38, 0.65],
     accent: "#E03A1A",
@@ -214,6 +214,38 @@ function rand(min, max) {
 function pickFromRanges(ranges) {
   const range = ranges[Math.floor(Math.random() * ranges.length)];
   return rand(range[0], range[1]);
+}
+
+// Stratified hue sampling — divides range into n slots, picks randomly within each
+// Guarantees no two hues are too close while keeping randomness within each slot
+function stratifiedHues(ranges, count) {
+  // Flatten all ranges into total span
+  const totalSpan = ranges.reduce((sum, [a, b]) => sum + (b - a), 0);
+  const slotSize = totalSpan / count;
+
+  // Assign each slot a random offset within it
+  const hues = Array.from({ length: count }, (_, i) => {
+    const slotStart = i * slotSize;
+    const slotEnd = slotStart + slotSize;
+    const rawHue = rand(slotStart, slotEnd);
+
+    // Map back to actual range
+    let remaining = rawHue;
+    for (const [a, b] of ranges) {
+      const span = b - a;
+      if (remaining <= span) return a + remaining;
+      remaining -= span;
+    }
+    return ranges[ranges.length - 1][1];
+  });
+
+  // Shuffle so slot order doesn't predict color order
+  for (let i = hues.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [hues[i], hues[j]] = [hues[j], hues[i]];
+  }
+
+  return hues;
 }
 
 function clampOklch(l, c, h) {
@@ -278,16 +310,19 @@ function generatePalette(mood, harmony, contrastMode, count, locks) {
   const baseHue = pickFromRanges(m.hues);
   const harmonyHues = harmony !== "free" ? generateHarmonyHues(baseHue, harmony, count) : null;
 
+  // For free mode, pre-generate stratified hues for all slots
+  const freeHues = !harmonyHues ? stratifiedHues(m.hues, count) : null;
+
   const colors = [];
   for (let i = 0; i < count; i++) {
     if (locks[i]) {
       colors.push(locks[i]);
       continue;
     }
-    // Compute hue once per slot — retries only vary L and C, preserving harmony
+
     const fixedH = harmonyHues
       ? ((harmonyHues[i] % 360) + 360) % 360
-      : pickFromRanges(m.hues);
+      : freeHues[i];
 
     let attempts = 0;
     let color;
@@ -343,7 +378,7 @@ function MoodCard({ moodKey, mood, isSelected, onSelect }) {
   );
 }
 
-function ColorSwatch({ color, index, isLocked, onLock, onCopy, onSendToPalette, copied }) {
+function ColorSwatch({ color, index, isLocked, onLock, onCopy, copied }) {
   const info = getContrastInfo(color.hex);
   const [l, c, h] = chroma(color.hex).oklch();
 
@@ -416,13 +451,7 @@ function ColorSwatch({ color, index, isLocked, onLock, onCopy, onSendToPalette, 
           <span className="text-[8px] font-mono text-foreground/30">{info.best}:1</span>
         </div>
 
-        {/* Send to palette */}
-        <button
-          onClick={() => onSendToPalette(color)}
-          className="w-full py-1 text-[8px] font-bold border border-(--navBorder) rounded hover:border-(--brand) hover:text-(--brand) transition-colors text-foreground/40 uppercase tracking-widest"
-        >
-          + Add to Palette
-        </button>
+
       </div>
     </div>
   );
@@ -483,7 +512,6 @@ const MAX_HISTORY = 6;
 
 // ─── Main Component ───
 export default function SmartRandomize() {
-  const { palette, setPalette } = useColorPaletteContext();
 
   const [selectedMood, setSelectedMood] = useState("Warm & Earthy");
   const [harmony, setHarmony] = useState("free");
@@ -495,8 +523,7 @@ export default function SmartRandomize() {
   const [history, setHistory] = useState([]);
   const [expandedVariation, setExpandedVariation] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [sentColors, setSentColors] = useState(new Set());
-
+  
   const lockedColors = useMemo(() => {
     const obj = {};
     Object.keys(locks).forEach((i) => {
@@ -528,27 +555,6 @@ export default function SmartRandomize() {
     setCopied(hex);
     setTimeout(() => setCopied(null), 1800);
   };
-
-const handleSendToPalette = (color) => {
-  const [l, c, h] = chroma(color.hex).oklch();
-  const newEntry = { value: { l, c, h } };
-  setPalette([...(palette || []), newEntry]);
-  setSentColors((prev) => new Set([...prev, color.hex]));
-  setTimeout(() => setSentColors((prev) => {
-    const next = new Set(prev);
-    next.delete(color.hex);
-    return next;
-  }), 2000);
-};
-
-const handleSendAllToPalette = () => {
-  if (!setPalette || !generated.length) return;
-  const newEntries = generated.map((color) => {
-    const [l, c, h] = chroma(color.hex).oklch();
-    return { value: { l, c, h } };
-  });
-  setPalette([...(palette || []), ...newEntries]);
-};
 
   const handleRestoreHistory = (entry) => {
     setGenerated(entry.colors);
@@ -631,12 +637,7 @@ const handleSendAllToPalette = () => {
                   {copied === "json" ? "✓ Copied" : "JSON"}
                 </button>
                 <div className="h-4 w-[1px] bg-(--navBorder)" />
-                <button
-                  onClick={handleSendAllToPalette}
-                  className="px-3 py-1.5 text-[10px] font-bold border border-(--brand)/40 rounded bg-(--brand)/5 text-(--brand) hover:bg-(--brand)/10 transition-colors"
-                >
-                  → Send All to Palette
-                </button>
+
               </>
             )}
           </div>
@@ -875,8 +876,7 @@ const handleSendAllToPalette = () => {
                       isLocked={!!locks[i]}
                       onLock={handleLock}
                       onCopy={handleCopy}
-                      onSendToPalette={handleSendToPalette}
-                      copied={copied}
+                    copied={copied}
                     />
                   ))}
                 </div>
