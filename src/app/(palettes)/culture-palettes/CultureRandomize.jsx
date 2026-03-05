@@ -21,7 +21,7 @@ const CULTURES = {
     description: "Stone grey, moss, aged cedar, ink, soft white",
     hues: [[80, 130], [30, 55]],
     chroma: [0.01, 0.07],
-    lightness: [0.22, 0.72],
+    lightness: [0.22, 0.88],
     accent: "#8A8A7A",
     count: 5,
   },
@@ -30,8 +30,8 @@ const CULTURES = {
     region: "East Asia",
     description: "Vermillion, imperial yellow, jade green, lacquer black",
     hues: [[0, 25], [45, 65], [155, 175]],
-    chroma: [0.14, 0.26],
-    lightness: [0.28, 0.65],
+    chroma: [0.02, 0.26],
+    lightness: [0.15, 0.78],
     accent: "#C41E3A",
     count: 5,
   },
@@ -41,7 +41,7 @@ const CULTURES = {
     description: "White linen, celadon green, deep indigo, natural earth",
     hues: [[155, 195], [230, 260], [40, 65]],
     chroma: [0.03, 0.12],
-    lightness: [0.45, 0.88],
+    lightness: [0.28, 0.88],
     accent: "#7BAAB0",
     count: 5,
   },
@@ -73,7 +73,7 @@ const CULTURES = {
     description: "Cinnamon, cardamom green, deep teal, warm ivory",
     hues: [[25, 50], [140, 175]],
     chroma: [0.08, 0.18],
-    lightness: [0.35, 0.68],
+    lightness: [0.35, 0.88],
     accent: "#A0522D",
     count: 5,
   },
@@ -84,8 +84,8 @@ const CULTURES = {
     region: "Southeast Asia",
     description: "Gold, deep purple, emerald, warm white, crimson",
     hues: [[45, 65], [270, 300], [145, 165], [0, 15]],
-    chroma: [0.12, 0.24],
-    lightness: [0.35, 0.72],
+    chroma: [0.02, 0.24],
+    lightness: [0.35, 0.88],
     accent: "#C9A84C",
     count: 5,
   },
@@ -94,8 +94,8 @@ const CULTURES = {
     region: "Southeast Asia",
     description: "Ochre stone, jungle green, volcanic black, lotus pink",
     hues: [[40, 65], [125, 160], [330, 355]],
-    chroma: [0.07, 0.18],
-    lightness: [0.28, 0.68],
+    chroma: [0.01, 0.18],
+    lightness: [0.14, 0.68],
     accent: "#8B7355",
     count: 5,
   },
@@ -105,9 +105,9 @@ const CULTURES = {
     emoji: "🕌",
     region: "Middle East & North Africa",
     description: "Terracotta, mosaic teal, saffron, deep indigo, dusty rose",
-    hues: [[15, 35], [175, 200], [45, 65], [240, 265]],
-    chroma: [0.1, 0.2],
-    lightness: [0.38, 0.72],
+    hues: [[15, 35], [175, 200], [45, 65], [240, 265], [345, 360]],
+    chroma: [0.05, 0.2],
+    lightness: [0.28, 0.72],
     accent: "#C46A3A",
     count: 5,
   },
@@ -115,7 +115,7 @@ const CULTURES = {
     emoji: "🌹",
     region: "Middle East & North Africa",
     description: "Lapis blue, turquoise, rose, saffron, deep forest",
-    hues: [[215, 250], [175, 200], [0, 20], [45, 65]],
+    hues: [[215, 250], [175, 200], [0, 20], [45, 65], [120, 145]],
     chroma: [0.1, 0.22],
     lightness: [0.32, 0.68],
     accent: "#2A5F8F",
@@ -126,7 +126,7 @@ const CULTURES = {
     region: "Middle East & North Africa",
     description: "Lapis, gold, sandstone, turquoise, ochre",
     hues: [[220, 255], [45, 65], [175, 195]],
-    chroma: [0.1, 0.22],
+    chroma: [0.05, 0.22],
     lightness: [0.35, 0.72],
     accent: "#1B4F8A",
     count: 5,
@@ -138,8 +138,8 @@ const CULTURES = {
     region: "Africa",
     description: "Gold, green, red, black — bold, high contrast geometric",
     hues: [[45, 65], [130, 155], [0, 20]],
-    chroma: [0.16, 0.28],
-    lightness: [0.25, 0.68],
+    chroma: [0.02, 0.28],
+    lightness: [0.14, 0.75],
     accent: "#D4A017",
     count: 5,
   },
@@ -148,8 +148,8 @@ const CULTURES = {
     region: "Africa",
     description: "Warm red, ochre, deep brown, sky blue, ivory",
     hues: [[0, 25], [40, 60], [200, 230]],
-    chroma: [0.12, 0.22],
-    lightness: [0.35, 0.72],
+    chroma: [0.02, 0.22],
+    lightness: [0.24, 0.88],
     accent: "#C0392B",
     count: 5,
   },
@@ -159,7 +159,7 @@ const CULTURES = {
     emoji: "🎨",
     region: "Latin America",
     description: "Hot pink, electric blue, marigold, jade green, vermillion",
-    hues: [[310, 345], [200, 230], [45, 65], [145, 170], [0, 20]],
+    hues: [[310, 345], [225, 255], [45, 65], [145, 170], [0, 20]],
     chroma: [0.18, 0.30],
     lightness: [0.42, 0.72],
     accent: "#E040A0",
@@ -170,8 +170,8 @@ const CULTURES = {
     region: "Latin America",
     description: "Alpaca cream, deep indigo, coca red, sky blue, warm gold",
     hues: [[230, 265], [0, 20], [195, 220], [45, 65]],
-    chroma: [0.12, 0.24],
-    lightness: [0.35, 0.75],
+    chroma: [0.04, 0.24],
+    lightness: [0.35, 0.90],
     accent: "#4A3F8A",
     count: 5,
   },
@@ -182,8 +182,8 @@ const CULTURES = {
     region: "Europe",
     description: "Azure, terracotta, olive, white chalk, sun yellow",
     hues: [[195, 230], [15, 35], [80, 110], [45, 65]],
-    chroma: [0.08, 0.2],
-    lightness: [0.45, 0.82],
+    chroma: [0.02, 0.2],
+    lightness: [0.45, 0.92],
     accent: "#2980B9",
     count: 5,
   },
@@ -192,8 +192,8 @@ const CULTURES = {
     region: "Europe",
     description: "Dala red, birch white, navy, forest green, slate grey",
     hues: [[0, 15], [210, 240], [130, 155]],
-    chroma: [0.1, 0.2],
-    lightness: [0.28, 0.82],
+    chroma: [0.02, 0.2],
+    lightness: [0.28, 0.90],
     accent: "#C0392B",
     count: 5,
   },
@@ -201,8 +201,8 @@ const CULTURES = {
     emoji: "☘️",
     region: "Europe",
     description: "Emerald, golden amber, deep navy, heather grey, peat brown",
-    hues: [[130, 160], [40, 60], [215, 245]],
-    chroma: [0.08, 0.2],
+    hues: [[130, 160], [40, 60], [215, 245], [275, 305]],
+    chroma: [0.02, 0.2],
     lightness: [0.28, 0.68],
     accent: "#2E8B57",
     count: 5,
@@ -251,9 +251,9 @@ const FESTIVALS = {
     occasion: "Chinese New Year",
     region: "East Asia",
     description: "Scarlet, imperial gold, black, jade — prosperity and luck",
-    hues: [[0, 18], [45, 62]],
-    chroma: [0.18, 0.30],
-    lightness: [0.28, 0.65],
+    hues: [[0, 18], [45, 62], [145, 165]],
+    chroma: [0.02, 0.30],
+    lightness: [0.14, 0.65],
     accent: "#DC143C",
     count: 5,
   },
@@ -262,7 +262,7 @@ const FESTIVALS = {
     occasion: "Cherry Blossom",
     region: "East Asia",
     description: "Blush pink, soft white, pale green, sky blue, warm beige",
-    hues: [[0, 20], [340, 360], [120, 155], [200, 225]],
+    hues: [[0, 20], [340, 360], [120, 155], [200, 225], [40, 62]],
     chroma: [0.04, 0.12],
     lightness: [0.68, 0.92],
     accent: "#FFB7C5",
@@ -274,8 +274,8 @@ const FESTIVALS = {
     region: "East Asia",
     description: "Midnight navy, silver, pale gold, deep violet, soft white",
     hues: [[215, 250], [265, 290], [45, 65]],
-    chroma: [0.06, 0.18],
-    lightness: [0.22, 0.78],
+    chroma: [0.01, 0.18],
+    lightness: [0.22, 0.90],
     accent: "#191970",
     count: 5,
   },
@@ -287,8 +287,8 @@ const FESTIVALS = {
     region: "Middle East",
     description: "Deep teal, gold crescent, midnight navy, warm amber, star white",
     hues: [[175, 210], [45, 65], [220, 250]],
-    chroma: [0.08, 0.2],
-    lightness: [0.22, 0.72],
+    chroma: [0.02, 0.2],
+    lightness: [0.22, 0.88],
     accent: "#008080",
     count: 5,
   },
@@ -300,7 +300,7 @@ const FESTIVALS = {
     region: "Mexico",
     description: "Marigold, hot pink, violet, cobalt, warm black",
     hues: [[45, 65], [310, 345], [265, 295], [210, 240]],
-    chroma: [0.18, 0.30],
+    chroma: [0.02, 0.30],
     lightness: [0.28, 0.72],
     accent: "#FF8C00",
     count: 5,
@@ -311,8 +311,8 @@ const FESTIVALS = {
     region: "Western",
     description: "Pumpkin orange, black, deep purple, sickly green, blood red",
     hues: [[20, 40], [265, 295], [120, 145], [0, 15]],
-    chroma: [0.14, 0.26],
-    lightness: [0.18, 0.65],
+    chroma: [0.02, 0.26],
+    lightness: [0.12, 0.65],
     accent: "#FF6600",
     count: 5,
   },
@@ -324,8 +324,8 @@ const FESTIVALS = {
     region: "Western",
     description: "Deep pine green, crimson, gold, ivory, midnight blue",
     hues: [[130, 160], [0, 18], [45, 65], [220, 250]],
-    chroma: [0.1, 0.22],
-    lightness: [0.22, 0.78],
+    chroma: [0.02, 0.22],
+    lightness: [0.22, 0.90],
     accent: "#165B33",
     count: 5,
   },
@@ -346,8 +346,8 @@ const FESTIVALS = {
     region: "Europe",
     description: "Deep teal, gold, crimson, midnight, ivory mask",
     hues: [[175, 200], [45, 65], [0, 18], [240, 265]],
-    chroma: [0.12, 0.24],
-    lightness: [0.22, 0.72],
+    chroma: [0.02, 0.24],
+    lightness: [0.22, 0.78],
     accent: "#008B8B",
     count: 5,
   },
@@ -370,8 +370,8 @@ const FESTIVALS = {
     region: "African Diaspora",
     description: "Black, red, green — unity, struggle, hope",
     hues: [[0, 18], [130, 155]],
-    chroma: [0.16, 0.26],
-    lightness: [0.18, 0.58],
+    chroma: [0.02, 0.26],
+    lightness: [0.12, 0.58],
     accent: "#CC0000",
     count: 5,
   },
@@ -517,14 +517,15 @@ function PalettePreviewBar({ colors }) {
   );
 }
 
-function VariationStrip({ baseColor }) {
+// TO:
+function VariationStrip({ baseColor, paletteDef }) {
   const { h } = hexToOklch(baseColor.hex);
   const variations = useMemo(() => {
     return [0.12, 0.28, 0.44, 0.58, 0.72, 0.86].map((l) => {
-      const c = rand(0.04, 0.18);
+      const c = rand(paletteDef.chroma[0], paletteDef.chroma[1]);
       return clampOklch(l, c, h);
     });
-  }, [baseColor.hex]);
+  }, [baseColor.hex, paletteDef]);
 
   return (
     <div className="space-y-1.5">
@@ -645,12 +646,13 @@ export default function CultureRandomize() {
     setTimeout(() => setCopied(null), 2000);
   };
 
-  const handleRestoreHistory = (entry) => {
-    setGenerated(entry.colors);
-    setSelectedKey(entry.key);
-    setActiveTab(entry.tab);
-    setLocks({});
-  };
+const handleRestoreHistory = (entry) => {
+  setGenerated(entry.colors);
+  setSelectedKey(entry.key);
+  setActiveTab(entry.tab);
+  setLocks({});
+  setExpandedVariation(null);
+};
 
   const lockedCount = Object.values(locks).filter(Boolean).length;
 
@@ -985,7 +987,7 @@ export default function CultureRandomize() {
                     ))}
                   </div>
                   {expandedVariation !== null && generated[expandedVariation] && (
-                    <VariationStrip baseColor={generated[expandedVariation]} />
+                    <VariationStrip baseColor={generated[expandedVariation]} paletteDef={activeDef} />
                   )}
                 </div>
 

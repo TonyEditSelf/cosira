@@ -18,30 +18,35 @@ export function pickFromRanges(ranges) {
 // Divides the total hue span into n equal slots, picks randomly within each.
 // Guarantees no two hues are too close while keeping randomness within each slot.
 
+
 export function stratifiedHues(ranges, count) {
-  const totalSpan = ranges.reduce((sum, [a, b]) => sum + (b - a), 0);
-  const slotSize = totalSpan / count;
+const pickCount = Math.min(ranges.length, count);
+const shuffledRanges = [...ranges].sort(() => Math.random() - 0.5);
+const guaranteed = shuffledRanges.slice(0, pickCount).map(([a, b]) => rand(a, b));
+const remaining = count - pickCount;
 
-  const hues = Array.from({ length: count }, (_, i) => {
-    const slotStart = i * slotSize;
-    const slotEnd = slotStart + slotSize;
-    const rawHue = rand(slotStart, slotEnd);
-
-    let remaining = rawHue;
-    for (const [a, b] of ranges) {
-      const span = b - a;
-      if (remaining <= span) return a + remaining;
-      remaining -= span;
+  const extra = [];
+  if (remaining > 0) {
+    const totalSpan = ranges.reduce((sum, [a, b]) => sum + (b - a), 0);
+    const slotSize = totalSpan / remaining;
+    for (let i = 0; i < remaining; i++) {
+      const slotStart = i * slotSize;
+      let r = rand(slotStart, slotStart + slotSize);
+      for (const [a, b] of ranges) {
+        const span = b - a;
+        if (r <= span) { extra.push(a + r); break; }
+        r -= span;
+      }
     }
-    return ranges[ranges.length - 1][1];
-  });
+  }
 
-  // Shuffle so slot order doesn't predict color order
+  const hues = [...guaranteed, ...extra].slice(0, count);
+  while (hues.length < count) hues.push(rand(...ranges[hues.length % ranges.length]));
+
   for (let i = hues.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [hues[i], hues[j]] = [hues[j], hues[i]];
   }
-
   return hues;
 }
 
@@ -63,6 +68,21 @@ export function clampOklch(l, c, h) {
 }
 
 // ─── Harmony hue generation ───
+
+export function clampHueToRanges(hue, ranges) {
+  for (const [a, b] of ranges) {
+    if (hue >= a && hue <= b) return hue;
+  }
+  let best = ranges[0][0];
+  let bestDist = Infinity;
+  for (const [a, b] of ranges) {
+    const distA = Math.min(Math.abs(hue - a), Math.abs(hue - a + 360), Math.abs(hue - a - 360));
+    const distB = Math.min(Math.abs(hue - b), Math.abs(hue - b + 360), Math.abs(hue - b - 360));
+    if (distA < bestDist) { bestDist = distA; best = a; }
+    if (distB < bestDist) { bestDist = distB; best = b; }
+  }
+  return best;
+}
 
 export function generateHarmonyHues(baseHue, harmony, count) {
   switch (harmony) {
@@ -160,18 +180,27 @@ export function generatePalette(paletteDef, harmony, contrastMode, count, locks)
       continue;
     }
 
-    const fixedH = harmonyHues
-      ? ((harmonyHues[i] % 360) + 360) % 360
-      : freeHues[i];
+    let fixedH;
+    if (harmonyHues) {
+      const raw = ((harmonyHues[i] % 360) + 360) % 360;
+      fixedH = clampHueToRanges(raw, paletteDef.hues);
+    } else {
+      fixedH = freeHues[i];
+    }
 
     let attempts = 0;
     let color;
     do {
-      const c = rand(paletteDef.chroma[0],    paletteDef.chroma[1]);
+      const c = rand(paletteDef.chroma[0], paletteDef.chroma[1]);
       const l = rand(paletteDef.lightness[0], paletteDef.lightness[1]);
       color = clampOklch(l, c, fixedH);
       attempts++;
     } while (!meetsContrast(color.hex, contrastMode) && attempts < 40);
+
+    if (!meetsContrast(color.hex, contrastMode)) {
+      const fallbackL = contrastMode === "aaa" ? 0.92 : 0.85;
+      color = clampOklch(fallbackL, paletteDef.chroma[0], fixedH);
+    }
 
     colors.push(color);
   }
