@@ -97,23 +97,23 @@ export default function CustomPalToolbar() {
   };
 
   return (
-    <section className="flex gap-3 items-center justify-center border border-[var(--navBorder)] py-3 ml-2 mr-2 mb-2 mt-2 rounded-md">
+    <section className="flex gap-3 items-center text-xs justify-center border border-[var(--navBorder)] py-1 ml-2 mr-2 mb-2 mt-2 rounded-md">
       {!showHidePanelOpen ? (
         <SiShowtime
           onClick={() => setShowHidePanelOpen((prev) => !prev)}
-          className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]"
+          className="size-7 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]"
         />
       ) : (
         <IoMdClose
           onClick={() => setShowHidePanelOpen((prev) => !prev)}
-          className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]"
+          className="size-7 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]"
         />
       )}
 
       {!leftPaletteAdjusterOpen ? (
         <HiMiniAdjustmentsHorizontal
           onClick={() => setLeftPaletteAdjusterOpen((prev) => !prev)}
-          className={`size-9 cursor-pointer font-black py-2 px-2 rounded-md ${
+          className={`size-7 cursor-pointer font-black py-2 px-2 rounded-md ${
             leftPaletteAdjusterOpen
               ? "border-[var(--navBorder)] hover:border-[var(--muted-foreground)] border"
               : "border-[var(--brand)] border-2 hover:border-2"
@@ -122,7 +122,7 @@ export default function CustomPalToolbar() {
       ) : (
         <IoMdClose
           onClick={() => setLeftPaletteAdjusterOpen((prev) => !prev)}
-          className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]"
+          className="size-7 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]"
         />
       )}
 
@@ -137,8 +137,8 @@ export default function CustomPalToolbar() {
         disabled={isRandomPalettesPage}
       />
 
-      <FaAnglesUp className="size-9 cursor-pointer border border-(--navBorder) py-2 px-2 rounded-md hover:border-muted-foreground" />
-      <FaAnglesDown className="size-9 cursor-pointer border border-(--navBorder) hover:border-muted-foreground p-2 rounded-md" />
+      <FaAnglesUp className="size-7 cursor-pointer border border-(--navBorder) py-2 px-2 rounded-md hover:border-muted-foreground" />
+      <FaAnglesDown className="size-7 cursor-pointer border border-(--navBorder) hover:border-muted-foreground p-2 rounded-md" />
       <section className="flex gap-5 items-center border border-(--navBorder) hover:border-muted-foreground pl-5 rounded-md">
         <p className="h-full">Pick Color: </p>
         <button
@@ -150,19 +150,19 @@ export default function CustomPalToolbar() {
         ></button>
       </section>
       <FaAnglesLeft
-        className="size-9 cursor-pointer py-2 px-2 rounded-md border border-(--navBorder) hover:border-muted-foreground"
+        className="size-7 cursor-pointer py-2 px-2 rounded-md border border-(--navBorder) hover:border-muted-foreground"
         onClick={goBackPalHistory}
       />
 
       {isRandomPalettesPage && (
         <FaPlay
           onClick={generateRandomPalette}
-          className="size-9 cursor-pointer border border-(--navBorder) py-2 px-2 rounded-md hover:border-muted-foreground"
+          className="size-7 cursor-pointer border border-(--navBorder) py-2 px-2 rounded-md hover:border-muted-foreground"
         />
       )}
 
       <FaAnglesRight
-        className="size-9 cursor-pointer border border-(--navBorder) py-2 px-2 rounded-md hover:border-muted-foreground"
+        className="size-7 cursor-pointer border border-(--navBorder) py-2 px-2 rounded-md hover:border-muted-foreground"
         onClick={goForwardPalHistory}
       />
 
@@ -184,7 +184,7 @@ export default function CustomPalToolbar() {
             ]);
           }
         }}
-        className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]"
+        className="size-7 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]"
       />
 
       {/* <CgExport className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]" /> */}
@@ -192,12 +192,12 @@ export default function CustomPalToolbar() {
       {!databaseOpen ? (
         <FaDatabase
           onClick={() => setDatabaseOpen((prev) => !prev)}
-          className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]"
+          className="size-7 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]"
         />
       ) : (
         <IoMdClose
           onClick={() => setDatabaseOpen((prev) => !prev)}
-          className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]"
+          className="size-7 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]"
         />
       )}
     </section>

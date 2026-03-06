@@ -75,7 +75,6 @@ export default function PaletteViewer() {
     { key: "addColor", label: "Show Add Color" },
   ];
 
-
   return (
     <main className="hidden lg:flex flex-col pt-3 h-full">
       <section className="flex flex-1">
@@ -135,14 +134,14 @@ export default function PaletteViewer() {
           transition={{ duration: 0.9, ease: "easeIn" }}
           className="relative flex-1 min-w-0 ml-3 mr-2 mb-0 border rounded-md border-[var(--navBorder)] p-2 overflow-x-scroll"
         >
-<div
-  role="palette viewer"
-  className={`flex h-full w-full ${
-    palette.length > 10
-      ? "overflow-x-auto overflow-y-hidden flex-nowrap"
-      : "overflow-hidden flex-nowrap"
-  }`}
->
+          <div
+            role="palette viewer"
+            className={`flex h-full w-full  ${
+              palette.length > 10
+                ? "overflow-x-auto overflow-y-hidden flex-nowrap"
+                : "overflow-hidden flex-1 flex-nowrap"
+            }`}
+          >
             {palette?.map((colorObj, index) => {
               const { l, c, h, a } = colorObj.value;
               let textColor;
@@ -179,7 +178,7 @@ export default function PaletteViewer() {
               return (
                 <div
                   className={`h-full
-  ${palette.length > 10 ? "w-[100px] flex-none" : "flex-1 min-w-0"}
+  ${palette.length > 10 || leftPaletteAdjusterOpen ? "min-w-[100px] flex-1" : "flex-1 min-w-0"}
   ${shadesTintsTonesIndex === index ? "py-0" : "py-5"}
                   flex flex-col gap-2 justify-between items-center font-semibold
                   ${textColor === "white" ? "text-white" : "text-black"}
@@ -236,7 +235,7 @@ export default function PaletteViewer() {
                                 );
                               }}
                             >
-                              <span className="absolute hidden group-hover:block bottom-4 left-1/2 -translate-x-1/2 z-50 text-xs bg-[var(--navBorder)] px-2 py-1 rounded-xs text-white">
+                              <span className="absolute hidden group-hover:block top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 z-50 text-xs bg-[var(--navBorder)] px-2 py-1 rounded-xs text-white">
                                 {shadesTintsTonesValues[STTIndex].toFixed(2)}
                               </span>
                             </div>
@@ -246,226 +245,308 @@ export default function PaletteViewer() {
                     </div>
                   ) : (
                     <>
-  <div className="flex flex-col gap-2 items-center w-full px-1 overflow-y-auto custom-scrollbar py-3 flex-1 min-h-0">
+                      <div className="flex flex-col gap-2 items-center w-full px-1 overflow-y-auto custom-scrollbar py-3 flex-1 min-h-0">
+                        {/* ── Identity group ── */}
+                        {(toggles.colorTypes || toggles.role) && (
+                          <div
+                            className={`flex flex-col items-center gap-1.5 w-full pb-2 border-b ${
+                              textColor === "white"
+                                ? "border-white/15"
+                                : "border-black/10"
+                            }`}
+                          >
+                            {toggles.colorTypes && (
+                              <div className="flex flex-col items-center gap-0.5">
+                                <span className="text-[7px] font-bold uppercase tracking-[0.15em] opacity-40">
+                                  SCALE
+                                </span>
+                                <span className="text-[9px] font-mono font-bold opacity-75 tracking-widest text-center break-words">
+                                  {colorObj.name}
+                                </span>
+                              </div>
+                            )}
+                            {toggles.role && (
+                              <div className="flex flex-col items-center gap-0.5">
+                                <span className="text-[7px] font-bold uppercase tracking-[0.15em] opacity-40">
+                                  ROLE
+                                </span>
+                                <span
+                                  className={`text-[7px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-sm border ${
+                                    textColor === "white"
+                                      ? "border-white/30 bg-white/10"
+                                      : "border-black/20 bg-black/[0.08]"
+                                  } opacity-80`}
+                                >
+                                  {role}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        )}
 
-    {/* ── Identity group ── */}
-    {(toggles.colorTypes || toggles.role) && (
-      <div className={`flex flex-col items-center gap-1.5 w-full pb-2 border-b ${
-        textColor === "white" ? "border-white/15" : "border-black/10"
-      }`}>
-        {toggles.colorTypes && (
-          <div className="flex flex-col items-center gap-0.5">
-            <span className="text-[7px] font-bold uppercase tracking-[0.15em] opacity-40">
-              SCALE
-            </span>
-            <span className="text-[9px] font-mono font-bold opacity-75 tracking-widest text-center break-words">
-              {colorObj.name}
-            </span>
-          </div>
-        )}
-        {toggles.role && (
-          <div className="flex flex-col items-center gap-0.5">
-            <span className="text-[7px] font-bold uppercase tracking-[0.15em] opacity-40">
-              ROLE
-            </span>
-            <span className={`text-[7px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-sm border ${
-              textColor === "white"
-                ? "border-white/30 bg-white/10"
-                : "border-black/20 bg-black/[0.08]"
-            } opacity-80`}>
-              {role}
-            </span>
-          </div>
-        )}
-      </div>
-    )}
+                        {/* ── Color values group ── */}
+                        {(toggles.hexOn ||
+                          toggles.lightOn ||
+                          toggles.chromaOn ||
+                          toggles.hueOn ||
+                          toggles.alphaOn) && (
+                          <div
+                            className={`flex flex-col items-center gap-1.5 w-full pb-2 border-b ${
+                              textColor === "white"
+                                ? "border-white/15"
+                                : "border-black/10"
+                            }`}
+                          >
+                            {toggles.hexOn && (
+                              <div className="flex flex-col items-center gap-0.5">
+                                <span className="text-[7px] font-bold uppercase tracking-[0.15em] opacity-40">
+                                  HEX
+                                </span>
+                                <span className="text-[10px] font-mono font-bold tracking-wide opacity-90">
+                                  {hex.toUpperCase()}
+                                </span>
+                              </div>
+                            )}
+                            {(toggles.lightOn ||
+                              toggles.chromaOn ||
+                              toggles.hueOn ||
+                              toggles.alphaOn) && (
+                              <div className="flex gap-2 flex-wrap justify-center">
+                                {toggles.lightOn && (
+                                  <div className="flex flex-col items-center gap-0">
+                                    <span className="text-[7px] font-bold uppercase tracking-[0.15em] opacity-40">
+                                      L
+                                    </span>
+                                    <span className="text-[9px] font-mono font-semibold opacity-80">
+                                      {(l * 100).toFixed(1)}%
+                                    </span>
+                                  </div>
+                                )}
+                                {toggles.chromaOn && (
+                                  <div className="flex flex-col items-center gap-0">
+                                    <span className="text-[7px] font-bold uppercase tracking-[0.15em] opacity-40">
+                                      C
+                                    </span>
+                                    <span className="text-[9px] font-mono font-semibold opacity-80">
+                                      {c.toFixed(3)}
+                                    </span>
+                                  </div>
+                                )}
+                                {toggles.hueOn && (
+                                  <div className="flex flex-col items-center gap-0">
+                                    <span className="text-[7px] font-bold uppercase tracking-[0.15em] opacity-40">
+                                      H
+                                    </span>
+                                    <span className="text-[9px] font-mono font-semibold opacity-80">
+                                      {h.toFixed(1)}°
+                                    </span>
+                                  </div>
+                                )}
+                                {toggles.alphaOn && (
+                                  <div className="flex flex-col items-center gap-0">
+                                    <span className="text-[7px] font-bold uppercase tracking-[0.15em] opacity-40">
+                                      A
+                                    </span>
+                                    <span className="text-[9px] font-mono font-semibold opacity-80">
+                                      {((a ?? 1) * 100).toFixed(0)}%
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )}
 
-    {/* ── Color values group ── */}
-    {(toggles.hexOn || toggles.lightOn || toggles.chromaOn || toggles.hueOn || toggles.alphaOn) && (
-      <div className={`flex flex-col items-center gap-1.5 w-full pb-2 border-b ${
-        textColor === "white" ? "border-white/15" : "border-black/10"
-      }`}>
-        {toggles.hexOn && (
-          <div className="flex flex-col items-center gap-0.5">
-            <span className="text-[7px] font-bold uppercase tracking-[0.15em] opacity-40">
-              HEX
-            </span>
-            <span className="text-[10px] font-mono font-bold tracking-wide opacity-90">
-              {hex.toUpperCase()}
-            </span>
-          </div>
-        )}
-        {(toggles.lightOn || toggles.chromaOn || toggles.hueOn || toggles.alphaOn) && (
-          <div className="flex gap-2 flex-wrap justify-center">
-            {toggles.lightOn && (
-              <div className="flex flex-col items-center gap-0">
-                <span className="text-[7px] font-bold uppercase tracking-[0.15em] opacity-40">L</span>
-                <span className="text-[9px] font-mono font-semibold opacity-80">
-                  {(l * 100).toFixed(1)}%
-                </span>
-              </div>
-            )}
-            {toggles.chromaOn && (
-              <div className="flex flex-col items-center gap-0">
-                <span className="text-[7px] font-bold uppercase tracking-[0.15em] opacity-40">C</span>
-                <span className="text-[9px] font-mono font-semibold opacity-80">
-                  {c.toFixed(3)}
-                </span>
-              </div>
-            )}
-            {toggles.hueOn && (
-              <div className="flex flex-col items-center gap-0">
-                <span className="text-[7px] font-bold uppercase tracking-[0.15em] opacity-40">H</span>
-                <span className="text-[9px] font-mono font-semibold opacity-80">
-                  {h.toFixed(1)}°
-                </span>
-              </div>
-            )}
-            {toggles.alphaOn && (
-              <div className="flex flex-col items-center gap-0">
-                <span className="text-[7px] font-bold uppercase tracking-[0.15em] opacity-40">A</span>
-                <span className="text-[9px] font-mono font-semibold opacity-80">
-                  {((a ?? 1) * 100).toFixed(0)}%
-                </span>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    )}
+                        {/* ── Contrast group ── */}
+                        {(toggles.whiteContrastOn ||
+                          toggles.blackContrastOn) && (
+                          <div
+                            className={`flex flex-col items-center gap-1.5 w-full pb-2 border-b ${
+                              textColor === "white"
+                                ? "border-white/15"
+                                : "border-black/10"
+                            }`}
+                          >
+                            {toggles.whiteContrastOn && (
+                              <div className="flex flex-col items-center gap-0.5">
+                                <span className="text-[7px] font-bold uppercase tracking-[0.15em] opacity-40">
+                                  ON WHITE
+                                </span>
+                                <div className="flex items-baseline gap-0.5">
+                                  <span className="text-[10px] font-mono font-bold opacity-90">
+                                    {contrast1.toFixed(1)}
+                                  </span>
+                                  <span className="text-[7px] font-mono opacity-40">
+                                    :1
+                                  </span>
+                                  <span
+                                    className={`text-[6px] font-bold uppercase px-1 py-0.5 rounded-sm ml-0.5 ${
+                                      contrast1 >= 7
+                                        ? textColor === "white"
+                                          ? "bg-white/20 text-white"
+                                          : "bg-black/10 text-black"
+                                        : contrast1 >= 4.5
+                                          ? "bg-yellow-400/30 text-yellow-200"
+                                          : "bg-red-400/20 text-red-300"
+                                    }`}
+                                  >
+                                    {contrast1 >= 7
+                                      ? "AAA"
+                                      : contrast1 >= 4.5
+                                        ? "AA"
+                                        : "FAIL"}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+                            {toggles.blackContrastOn && (
+                              <div className="flex flex-col items-center gap-0.5">
+                                <span className="text-[7px] font-bold uppercase tracking-[0.15em] opacity-40">
+                                  ON BLACK
+                                </span>
+                                <div className="flex items-baseline gap-0.5">
+                                  <span className="text-[10px] font-mono font-bold opacity-90">
+                                    {contrast2.toFixed(1)}
+                                  </span>
+                                  <span className="text-[7px] font-mono opacity-40">
+                                    :1
+                                  </span>
+                                  <span
+                                    className={`text-[6px] font-bold uppercase px-1 py-0.5 rounded-sm ml-0.5 ${
+                                      contrast2 >= 7
+                                        ? textColor === "white"
+                                          ? "bg-white/20 text-white"
+                                          : "bg-black/10 text-black"
+                                        : contrast2 >= 4.5
+                                          ? "bg-yellow-400/30 text-yellow-200"
+                                          : "bg-red-400/20 text-red-300"
+                                    }`}
+                                  >
+                                    {contrast2 >= 7
+                                      ? "AAA"
+                                      : contrast2 >= 4.5
+                                        ? "AA"
+                                        : "FAIL"}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
 
-    {/* ── Contrast group ── */}
-    {(toggles.whiteContrastOn || toggles.blackContrastOn) && (
-      <div className={`flex flex-col items-center gap-1.5 w-full pb-2 border-b ${
-        textColor === "white" ? "border-white/15" : "border-black/10"
-      }`}>
-        {toggles.whiteContrastOn && (
-          <div className="flex flex-col items-center gap-0.5">
-            <span className="text-[7px] font-bold uppercase tracking-[0.15em] opacity-40">
-              ON WHITE
-            </span>
-            <div className="flex items-baseline gap-0.5">
-              <span className="text-[10px] font-mono font-bold opacity-90">
-                {contrast1.toFixed(1)}
-              </span>
-              <span className="text-[7px] font-mono opacity-40">:1</span>
-              <span className={`text-[6px] font-bold uppercase px-1 py-0.5 rounded-sm ml-0.5 ${
-                contrast1 >= 7
-                  ? textColor === "white"
-                    ? "bg-white/20 text-white"
-                    : "bg-black/10 text-black"
-                  : contrast1 >= 4.5
-                  ? "bg-yellow-400/30 text-yellow-200"
-                  : "bg-red-400/20 text-red-300"
-              }`}>
-                {contrast1 >= 7 ? "AAA" : contrast1 >= 4.5 ? "AA" : "FAIL"}
-              </span>
-            </div>
-          </div>
-        )}
-        {toggles.blackContrastOn && (
-          <div className="flex flex-col items-center gap-0.5">
-            <span className="text-[7px] font-bold uppercase tracking-[0.15em] opacity-40">
-              ON BLACK
-            </span>
-            <div className="flex items-baseline gap-0.5">
-              <span className="text-[10px] font-mono font-bold opacity-90">
-                {contrast2.toFixed(1)}
-              </span>
-              <span className="text-[7px] font-mono opacity-40">:1</span>
-              <span className={`text-[6px] font-bold uppercase px-1 py-0.5 rounded-sm ml-0.5 ${
-                contrast2 >= 7
-                  ? textColor === "white"
-                    ? "bg-white/20 text-white"
-                    : "bg-black/10 text-black"
-                  : contrast2 >= 4.5
-                  ? "bg-yellow-400/30 text-yellow-200"
-                  : "bg-red-400/20 text-red-300"
-              }`}>
-                {contrast2 >= 7 ? "AAA" : contrast2 >= 4.5 ? "AA" : "FAIL"}
-              </span>
-            </div>
-          </div>
-        )}
-      </div>
-    )}
+                        {/* ── Action icons group ── */}
+                        {(toggles.makeBaseOn ||
+                          toggles.tints ||
+                          toggles.shades ||
+                          toggles.addColor) && (
+                          <div className="flex gap-2 items-center justify-center flex-wrap">
+                            {toggles.makeBaseOn &&
+                              selectedPaletteType !== "kidFriendly" && (
+                                <span
+                                  className={`p-1 rounded-md border ${
+                                    colorObj.name === "Base"
+                                      ? "border-0"
+                                      : "border"
+                                  } ${textColor === "white" ? "border-white/40" : "border-black/20"}`}
+                                >
+                                  <FaCrosshairs
+                                    className={`w-3 h-3 cursor-pointer ${
+                                      colorObj.name === "Base"
+                                        ? "invisible"
+                                        : "visible"
+                                    }`}
+                                    onClick={() => setOklch(colorObj.value)}
+                                  />
+                                </span>
+                              )}
+                            {toggles.tints && (
+                              <span
+                                onClick={() => {
+                                  shadesTintsTonesFunction(
+                                    colorObj.value,
+                                    "shadesTints",
+                                  );
+                                  setColorForShadesTintsTones(colorObj.value);
+                                  setShadesTintsTonesIndex(index);
+                                  setPickedShadesOrTones("shades");
+                                }}
+                                className={`rounded-md cursor-pointer border ${
+                                  textColor === "white"
+                                    ? "border-white/40"
+                                    : "border-black/20"
+                                }`}
+                              >
+                                <Icon
+                                  icon="mdi:alpha-l"
+                                  className="w-5 h-5 font-bold cursor-pointer"
+                                />
+                              </span>
+                            )}
+                            {toggles.shades && (
+                              <span
+                                onClick={() => {
+                                  shadesTintsTonesFunction(
+                                    colorObj.value,
+                                    "tones",
+                                  );
+                                  setColorForShadesTintsTones(colorObj.value);
+                                  setShadesTintsTonesIndex(index);
+                                  setPickedShadesOrTones("tones");
+                                }}
+                                className={`rounded-md border ${
+                                  textColor === "white"
+                                    ? "border-white/40"
+                                    : "border-black/20"
+                                }`}
+                              >
+                                <Icon
+                                  icon="mdi:alpha-c"
+                                  className="w-5 h-5 font-bold cursor-pointer"
+                                />
+                              </span>
+                            )}
+                            {toggles.addColor && (
+                              <span
+                                onClick={() => {
+                                  const exists = favColors.some(
+                                    (color) =>
+                                      JSON.stringify(color) ===
+                                      JSON.stringify(colorObj.value),
+                                  );
+                                  if (!exists)
+                                    setFavColors((prev) => [
+                                      ...prev,
+                                      colorObj.value,
+                                    ]);
+                                }}
+                                className={`p-1 rounded-md border ${
+                                  textColor === "white"
+                                    ? "border-white/40"
+                                    : "border-black/20"
+                                }`}
+                              >
+                                <RiAddLargeLine className="w-3 h-3 cursor-pointer" />
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
 
-    {/* ── Action icons group ── */}
-    {(toggles.makeBaseOn || toggles.tints || toggles.shades || toggles.addColor) && (
-      <div className="flex gap-2 items-center justify-center flex-wrap">
-        {toggles.makeBaseOn && selectedPaletteType !== "kidFriendly" && (
-          <span className={`p-1 rounded-md border ${
-            colorObj.name === "Base" ? "border-0" : "border"
-          } ${textColor === "white" ? "border-white/40" : "border-black/20"}`}>
-            <FaCrosshairs
-              className={`w-3 h-3 cursor-pointer ${
-                colorObj.name === "Base" ? "invisible" : "visible"
-              }`}
-              onClick={() => setOklch(colorObj.value)}
-            />
-          </span>
-        )}
-        {toggles.tints && (
-          <span
-            onClick={() => {
-              shadesTintsTonesFunction(colorObj.value, "shadesTints");
-              setColorForShadesTintsTones(colorObj.value);
-              setShadesTintsTonesIndex(index);
-              setPickedShadesOrTones("shades");
-            }}
-            className={`rounded-md cursor-pointer border ${
-              textColor === "white" ? "border-white/40" : "border-black/20"
-            }`}
-          >
-            <Icon icon="mdi:alpha-l" className="w-5 h-5 font-bold cursor-pointer" />
-          </span>
-        )}
-        {toggles.shades && (
-          <span
-            onClick={() => {
-              shadesTintsTonesFunction(colorObj.value, "tones");
-              setColorForShadesTintsTones(colorObj.value);
-              setShadesTintsTonesIndex(index);
-              setPickedShadesOrTones("tones");
-            }}
-            className={`rounded-md border ${
-              textColor === "white" ? "border-white/40" : "border-black/20"
-            }`}
-          >
-            <Icon icon="mdi:alpha-c" className="w-5 h-5 font-bold cursor-pointer" />
-          </span>
-        )}
-        {toggles.addColor && (
-          <span
-            onClick={() => {
-              const exists = favColors.some(
-                (color) => JSON.stringify(color) === JSON.stringify(colorObj.value)
-              );
-              if (!exists) setFavColors((prev) => [...prev, colorObj.value]);
-            }}
-            className={`p-1 rounded-md border ${
-              textColor === "white" ? "border-white/40" : "border-black/20"
-            }`}
-          >
-            <RiAddLargeLine className="w-3 h-3 cursor-pointer" />
-          </span>
-        )}
-      </div>
-    )}
-
-  </div>
-
-  {/* ── Color name — pinned to bottom ── */}
-  {toggles.colorNames && (
-    <div className={`w-full px-2 py-2 border-t flex-shrink-0 ${
-      textColor === "white" ? "border-white/15" : "border-black/10"
-    }`}>
-      <span className="block w-full text-[9px] font-medium italic opacity-60 text-center leading-tight">
-        {color.name}
-      </span>
-    </div>
-  )}
-</>
+                      {/* ── Color name — pinned to bottom ── */}
+                      {toggles.colorNames && (
+                        <div
+                          className={`w-full px-2 py-2 border-t flex-shrink-0 ${
+                            textColor === "white"
+                              ? "border-white/15"
+                              : "border-black/10"
+                          }`}
+                        >
+                          <span className="block w-full text-[9px] font-medium italic opacity-60 text-center leading-tight">
+                            {color.name}
+                          </span>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               );
