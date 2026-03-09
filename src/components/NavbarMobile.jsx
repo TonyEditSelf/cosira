@@ -14,59 +14,55 @@ export default function NavbarMobile({ setMobileMenuOpen }) {
     setOpenDropdown(openDropdown === label ? null : label);
   };
 
-  // Check if any submenu item is active
   const isSubmenuActive = (submenu) => {
     return submenu.some((item) => item.path === pathname);
   };
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setOpenDropdown(null);
       }
     };
-
     if (openDropdown) {
       document.addEventListener("mousedown", handleClickOutside);
     }
-
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [openDropdown]);
 
   return (
-    <div ref={dropdownRef}>
+    <div ref={dropdownRef} className="mobile-nav w-full px-2 space-y-1">
       {navMobileElements.map((element) => {
         if (element.submenu) {
           const isActive = isSubmenuActive(element.submenu);
+          const isOpen = openDropdown === element.label;
 
           return (
-            <div key={element.label}>
+            <div key={element.label} className="mobile-nav__group">
               <button
                 onClick={() => toggleDropdown(element.label)}
-                className={`w-full text-left py-2 px-3 flex items-center justify-between hover:bg-[var(--hover-bg)] rounded-md transition-colors ${
-                  isActive
-                    ? "border border-[var(--brand)] rounded-tl-lg rounded-br-lg text-[var(--foreground)]"
-                    : ""
-                }`}
+                className={`
+                  mobile-nav__trigger
+                  w-full text-left py-2.5 px-4 flex items-center justify-between
+                  rounded-lg text-sm font-[300] transition-all duration-200
+                  ${isActive ? "mobile-nav__trigger--active" : ""}
+                `}
               >
                 {element.label}
                 <HiChevronDown
-                  className={`transition-transform ${
-                    openDropdown === element.label ? "rotate-180" : ""
-                  }`}
+                  className={`text-xs opacity-50 transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}
                 />
               </button>
 
-              {openDropdown === element.label && (
-                <div className="pl-4 space-y-1">
+              <div className={`mobile-nav__submenu overflow-hidden transition-all duration-300 ${isOpen ? "mobile-nav__submenu--open" : ""}`}>
+                <div className="pl-4 pt-1 pb-1 space-y-0.5">
                   {element.submenu.map((item) => (
                     <NavLinkIsActive
                       href={item.path}
                       key={item.path}
-                      extraClasses="block py-2 px-3 rounded-md text-sm"
+                      extraClasses="mobile-nav__subitem block py-2 px-3 rounded-md text-sm"
                       onClick={() => {
                         setOpenDropdown(null);
                         setMobileMenuOpen(false);
@@ -77,7 +73,7 @@ export default function NavbarMobile({ setMobileMenuOpen }) {
                     </NavLinkIsActive>
                   ))}
                 </div>
-              )}
+              </div>
             </div>
           );
         }
@@ -86,7 +82,7 @@ export default function NavbarMobile({ setMobileMenuOpen }) {
           <NavLinkIsActive
             href={element.path}
             key={element.path}
-            extraClasses="py-2 px-3 rounded-md"
+            extraClasses="mobile-nav__item block py-2.5 px-4 rounded-lg text-sm font-[300]"
             onClick={() => setMobileMenuOpen(false)}
           >
             {element.label}

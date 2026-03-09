@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { IoContrast } from "react-icons/io5";
 import { IoMdClose } from "react-icons/io";
 import { SiShowtime } from "react-icons/si";
@@ -9,6 +9,7 @@ import { paletteTypes } from "@/app/data/paletteTypes";
 import { FaDatabase } from "react-icons/fa";
 import SelectComp from "./SelectComp";
 import { HiMiniAdjustmentsHorizontal } from "react-icons/hi2";
+import { TbArrowsMaximize } from "react-icons/tb";
 
 import {
   FaAnglesUp,
@@ -17,12 +18,12 @@ import {
   FaAnglesRight,
 } from "react-icons/fa6";
 import { FaSave, FaPlay } from "react-icons/fa";
-// import { CgExport } from "cg-icons";
-import { LuFullscreen } from "react-icons/lu";
 import { useColorPaletteContext } from "../../ColorContext";
 
 export default function CustomPalToolbar() {
   const pathname = usePathname();
+  const router = useRouter();
+
   const {
     palette,
     setPalette,
@@ -50,24 +51,29 @@ export default function CustomPalToolbar() {
     setFavPalette,
     generateRandomColor,
     generateRandomPalette,
+    prepareForExpander,
+    expanderThemeProfile,
   } = useColorPaletteContext();
 
   const isRandomPalettesPage = pathname === "/random-palettes";
 
+  const handleExpand = () => {
+    const { bases, label } = prepareForExpander();
+    if (!bases || bases.length === 0) return;
+    // Navigate — expander reads expanderBases from context
+    router.push("/palette-expander");
+  };
+
   const goBackPalHistory = () => {
     if (paletteHistoryCounter <= 0) return;
-
     const newCounter = paletteHistoryCounter - 1;
     const historyEntry = paletteHistory[newCounter];
-
     historyNavigationRef.current = true;
-
     setPaletteHistoryCounter(newCounter);
     setPalette(historyEntry.palette);
     setDuplicatePaletteType(historyEntry.type);
     setSelectedPaletteType(historyEntry.type);
     setOklch(historyEntry.oklch);
-
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         historyNavigationRef.current = false;
@@ -77,18 +83,14 @@ export default function CustomPalToolbar() {
 
   const goForwardPalHistory = () => {
     if (paletteHistoryCounter >= paletteHistory.length - 1) return;
-
     const newCounter = paletteHistoryCounter + 1;
     const historyEntry = paletteHistory[newCounter];
-
     historyNavigationRef.current = true;
-
     setPaletteHistoryCounter(newCounter);
     setPalette(historyEntry.palette);
     setDuplicatePaletteType(historyEntry.type);
     setSelectedPaletteType(historyEntry.type);
     setOklch(historyEntry.oklch);
-
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         historyNavigationRef.current = false;
@@ -117,7 +119,7 @@ export default function CustomPalToolbar() {
             leftPaletteAdjusterOpen
               ? "border-[var(--navBorder)] hover:border-[var(--muted-foreground)] border"
               : "border-[var(--brand)] border-2 hover:border-2"
-          } `}
+          }`}
         />
       ) : (
         <IoMdClose
@@ -139,16 +141,16 @@ export default function CustomPalToolbar() {
 
       <FaAnglesUp className="size-7 cursor-pointer border border-(--navBorder) py-2 px-2 rounded-md hover:border-muted-foreground" />
       <FaAnglesDown className="size-7 cursor-pointer border border-(--navBorder) hover:border-muted-foreground p-2 rounded-md" />
+
       <section className="flex gap-5 items-center border border-(--navBorder) hover:border-muted-foreground pl-5 rounded-md">
         <p className="h-full">Pick Color: </p>
         <button
-          onClick={() => {
-            setMyColorPickerOpen((prev) => !prev);
-          }}
+          onClick={() => setMyColorPickerOpen((prev) => !prev)}
           className="rounded-md h-8.75 py-1 px-20 cursor-pointer"
           style={{ backgroundColor: `${cssColor}` }}
-        ></button>
+        />
       </section>
+
       <FaAnglesLeft
         className="size-7 cursor-pointer py-2 px-2 rounded-md border border-(--navBorder) hover:border-muted-foreground"
         onClick={goBackPalHistory}
@@ -168,26 +170,31 @@ export default function CustomPalToolbar() {
 
       <FaSave
         onClick={() => {
-          const favpalObject = {
-            palette: palette,
-            type: selectedPaletteType,
-          };
-
-          const exists = favPalette.some((element) => {
-            return JSON.stringify(element) === JSON.stringify(favpalObject);
-          });
-
+          const favpalObject = { palette, type: selectedPaletteType };
+          const exists = favPalette.some(
+            (element) => JSON.stringify(element) === JSON.stringify(favpalObject)
+          );
           if (!exists) {
             setFavPalette((prev) => [
               ...prev,
-              { palette: palette, type: selectedPaletteType },
+              { palette, type: selectedPaletteType },
             ]);
           }
         }}
         className="size-7 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]"
       />
 
-      {/* <CgExport className="size-9 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]" /> */}
+      {/* ── EXPAND BUTTON ───────────────────────────────────────────── */}
+      <button
+        onClick={handleExpand}
+        title="Expand this palette into a full design system"
+        className="flex items-center gap-1.5 px-2.5 h-7 cursor-pointer border-2 border-[var(--brand)] rounded-md hover:bg-[var(--brand)] hover:text-white transition-all group"
+      >
+        <TbArrowsMaximize className="size-3.5 text-[var(--brand)] group-hover:text-white transition-colors" />
+        <span className="text-[10px] font-bold text-[var(--brand)] group-hover:text-white transition-colors leading-none">
+          Expand
+        </span>
+      </button>
 
       {!databaseOpen ? (
         <FaDatabase

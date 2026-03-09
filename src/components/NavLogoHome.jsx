@@ -11,7 +11,6 @@ import NavBar from "./NavbarDesktop";
 const orbitron = Orbitron({
   subsets: ["latin"],
   weight: ["900"],
-  // weight: ["400", "700", "800", "900"],
 });
 
 export default function NavLogoHome() {
@@ -19,32 +18,50 @@ export default function NavLogoHome() {
 
   return (
     <>
-      <CgMenuGridR
+      <button
         onClick={() => setMobileMenuOpen(true)}
-        className="lg:hidden text-4xl"
-      />
+        className="lg:hidden nav-mobile-open-btn p-1.5 rounded-md"
+        aria-label="Open menu"
+      >
+        <CgMenuGridR className="text-2xl" />
+      </button>
 
-      {mobileMenuOpen && (
-        <div className="absolute top-0 bottom-0 left-0 right-24 bg-[var(--background)] border border-[var(--border)] flex flex-col justify-center items-center gap-3">
-          <FaRegWindowClose
-            onClick={() => setMobileMenuOpen(false)}
-            className="text-4xl font-light absolute top-8 right-8"
-          />
+      {/* Mobile menu overlay */}
+      <div className={`mobile-overlay lg:hidden ${mobileMenuOpen ? "mobile-overlay--open" : ""}`}>
+        <div className="mobile-overlay__panel">
+          <div className="mobile-overlay__header flex items-center justify-between px-6 py-4 mb-4">
+            {/* Logo repeated in panel */}
+            <Link
+              href={"/"}
+              className={`${orbitron.className} text-sm font-[900] text-[var(--brand)]`}
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <span className="border-l-2 border-t-2 border-b-2 rounded-tl-lg border-[var(--brand)] px-1.5 py-0.5">TO</span>
+              <span className="border-2 border-[var(--brand)] px-1.5 py-0.5">FAB</span>
+              <span className="border-r-2 border-t-2 border-b-2 border-[var(--brand)] rounded-br-lg px-1.5 py-0.5">ZA</span>
+            </Link>
+
+            <button
+              onClick={() => setMobileMenuOpen(false)}
+              className="nav-mobile-close-btn p-1.5 rounded-md"
+              aria-label="Close menu"
+            >
+              <FaRegWindowClose className="text-xl opacity-70" />
+            </button>
+          </div>
+
           <NavbarMobile setMobileMenuOpen={setMobileMenuOpen} />
         </div>
-      )}
+      </div>
 
+      {/* Logo */}
       <Link
         href={"/"}
-        className={`${orbitron.className} text-md lg:text-[17px] font-[900] text-[var(--brand)]`}
+        className={`${orbitron.className} text-[15px] lg:text-[17px] font-[900] text-[var(--brand)] nav-logo`}
       >
-        <span className="border-l-3 border-t-3 border-b-3 rounded-tl-xl border-[var(--brand)] px-2 py-1">
-          TO
-        </span>
-        <span className="border-3 border-[var(--brand)] px-2 py-1">FAB</span>
-        <span className="border-r-3 border-t-3 border-b-3 border-[var(--brand)] rounded-br-xl  px-2 py-1">
-          ZA
-        </span>
+        <span className="border-l-2 border-t-2 border-b-2 rounded-tl-xl border-[var(--brand)] px-2 py-1">TO</span>
+        <span className="border-2 border-[var(--brand)] px-2 py-1">FAB</span>
+        <span className="border-r-2 border-t-2 border-b-2 border-[var(--brand)] rounded-br-xl px-2 py-1">ZA</span>
       </Link>
     </>
   );

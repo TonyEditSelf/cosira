@@ -10,6 +10,8 @@ import {
   use,
 } from "react";
 
+import extractBasesForExpander from "./custom-palettes/ColorPaletteUtils/extractBasesForExpander";
+
 import {
   oklchToRgb,
   oklchToCss,
@@ -191,7 +193,10 @@ export function ColorPaletteContextProvider({ children }) {
     });
   };
 
-  // Helper to get current effective angles (for display in UI)
+const [expanderBases, setExpanderBases] = useState(null);
+const [expanderThemeProfile, setExpanderThemeProfile] = useState(null);
+
+// Helper to get current effective angles (for display in UI)
   const getCurrentAngles = () => {
     const baseAngle = getBaseAngles(analogPalType);
     return {
@@ -437,6 +442,18 @@ const setPalette = useCallback((newPalette) => {
 }, []);
 
   const palette = paletteState;
+
+const prepareForExpander = useCallback(() => {
+  const { bases, themeProfile, label } = extractBasesForExpander(palette);
+  setExpanderBases(bases);
+  setExpanderThemeProfile(themeProfile);
+  return { bases, themeProfile, label };
+}, [palette]);
+
+useEffect(() => {
+  if (!palette || palette.length === 0) return;
+  prepareForExpander();
+}, [palette]);
 
   const [duplicatePalette, setDuplicatePalette] = useState([]);
   const [duplicatePaletteType, setDuplicatePaletteType] = useState("");
@@ -702,6 +719,11 @@ monoHueDrift,
 setMonoColorCount,
 monoHueDrift,
 setMonoHueDrift,
+expanderBases,
+setExpanderBases,
+expanderThemeProfile,
+setExpanderThemeProfile,
+prepareForExpander,
   };
 
   return (

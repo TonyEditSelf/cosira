@@ -17,17 +17,19 @@ export default function NavLinkIsActive({
     <Link
       href={href}
       onClick={onClick}
-      className={`${
-        isActive && !showTickOnActive
-          ? "border border-[var(--brand)] rounded-tl-lg rounded-br-lg text-[var(--foreground)]"
-          : ""
-      } ${extraClasses} ${
-        showTickOnActive && isActive ? "flex items-center justify-between" : ""
-      }`}
+      className={`
+        nav-link relative group
+        ${isActive && !showTickOnActive ? "nav-link--active" : ""}
+        ${showTickOnActive && isActive ? "flex items-center justify-between nav-link--tick-active" : ""}
+        ${extraClasses}
+      `}
     >
+      {!showTickOnActive && (
+        <span className="nav-link__underline" />
+      )}
       {children}
       {showTickOnActive && isActive && (
-        <HiCheck className="text-lg text-[var(--foreground)]" />
+        <HiCheck className="text-sm text-[var(--brand)] ml-2" />
       )}
     </Link>
   );

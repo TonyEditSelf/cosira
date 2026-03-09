@@ -15,70 +15,72 @@ export default function NavbarDesktop() {
     setOpenDropdown(openDropdown === label ? null : label);
   };
 
-  // Check if any submenu item is active
   const isSubmenuActive = (submenu) => {
     return submenu.some((item) => item.path === pathname);
   };
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setOpenDropdown(null);
       }
     };
-
     if (openDropdown) {
       document.addEventListener("mousedown", handleClickOutside);
     }
-
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [openDropdown]);
 
   return (
-    <div ref={dropdownRef} className="flex items-center gap-5">
+    <div ref={dropdownRef} className="flex items-center gap-1">
       {navDesktopElements.map((element) => {
         const isActive = isSubmenuActive(element.submenu);
+        const isOpen = openDropdown === element.label;
 
         return (
           <div key={element.label} className="relative">
             <button
               onClick={() => toggleDropdown(element.label)}
-              className={`px-2 py-1 flex items-center gap-1 hover:text-[var(--brand)] transition-colors ${
-                isActive
-                  ? "border border-[var(--brand)] rounded-tl-lg rounded-br-lg text-[var(--foreground)]"
-                  : ""
-              }`}
+              className={`
+                nav-dropdown-trigger
+                px-3 py-1.5 flex items-center gap-1.5 rounded-md text-sm font-[300]
+                transition-all duration-200
+                ${isActive ? "nav-dropdown-trigger--active" : ""}
+                ${isOpen ? "nav-dropdown-trigger--open" : ""}
+              `}
             >
               {element.label}
               <HiChevronDown
-                className={`transition-transform ${
-                  openDropdown === element.label ? "rotate-180" : ""
-                }`}
+                className={`text-xs opacity-60 transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}
               />
             </button>
 
-            {openDropdown === element.label && (
-              <div className="absolute top-full left-0 mt-1 bg-[var(--background)] border border-[var(--navBorder)] rounded-md shadow-lg min-w-[200px] z-50">
-                {element.submenu.map((item) => (
-                  <NavLinkIsActive
-                    key={item.path}
-                    href={item.path}
-                    extraClasses="block px-4 py-2 hover:bg-[var(--hover-bg)] transition-colors"
-                    onClick={() => setOpenDropdown(null)}
-                    showTickOnActive={true}
-                  >
-                    {item.label}
-                  </NavLinkIsActive>
-                ))}
+            {isOpen && (
+              <div className="nav-dropdown absolute top-full left-0 mt-2 min-w-[200px] z-50">
+                <div className="nav-dropdown__inner py-1.5">
+                  {element.submenu.map((item, i) => (
+                    <NavLinkIsActive
+                      key={item.path}
+                      href={item.path}
+                      extraClasses="nav-dropdown__item block px-4 py-2 text-sm"
+                      onClick={() => setOpenDropdown(null)}
+                      showTickOnActive={true}
+                    >
+                      {item.label}
+                    </NavLinkIsActive>
+                  ))}
+                </div>
               </div>
             )}
           </div>
         );
       })}
-      <CiMenuKebab className="text-2xl cursor-pointer lg:text-3xl border border-[var(--navBorder)] rounded-tl-md rounded-br-md p-1" />
+
+      <button className="nav-kebab-btn ml-2 p-1.5 rounded-md">
+        <CiMenuKebab className="text-lg" />
+      </button>
     </div>
   );
 }

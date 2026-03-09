@@ -8,28 +8,31 @@ import { AnimatePresence } from "framer-motion";
 
 const dm_sans = DM_Sans({
   subsets: ["latin"],
-  // weight: ["100", "400", "500", "600", "700", "800", "900", "1000"],
   weight: ["100", "200", "300", "400"],
 });
 
-export default function AnimatedLayount({ children }) {
+export default function AnimatedLayout({ children }) {
   const pathname = usePathname();
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden">
-      <header className="flex-shrink-0">
-        <nav className="flex border border-[var(--border)] px-7 items-center justify-between py-2 lg:px-10 lg:border-0">
-          <NavLogoHome />
+    <div className={`h-screen flex flex-col overflow-hidden ${dm_sans.className}`}>
+      <header className="nav-header flex-shrink-0">
+        <nav className="nav-bar flex items-center justify-between px-6 py-3 lg:px-10">
+          {/* Left: hamburger (mobile) + logo */}
+          <div className="flex items-center gap-3">
+            <NavLogoHome />
+          </div>
 
-          <ThemeToggle />
-
-          <div
-            className={`hidden lg:flex justify-center items-center gap-5 ${dm_sans.className} text-[16px] font-[300] `}
-          >
-            <NavbarDesktop />
+          {/* Right: desktop nav + theme toggle */}
+          <div className="flex items-center gap-3">
+            <div className="hidden lg:flex items-center gap-1 text-[15px] font-[300]">
+              <NavbarDesktop />
+            </div>
+            <ThemeToggle />
           </div>
         </nav>
       </header>
+
       <AnimatePresence mode="wait">
         <main key={pathname} className="flex-1 min-h-0 overflow-hidden">
           {children}
