@@ -1,7 +1,13 @@
 // ─── TOOLBAR: Single row with Palette | Mode | Ceiling/Floor | Roles bundle | Reset | Export | Preview ───
 // ─── ROLES PANEL: 2-column grid when preview hidden, left panel when preview shown ───
 
-import React, { useMemo, useState, useRef, useEffect } from "react";
+import React, {
+  useMemo,
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+} from "react";
 import { generateExpandedPalette, getContrastRatio } from "./colorexpansion";
 import { useColorPaletteContext } from "../ColorContext";
 import Preview from "./Preview";
@@ -99,6 +105,79 @@ const roleTokenMap = {
 
 const statusHueMap = { success: 145, warning: 85, error: 25, info: 250 };
 
+// Maps each foreground role → the background role(s) it sits on.
+// Used by contrast enforcement to know which pairs to check.
+const CONTRAST_RELATIONSHIPS = {
+  text: ["background", "surface"],
+  "text-subtle": ["background", "surface"],
+  "text-strong": ["background", "surface"],
+  "text-inverse": ["interactive-default"],
+  border: ["background", "surface"],
+  "border-strong": ["background", "surface"],
+  "border-active": ["background", "surface"],
+  "border-focus": ["background", "surface"],
+  "interactive-default": ["background"],
+  "interactive-hover": ["background"],
+  "interactive-active": ["background"],
+  icon: ["background", "surface"],
+  "icon-subtle": ["background", "surface"],
+  "icon-strong": ["background", "surface"],
+  success: ["success-subtle", "background"],
+  warning: ["warning-subtle", "background"],
+  error: ["error-subtle", "background"],
+  info: ["info-subtle", "background"],
+  accent: ["background", "surface"],
+  "accent-strong": ["background", "surface"],
+  fill: ["background"],
+  "fill-strong": ["background"],
+  "neutral-default": ["neutral-surface", "background"],
+  "neutral-strong": ["neutral-surface", "background"],
+};
+
+// WCAG minimum ratios per mode
+const WCAG_RATIOS = { free: 0, AA: 4.5, AAA: 7.0 };
+
+/**
+ * Find the nearest token step (fewest steps from currentToken, either
+ * direction) that achieves >= minRatio contrast against bgColor.
+ * Returns the new token number, or null if current already passes
+ * or no step in the scale can pass.
+ */
+function findCompliantToken(
+  fgRole,
+  currentToken,
+  scale,
+  bgColor,
+  minRatio,
+  resolveColor,
+) {
+  const steps = Object.keys(scale)
+    .map(Number)
+    .sort((a, b) => a - b);
+  const currentIdx = steps.indexOf(Number(currentToken));
+
+  // Already passes — no change needed
+  const currentColor = resolveColor(fgRole, scale[currentToken]);
+  if (getContrastRatio(currentColor, bgColor) >= minRatio) return null;
+
+  // Expand outward from current index, checking both directions each round
+  let lo = currentIdx - 1;
+  let hi = currentIdx + 1;
+  while (lo >= 0 || hi < steps.length) {
+    if (hi < steps.length) {
+      const c = resolveColor(fgRole, scale[steps[hi]]);
+      if (getContrastRatio(c, bgColor) >= minRatio) return steps[hi];
+    }
+    if (lo >= 0) {
+      const c = resolveColor(fgRole, scale[steps[lo]]);
+      if (getContrastRatio(c, bgColor) >= minRatio) return steps[lo];
+    }
+    lo--;
+    hi++;
+  }
+  return null; // No compliant token exists in this scale
+}
+
 function buildTokenToRolesMap(customMappings) {
   const allRoles = Object.values(roleTokenMap).reduce(
     (acc, roles) => ({ ...acc, ...roles }),
@@ -161,6 +240,10 @@ function UsageRole({
   isHighlighted,
   isClicked,
   onHover,
+  globalContrastMode,
+  perRoleContrastMode,
+  onContrastModeChange,
+  pairedBgColor,
 }) {
   const [copied, setCopied] = useState(false);
   const [isSelecting, setIsSelecting] = useState(false);
@@ -177,20 +260,38 @@ function UsageRole({
         c: Math.max(baseColor.c, 0.12),
       };
     if (name.startsWith("neutral"))
-      return { ...baseColor, c: Math.min(baseColor.c, 0.012) };
+      return { ...baseColor, c: Math.min(baseColor.c * 0.06, 0.025) };
     return baseColor;
   }, [name, scale, currentToken]);
 
-  const { bestContrast } = useMemo(() => {
+  // Contrast against paired background (contextual) if available,
+  // otherwise fall back to best of white/black
+  const { bestContrast, contrastAgainstBg } = useMemo(() => {
     const white = { l: 1, c: 0, h: 0 };
     const black = { l: 0, c: 0, h: 0 };
     const ratioWhite = getContrastRatio(color, white);
     const ratioBlack = getContrastRatio(color, black);
-    return { bestContrast: Math.max(ratioWhite, ratioBlack).toFixed(1) };
-  }, [color]);
+    const best = Math.max(ratioWhite, ratioBlack).toFixed(1);
+    const againstBg = pairedBgColor
+      ? getContrastRatio(color, pairedBgColor).toFixed(1)
+      : null;
+    return { bestContrast: best, contrastAgainstBg: againstBg };
+  }, [color, pairedBgColor]);
 
-  const passesAA = parseFloat(bestContrast) >= 4.5;
-  const passesAAA = parseFloat(bestContrast) >= 7.0;
+  // Effective mode for this chip
+  const effectiveMode = perRoleContrastMode || globalContrastMode || "free";
+  const minRatio = WCAG_RATIOS[effectiveMode] || 0;
+
+  // Determine pass/fail against paired bg (contextual) or white/black fallback
+  const displayRatio =
+    contrastAgainstBg !== null ? contrastAgainstBg : bestContrast;
+  const ratioNum = parseFloat(displayRatio);
+  const passesAAA = ratioNum >= 7.0;
+  const passesAA = ratioNum >= 4.5;
+  const passesRequired = minRatio === 0 || ratioNum >= minRatio;
+  // Enforcement warning: in AA/AAA mode and failing
+  const isEnforcementWarning = minRatio > 0 && !passesRequired;
+
   const hasChanged = oldToken && oldToken !== currentToken;
   const alternatives = Object.keys(scale)
     .map(Number)
@@ -213,15 +314,17 @@ function UsageRole({
       <div
         onClick={() => setIsSelecting(!isSelecting)}
         className={`group relative flex items-center gap-2.5 px-2.5 py-2 rounded-lg bg-background border cursor-pointer transition-all hover:shadow-sm ${
-          isClicked
-            ? "ring-2 ring-amber-400 border-amber-400 bg-amber-50/30 shadow-md"
-            : isHighlighted
-              ? "ring-2 ring-blue-400 border-blue-400 bg-blue-50/30"
-              : isSelecting
-                ? "border-blue-500 ring-1 ring-blue-500 shadow-sm"
-                : hasChanged
-                  ? "border-blue-400 bg-blue-50/20"
-                  : "border-(--navBorder) hover:border-gray-400"
+          isEnforcementWarning
+            ? "ring-2 ring-orange-400 border-orange-400 bg-orange-50/20"
+            : isClicked
+              ? "ring-2 ring-amber-400 border-amber-400 bg-amber-50/30 shadow-md"
+              : isHighlighted
+                ? "ring-2 ring-blue-400 border-blue-400 bg-blue-50/30"
+                : isSelecting
+                  ? "border-blue-500 ring-1 ring-blue-500 shadow-sm"
+                  : hasChanged
+                    ? "border-blue-400 bg-blue-50/20"
+                    : "border-(--navBorder) hover:border-gray-400"
         }`}
       >
         <div className="flex flex-col items-center gap-0.5 shrink-0">
@@ -241,38 +344,106 @@ function UsageRole({
             {oklchToHex(color)}
           </div>
         </div>
+
+        {/* Contrast badge — shows contextual ratio if paired bg exists */}
         <div
           className={`flex flex-col items-center shrink-0 px-1.5 py-1 rounded-md ${
-            passesAAA
-              ? "bg-green-500/10"
-              : passesAA
-                ? "bg-yellow-500/10"
-                : "bg-red-500/10"
+            isEnforcementWarning
+              ? "bg-orange-500/15"
+              : passesAAA
+                ? "bg-green-500/10"
+                : passesAA
+                  ? "bg-yellow-500/10"
+                  : "bg-red-500/10"
           }`}
+          title={
+            contrastAgainstBg
+              ? `${displayRatio}:1 against paired background`
+              : `${displayRatio}:1 best contrast`
+          }
         >
           <span
             className={`text-[10px] font-black leading-tight ${
-              passesAAA
-                ? "text-green-700"
-                : passesAA
-                  ? "text-yellow-700"
-                  : "text-red-600"
+              isEnforcementWarning
+                ? "text-orange-600"
+                : passesAAA
+                  ? "text-green-700"
+                  : passesAA
+                    ? "text-yellow-700"
+                    : "text-red-600"
             }`}
           >
-            {bestContrast}
+            {displayRatio}
           </span>
           <span
             className={`text-[7px] font-bold leading-tight ${
-              passesAAA
-                ? "text-green-600"
-                : passesAA
-                  ? "text-yellow-600"
-                  : "text-red-500"
+              isEnforcementWarning
+                ? "text-orange-500"
+                : passesAAA
+                  ? "text-green-600"
+                  : passesAA
+                    ? "text-yellow-600"
+                    : "text-red-500"
             }`}
           >
-            {passesAAA ? "AAA" : passesAA ? "AA" : "✗"}
+            {isEnforcementWarning
+              ? "!"
+              : passesAAA
+                ? "AAA"
+                : passesAA
+                  ? "AA"
+                  : "✗"}
           </span>
         </div>
+
+        {/* Per-chip contrast mode override — shown as a small pill on hover */}
+        {CONTRAST_RELATIONSHIPS[name] && (
+          <div
+            className="opacity-0 group-hover:opacity-100 absolute left-1.5 -top-2.5 flex items-center gap-0.5 z-20"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {["free", "AA", "AAA"].map((m) => {
+              const isActive =
+                perRoleContrastMode === m ||
+                (!perRoleContrastMode &&
+                  m === "free" &&
+                  globalContrastMode === "free") ||
+                (!perRoleContrastMode && m === globalContrastMode);
+              const isOverride = perRoleContrastMode === m;
+              return (
+                <button
+                  key={m}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // Clicking the already-active per-role override clears it (revert to global)
+                    onContrastModeChange(
+                      name,
+                      perRoleContrastMode === m ? null : m,
+                    );
+                  }}
+                  className={`px-1 py-0.5 rounded text-[6.5px] font-black transition-all border ${
+                    isOverride
+                      ? m === "AA"
+                        ? "bg-yellow-500 text-white border-yellow-500"
+                        : m === "AAA"
+                          ? "bg-green-600 text-white border-green-600"
+                          : "bg-gray-600 text-white border-gray-600"
+                      : "bg-background text-foreground/40 border-(--navBorder) hover:text-foreground/70"
+                  }`}
+                  title={
+                    isOverride
+                      ? `Override: ${m} (click to clear)`
+                      : `Set this role to ${m}`
+                  }
+                >
+                  {m}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Copy buttons */}
         <div className="opacity-0 group-hover:opacity-100 absolute right-1.5 top-1/2 -translate-y-1/2 bg-background border border-(--navBorder) flex items-center gap-0.5 px-1 py-0.5 rounded-md shadow-sm z-10">
           <button
             onClick={(e) => copy("hex", e)}
@@ -311,12 +482,19 @@ function UsageRole({
                     h: statusHueMap[statusKey],
                     c: Math.max(basePreview.c, 0.12),
                   }
-                : basePreview;
-              const previewContrast = Math.max(
-                getContrastRatio(previewColor, { l: 1, c: 0, h: 0 }),
-                getContrastRatio(previewColor, { l: 0, c: 0, h: 0 }),
-              ).toFixed(1);
+                : name.startsWith("neutral")
+                  ? { ...basePreview, c: Math.min(basePreview.c * 0.06, 0.025) }
+                  : basePreview;
+              // Show contrast against paired bg if available, else white/black
+              const previewContrast = pairedBgColor
+                ? getContrastRatio(previewColor, pairedBgColor).toFixed(1)
+                : Math.max(
+                    getContrastRatio(previewColor, { l: 1, c: 0, h: 0 }),
+                    getContrastRatio(previewColor, { l: 0, c: 0, h: 0 }),
+                  ).toFixed(1);
               const isCurrent = t === Number(currentToken);
+              const previewPasses =
+                minRatio === 0 || parseFloat(previewContrast) >= minRatio;
               return (
                 <button
                   key={t}
@@ -328,7 +506,9 @@ function UsageRole({
                   className={`flex-1 rounded-md flex flex-col items-center justify-center transition-all py-2 gap-1 border-2 ${
                     isCurrent
                       ? "border-white scale-105 shadow-lg"
-                      : "border-transparent opacity-70 hover:opacity-100"
+                      : !previewPasses && minRatio > 0
+                        ? "border-orange-400 opacity-60"
+                        : "border-transparent opacity-70 hover:opacity-100"
                   }`}
                   style={{
                     backgroundColor: oklchToCss(previewColor),
@@ -339,6 +519,11 @@ function UsageRole({
                   <span className="text-[7px] opacity-90 font-semibold">
                     {previewContrast}
                   </span>
+                  {!previewPasses && minRatio > 0 && (
+                    <span className="text-[6px] font-black text-orange-300">
+                      ✗
+                    </span>
+                  )}
                 </button>
               );
             })}
@@ -521,6 +706,10 @@ function ColorDetail({
   const [clickedRoles, setClickedRoles] = useState([]);
   // NEW: preview panel toggle
   const [showPreview, setShowPreview] = useState(false);
+  // NEW: global contrast enforcement mode
+  const [contrastMode, setContrastMode] = useState("free");
+  // NEW: per-role contrast mode overrides (role → "free"|"AA"|"AAA"|null=inherit)
+  const [contrastModePerRole, setContrastModePerRole] = useState({});
 
   const roleChipRefs = useRef({});
   const rolePanelRef = useRef(null);
@@ -548,23 +737,167 @@ function ColorDetail({
     [activeCustomMappings],
   );
 
+  // resolveColor: applies statusHue / neutral overrides to a raw scale color
+  // (mirrors getActiveColor but works on any arbitrary scale color + role name)
+  const resolveRoleColor = (role, baseColor) => {
+    const statusKey = Object.keys(statusHueMap).find((k) => role.startsWith(k));
+    if (statusKey)
+      return {
+        ...baseColor,
+        h: statusHueMap[statusKey],
+        c: Math.max(baseColor.c, 0.12),
+      };
+    if (role.startsWith("neutral"))
+      return { ...baseColor, c: Math.min(baseColor.c * 0.06, 0.025) };
+    return baseColor;
+  };
+
+  // ── Pure sweep: given a mappings snapshot, enforce contrast for ALL pairs ──
+  // Returns a new mappings object with any failing fg roles shifted to pass.
+  // changedByUser: optional role name the user just explicitly changed — skip
+  // auto-adjusting that specific fg role so we don't override their intent.
+  const enforceAllContrast = useCallback(
+    (mappings, currentScale, globalMode, perRoleMode, changedByUser = null) => {
+      const allRoleDefaults = Object.values(roleTokenMap).reduce(
+        (acc, r) => ({ ...acc, ...r }),
+        {},
+      );
+
+      const getColorForRole = (role, m) => {
+        const token = m[role] || allRoleDefaults[role];
+        if (!currentScale[token]) return null;
+        return resolveRoleColor(role, currentScale[token]);
+      };
+
+      const enforced = { ...mappings };
+
+      Object.entries(CONTRAST_RELATIONSHIPS).forEach(([fgRole, bgRoles]) => {
+        // Don't auto-adjust a role the user just explicitly chose
+        if (fgRole === changedByUser) return;
+
+        const roleMode = perRoleMode[fgRole] || globalMode;
+        const minRatio = WCAG_RATIOS[roleMode] || 0;
+        if (minRatio === 0) return;
+
+        // Use the best-contrast bg available (first one that resolves)
+        const bgColor = bgRoles
+          .map((bgRole) => getColorForRole(bgRole, enforced))
+          .find(Boolean);
+        if (!bgColor) return;
+
+        const currentFgToken = enforced[fgRole] || allRoleDefaults[fgRole];
+        const newFgToken = findCompliantToken(
+          fgRole,
+          currentFgToken,
+          currentScale,
+          bgColor,
+          minRatio,
+          resolveRoleColor,
+        );
+
+        if (newFgToken !== null) {
+          enforced[fgRole] = newFgToken;
+        }
+      });
+
+      return enforced;
+    },
+    [],
+  );
+
   const handleTokenChange = (roleName, newToken) => {
+    const allRoleDefaults = Object.values(roleTokenMap).reduce(
+      (acc, r) => ({ ...acc, ...r }),
+      {},
+    );
+
     setCustomMappingsPerMode((prev) => {
       const modeMap = prev[colorMode];
       const origMap = originalMappingsPerMode[colorMode];
+
+      // Save original token before first override
       if (!origMap[roleName]) {
-        const allRoles = Object.values(roleTokenMap).reduce(
-          (acc, roles) => ({ ...acc, ...roles }),
-          {},
-        );
         setOriginalMappingsPerMode((p) => ({
           ...p,
-          [colorMode]: { ...p[colorMode], [roleName]: allRoles[roleName] },
+          [colorMode]: {
+            ...p[colorMode],
+            [roleName]: allRoleDefaults[roleName],
+          },
         }));
       }
-      return { ...prev, [colorMode]: { ...modeMap, [roleName]: newToken } };
+
+      // Commit the user's change first
+      const withChange = { ...modeMap, [roleName]: newToken };
+
+      // Then sweep all pairs — skip auto-adjusting the role the user just changed
+      const enforced = enforceAllContrast(
+        withChange,
+        scale,
+        contrastMode,
+        contrastModePerRole,
+        roleName, // don't override the user's explicit choice
+      );
+
+      // Save originals for any roles that got auto-adjusted
+      Object.keys(enforced).forEach((role) => {
+        if (
+          role !== roleName &&
+          enforced[role] !== (modeMap[role] || allRoleDefaults[role])
+        ) {
+          if (!origMap[role]) {
+            setOriginalMappingsPerMode((p) => ({
+              ...p,
+              [colorMode]: { ...p[colorMode], [role]: allRoleDefaults[role] },
+            }));
+          }
+        }
+      });
+
+      return { ...prev, [colorMode]: enforced };
     });
   };
+
+  // ── When contrastMode or contrastModePerRole changes, immediately sweep ──
+  // all pairs and fix any that now fail the new requirement.
+  useEffect(() => {
+    if (contrastMode === "free") return; // free mode — nothing to enforce
+
+    const allRoleDefaults = Object.values(roleTokenMap).reduce(
+      (acc, r) => ({ ...acc, ...r }),
+      {},
+    );
+
+    setCustomMappingsPerMode((prev) => {
+      const modeMap = prev[colorMode];
+      const enforced = enforceAllContrast(
+        modeMap,
+        scale,
+        contrastMode,
+        contrastModePerRole,
+        null, // no user-changed role — sweep everything
+      );
+
+      // If nothing changed, bail out to avoid infinite loop
+      if (JSON.stringify(enforced) === JSON.stringify(modeMap)) return prev;
+
+      // Save originals for any newly auto-adjusted roles
+      setOriginalMappingsPerMode((p) => {
+        const origMap = p[colorMode];
+        const newOrigMap = { ...origMap };
+        Object.keys(enforced).forEach((role) => {
+          if (
+            !newOrigMap[role] &&
+            enforced[role] !== (modeMap[role] || allRoleDefaults[role])
+          ) {
+            newOrigMap[role] = allRoleDefaults[role];
+          }
+        });
+        return { ...p, [colorMode]: newOrigMap };
+      });
+
+      return { ...prev, [colorMode]: enforced };
+    });
+  }, [contrastMode, contrastModePerRole, colorMode, scale]);
 
   const getActiveColor = (role) => {
     const allRoles = Object.values(roleTokenMap).reduce(
@@ -583,7 +916,7 @@ function ColorDetail({
         c: Math.max(baseColor.c, 0.12),
       };
     } else if (role.startsWith("neutral")) {
-      resolved = { ...baseColor, c: Math.min(baseColor.c, 0.012) };
+      resolved = { ...baseColor, c: Math.min(baseColor.c * 0.06, 0.025) };
     } else {
       resolved = baseColor;
     }
@@ -763,6 +1096,34 @@ function ColorDetail({
         {/* Spacer pushes remaining controls right */}
         <div className="flex-1" />
 
+        {/* ── Contrast mode toggle ── */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          <span className="text-[9px] font-semibold text-foreground/40 uppercase tracking-wider">
+            Contrast
+          </span>
+          <div className="flex p-0.5 bg-gray-100 dark:bg-gray-800 rounded-lg border border-(--navBorder)">
+            {["free", "AA", "AAA"].map((mode) => (
+              <button
+                key={mode}
+                onClick={() => setContrastMode(mode)}
+                className={`px-2 py-1 rounded-md text-[10px] font-bold transition-all ${
+                  contrastMode === mode
+                    ? mode === "free"
+                      ? "bg-background text-foreground shadow-sm"
+                      : mode === "AA"
+                        ? "bg-yellow-500 text-white shadow-sm"
+                        : "bg-green-600 text-white shadow-sm"
+                    : "text-gray-400 hover:text-gray-600"
+                }`}
+              >
+                {mode}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="w-px h-4 bg-foreground/10 shrink-0" />
+
         {/* Override count badge */}
         {hasChanges && (
           <span className="text-[9px] text-blue-500 font-semibold shrink-0">
@@ -776,6 +1137,7 @@ function ColorDetail({
           onClick={() => {
             setCustomMappingsPerMode({ light: {}, dark: {} });
             setOriginalMappingsPerMode({ light: {}, dark: {} });
+            setContrastModePerRole({});
           }}
           className="px-2.5 py-1.5 rounded-lg border border-(--navBorder) text-[10px] font-semibold text-foreground/60 hover:text-foreground hover:border-gray-400 transition-all shrink-0"
         >
@@ -880,6 +1242,26 @@ function ColorDetail({
                               }
                               isClicked={clickedRoles.includes(roleName)}
                               onHover={setHoveredRole}
+                              globalContrastMode={contrastMode}
+                              perRoleContrastMode={
+                                contrastModePerRole[roleName] || null
+                              }
+                              onContrastModeChange={(role, mode) =>
+                                setContrastModePerRole((prev) => ({
+                                  ...prev,
+                                  [role]: mode,
+                                }))
+                              }
+                              pairedBgColor={(() => {
+                                const bgRoles =
+                                  CONTRAST_RELATIONSHIPS[roleName];
+                                if (!bgRoles) return null;
+                                for (const bgRole of bgRoles) {
+                                  const c = getActiveColor(bgRole);
+                                  if (c) return c;
+                                }
+                                return null;
+                              })()}
                             />
                           </div>
                         );
