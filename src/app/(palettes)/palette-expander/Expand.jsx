@@ -1,6 +1,3 @@
-// ─── TOOLBAR: Single row with Palette | Mode | Ceiling/Floor | Roles bundle | Reset | Export | Preview ───
-// ─── ROLES PANEL: 2-column grid when preview hidden, left panel when preview shown ───
-
 import React, {
   useMemo,
   useState,
@@ -8,7 +5,12 @@ import React, {
   useEffect,
   useCallback,
 } from "react";
-import { generateExpandedPalette, getContrastRatio } from "./colorexpansion";
+import {
+  generateExpandedPalette,
+  getContrastRatio,
+  oklchToRgbValues,
+  SEMANTIC_HUES,
+} from "./colorexpansion";
 import { useColorPaletteContext } from "../ColorContext";
 import Preview from "./Preview";
 
@@ -40,6 +42,7 @@ const ROLE_BUNDLES = {
       Accents: ["accent", "accent-subtle", "accent-strong"],
       Icons: ["icon", "icon-subtle", "icon-strong"],
       Decorative: ["decorative-light", "decorative", "decorative-dark"],
+      // FIX 1: Neutrals now map to the independent neutral scale
       Neutrals: [
         "neutral-subtle",
         "neutral-muted",
@@ -94,6 +97,7 @@ const roleTokenMap = {
     decorative: 600,
     "decorative-dark": 800,
   },
+  // FIX 1: Neutral token map — these will be resolved against neutralScale, not scale
   Neutrals: {
     "neutral-subtle": 50,
     "neutral-muted": 200,
@@ -103,10 +107,56 @@ const roleTokenMap = {
   },
 };
 
-const statusHueMap = { success: 145, warning: 85, error: 25, info: 250 };
+// Roles that resolve from the neutral scale rather than the brand scale
+const NEUTRAL_ROLES = new Set([
+  "neutral-subtle",
+  "neutral-muted",
+  "neutral-default",
+  "neutral-strong",
+  "neutral-surface",
+]);
 
-// Maps each foreground role → the background role(s) it sits on.
-// Used by contrast enforcement to know which pairs to check.
+// Semantic roles resolve from independent per-family scales (success/warning/error/info)
+const SEMANTIC_ROLE_PREFIXES = ["success", "warning", "error", "info"];
+function getSemanticKey(role) {
+  return (
+    SEMANTIC_ROLE_PREFIXES.find(
+      (p) => role === p || role.startsWith(p + "-"),
+    ) || null
+  );
+}
+
+// Route a role to its correct scale object for a given mode.
+// Semantic -> semanticScales[key]; Neutral -> neutralScale; else -> brand scale.
+function getScaleForRole(role, colorData, mode) {
+  const semanticKey = getSemanticKey(role);
+  if (semanticKey) {
+    return mode === "light"
+      ? colorData.semanticScales[semanticKey]
+      : colorData.darkSemanticScales[semanticKey];
+  }
+  if (NEUTRAL_ROLES.has(role)) {
+    return mode === "light"
+      ? colorData.neutralScale
+      : colorData.darkNeutralScale;
+  }
+  return mode === "light" ? colorData.scale : colorData.darkScale;
+}
+
+// Alpha token source roles — these get semi-transparent variants
+// (brand fills, overlays, hover tints, focus rings, shadows)
+const ALPHA_ROLES = [
+  "background",
+  "surface",
+  "interactive-default",
+  "fill",
+  "accent",
+  "border-focus",
+  "text",
+  "neutral-surface",
+];
+const ALPHA_LEVELS = [5, 10, 15, 20, 30, 40, 50, 60];
+
 const CONTRAST_RELATIONSHIPS = {
   text: ["background", "surface"],
   "text-subtle": ["background", "surface"],
@@ -134,15 +184,83 @@ const CONTRAST_RELATIONSHIPS = {
   "neutral-strong": ["neutral-surface", "background"],
 };
 
-// WCAG minimum ratios per mode
 const WCAG_RATIOS = { free: 0, AA: 4.5, AAA: 7.0 };
 
-/**
- * Find the nearest token step (fewest steps from currentToken, either
- * direction) that achieves >= minRatio contrast against bgColor.
- * Returns the new token number, or null if current already passes
- * or no step in the scale can pass.
- */
+// ── APCA (Advanced Perceptual Contrast Algorithm) ─────────────────────────────
+// Reference: https://github.com/Myndex/SAPC-APCA (open source, WCAG 3.0 basis)
+// Returns Lc value: positive = light bg, negative = dark bg. We use |Lc|.
+// Lc 45 = minimum readable, Lc 60 ≈ WCAG AA equivalent, Lc 75 ≈ WCAG AAA.
+const APCA_THRESHOLDS = { free: 0, AA: 60, AAA: 75 };
+
+function sRGBtoLinear(v) {
+  const s = Math.max(0, Math.min(1, v));
+  return s <= 0.04045 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+}
+
+function apcaLuminance(rgb) {
+  // Perceptual luminance with APCA coefficients (slightly different from WCAG)
+  return (
+    0.2126729 * Math.pow(sRGBtoLinear(rgb.r), 2.2) +
+    0.7151522 * Math.pow(sRGBtoLinear(rgb.g), 2.2) +
+    0.072175 * Math.pow(sRGBtoLinear(rgb.b), 2.2)
+  );
+}
+
+function apcaContrast(fg, bg) {
+  // Convert oklch -> rgb values
+  const fgRgb = oklchToRgbValues(fg);
+  const bgRgb = oklchToRgbValues(bg);
+  const Ytxt = apcaLuminance(fgRgb);
+  const Ybg = apcaLuminance(bgRgb);
+  // APCA-W3 power-curve constants
+  const normBg = 0.56,
+    normTxt = 0.57; // light bg
+  const revBg = 0.65,
+    revTxt = 0.62; // dark bg
+  const blkTxt = 0.0,
+    blkClmp = 0.022,
+    deltaYmin = 0.0005;
+  const scaleBoW = 1.14,
+    scaleWoB = 1.14;
+  const loClip = 0.1,
+    offset = 0.027;
+
+  const Sapc =
+    Ybg > Ytxt
+      ? (Math.pow(Ybg, normBg) - Math.pow(Math.max(Ytxt, blkClmp), normTxt)) *
+        scaleBoW
+      : (Math.pow(Ybg, revBg) - Math.pow(Math.max(Ytxt, blkClmp), revTxt)) *
+        scaleWoB;
+
+  const Lc =
+    Math.abs(Sapc) < loClip
+      ? 0
+      : (Sapc > 0 ? Sapc - offset : Sapc + offset) * 100;
+  return Math.abs(Math.round(Lc * 10) / 10);
+}
+
+// Unified: returns the contrast value for the active algorithm
+function getContrastValue(fg, bg, algo) {
+  if (!fg || !bg) return 0;
+  if (algo === "apca") return apcaContrast(fg, bg);
+  return getContrastRatio(fg, bg);
+}
+
+// Unified: does value meet the threshold for the given mode + algorithm?
+function meetsThreshold(value, mode, algo) {
+  if (mode === "free") return true;
+  const thresholds = algo === "apca" ? APCA_THRESHOLDS : WCAG_RATIOS;
+  return value >= (thresholds[mode] || 0);
+}
+
+// Format a contrast value for display (e.g. "4.5" or "Lc 62")
+function formatContrast(value, algo) {
+  if (algo === "apca") return "Lc " + value.toFixed(0);
+  return value.toFixed(1);
+}
+
+// FIX 5: Search by perceptual proximity to currentToken (nearest steps first,
+// alternating both directions) rather than always biasing toward higher tokens.
 function findCompliantToken(
   fgRole,
   currentToken,
@@ -150,32 +268,35 @@ function findCompliantToken(
   bgColor,
   minRatio,
   resolveColor,
+  algo = "wcag",
 ) {
   const steps = Object.keys(scale)
     .map(Number)
     .sort((a, b) => a - b);
   const currentIdx = steps.indexOf(Number(currentToken));
 
-  // Already passes — no change needed
   const currentColor = resolveColor(fgRole, scale[currentToken]);
-  if (getContrastRatio(currentColor, bgColor) >= minRatio) return null;
+  if (getContrastValue(currentColor, bgColor, algo) >= minRatio) return null;
 
-  // Expand outward from current index, checking both directions each round
+  const bgIsLight = bgColor.l > 0.5;
+  const preferredDir = bgIsLight ? 1 : -1;
+  const order = [];
   let lo = currentIdx - 1;
   let hi = currentIdx + 1;
   while (lo >= 0 || hi < steps.length) {
-    if (hi < steps.length) {
-      const c = resolveColor(fgRole, scale[steps[hi]]);
-      if (getContrastRatio(c, bgColor) >= minRatio) return steps[hi];
-    }
-    if (lo >= 0) {
-      const c = resolveColor(fgRole, scale[steps[lo]]);
-      if (getContrastRatio(c, bgColor) >= minRatio) return steps[lo];
-    }
+    const first = preferredDir > 0 ? hi : lo;
+    const second = preferredDir > 0 ? lo : hi;
+    if (first >= 0 && first < steps.length) order.push(steps[first]);
+    if (second >= 0 && second < steps.length && second !== first)
+      order.push(steps[second]);
     lo--;
     hi++;
   }
-  return null; // No compliant token exists in this scale
+  for (const step of order) {
+    const c = resolveColor(fgRole, scale[step]);
+    if (getContrastValue(c, bgColor, algo) >= minRatio) return step;
+  }
+  return null;
 }
 
 function buildTokenToRolesMap(customMappings) {
@@ -201,31 +322,19 @@ function oklchToCss(color) {
   return `oklch(${(l * 100).toFixed(1)}% ${c.toFixed(3)} ${h.toFixed(1)} / ${a})`;
 }
 
+// FIX 4: Generate a CSS value with rgb() fallback for broader tool compatibility
+export function oklchWithFallback(color) {
+  const oklch = oklchToCss(color);
+  const { r, g, b } = oklchToRgbValues(color);
+  const toInt = (v) => Math.round(Math.max(0, Math.min(1, v)) * 255);
+  const rgb = `rgb(${toInt(r)}, ${toInt(g)}, ${toInt(b)})`;
+  return { oklch, rgb };
+}
+
 function oklchToHex(color) {
-  const { l, c, h } = color;
-  const hRad = (h * Math.PI) / 180;
-  const a_ = c * Math.cos(hRad);
-  const b_ = c * Math.sin(hRad);
-  const l_ = l + 0.3963377774 * a_ + 0.2158037573 * b_;
-  const m_ = l - 0.1055613458 * a_ - 0.0638541728 * b_;
-  const s_ = l - 0.0894841775 * a_ - 1.291485548 * b_;
-  const l3 = l_ * l_ * l_;
-  const m3 = m_ * m_ * m_;
-  const s3 = s_ * s_ * s_;
-  const rLin = +4.0767416621 * l3 - 3.3077115913 * m3 + 0.2309699292 * s3;
-  const gLin = -1.2684380046 * l3 + 2.6097574011 * m3 - 0.3413193965 * s3;
-  const bLin = -0.0041960863 * l3 - 0.7034186147 * m3 + 1.707614701 * s3;
-  const toSrgb = (val) => {
-    val = Math.max(0, Math.min(1, val));
-    return val <= 0.0031308
-      ? 12.92 * val
-      : 1.055 * Math.pow(val, 1 / 2.4) - 0.055;
-  };
-  const r = toSrgb(rLin);
-  const g = toSrgb(gLin);
-  const b = toSrgb(bLin);
+  const { r, g, b } = oklchToRgbValues(color);
   const toHex = (x) =>
-    Math.round(x * 255)
+    Math.round(Math.max(0, Math.min(1, x)) * 255)
       .toString(16)
       .padStart(2, "0");
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`.toUpperCase();
@@ -233,7 +342,8 @@ function oklchToHex(color) {
 
 function UsageRole({
   name,
-  scale,
+  scaleForRole,
+  contrastAlgorithm = "wcag",
   currentToken,
   onTokenChange,
   oldToken,
@@ -243,67 +353,78 @@ function UsageRole({
   globalContrastMode,
   perRoleContrastMode,
   onContrastModeChange,
-  pairedBgColor,
+  pairedBgColors,
+  shiftAnnotation,
+  compact = false,
 }) {
   const [copied, setCopied] = useState(false);
   const [isSelecting, setIsSelecting] = useState(false);
 
+  // Color comes directly from scaleForRole (already the right scale).
+  // No runtime hue-shifting or chroma hacks needed anymore.
   const color = useMemo(() => {
-    const baseColor = scale[currentToken];
-    const statusKey = Object.keys(statusHueMap).find((key) =>
-      name.startsWith(key),
-    );
-    if (statusKey)
-      return {
-        ...baseColor,
-        h: statusHueMap[statusKey],
-        c: Math.max(baseColor.c, 0.12),
-      };
-    if (name.startsWith("neutral"))
-      return { ...baseColor, c: Math.min(baseColor.c * 0.06, 0.025) };
-    return baseColor;
-  }, [name, scale, currentToken]);
+    return scaleForRole[currentToken] || scaleForRole[500];
+  }, [scaleForRole, currentToken]);
 
-  // Contrast against paired background (contextual) if available,
-  // otherwise fall back to best of white/black
-  const { bestContrast, contrastAgainstBg } = useMemo(() => {
+  // Worst-case contrast using active algorithm (WCAG or APCA)
+  const { bestContrast, worstCaseBgContrast, worstCaseBgRole } = useMemo(() => {
     const white = { l: 1, c: 0, h: 0 };
     const black = { l: 0, c: 0, h: 0 };
-    const ratioWhite = getContrastRatio(color, white);
-    const ratioBlack = getContrastRatio(color, black);
-    const best = Math.max(ratioWhite, ratioBlack).toFixed(1);
-    const againstBg = pairedBgColor
-      ? getContrastRatio(color, pairedBgColor).toFixed(1)
-      : null;
-    return { bestContrast: best, contrastAgainstBg: againstBg };
-  }, [color, pairedBgColor]);
+    const best = Math.max(
+      getContrastValue(color, white, contrastAlgorithm),
+      getContrastValue(color, black, contrastAlgorithm),
+    );
 
-  // Effective mode for this chip
+    let worst = null;
+    let worstRole = null;
+    if (pairedBgColors && pairedBgColors.length > 0) {
+      pairedBgColors.forEach(({ role, color: bgColor }) => {
+        const val = getContrastValue(color, bgColor, contrastAlgorithm);
+        if (worst === null || val < worst) {
+          worst = val;
+          worstRole = role;
+        }
+      });
+    }
+    return {
+      bestContrast: best,
+      worstCaseBgContrast: worst,
+      worstCaseBgRole: worstRole,
+    };
+  }, [color, pairedBgColors, contrastAlgorithm]);
+
   const effectiveMode = perRoleContrastMode || globalContrastMode || "free";
-  const minRatio = WCAG_RATIOS[effectiveMode] || 0;
+  const thresholds =
+    contrastAlgorithm === "apca" ? APCA_THRESHOLDS : WCAG_RATIOS;
+  const minRatio = thresholds[effectiveMode] || 0;
 
-  // Determine pass/fail against paired bg (contextual) or white/black fallback
-  const displayRatio =
-    contrastAgainstBg !== null ? contrastAgainstBg : bestContrast;
-  const ratioNum = parseFloat(displayRatio);
-  const passesAAA = ratioNum >= 7.0;
-  const passesAA = ratioNum >= 4.5;
-  const passesRequired = minRatio === 0 || ratioNum >= minRatio;
-  // Enforcement warning: in AA/AAA mode and failing
+  // Use worst-case value for pass/fail determination
+  const displayValue =
+    worstCaseBgContrast !== null ? worstCaseBgContrast : bestContrast;
+  const displayRatio = formatContrast(displayValue, contrastAlgorithm);
+  const passesAAA = displayValue >= thresholds.AAA;
+  const passesAA = displayValue >= thresholds.AA;
+  const passesRequired = minRatio === 0 || displayValue >= minRatio;
   const isEnforcementWarning = minRatio > 0 && !passesRequired;
 
   const hasChanged = oldToken && oldToken !== currentToken;
-  const alternatives = Object.keys(scale)
+  const alternatives = Object.keys(scaleForRole)
     .map(Number)
     .sort((a, b) => a - b);
 
   const copy = (type, e) => {
     e.stopPropagation();
-    const val = type === "hex" ? oklchToHex(color) : oklchToCss(color);
+    const { oklch, rgb } = oklchWithFallback(color);
+    const val =
+      type === "hex" ? oklchToHex(color) : type === "rgb" ? rgb : oklch;
     navigator.clipboard.writeText(val);
-    setCopied(true);
+    setCopied(type);
     setTimeout(() => setCopied(false), 800);
   };
+
+  const contrastTitle = worstCaseBgRole
+    ? `${displayRatio} against ${worstCaseBgRole} (worst case)`
+    : `${displayRatio} best contrast`;
 
   return (
     <div
@@ -343,9 +464,26 @@ function UsageRole({
           <div className="text-[9px] text-gray-400 font-mono mt-0.5">
             {oklchToHex(color)}
           </div>
+          {/* FIX 3: Shift annotation — shown when a token was auto-adjusted */}
+          {shiftAnnotation && (
+            <div className="text-[7.5px] font-bold text-orange-500 mt-0.5 leading-tight">
+              ↕ shifted {shiftAnnotation.from}→{shiftAnnotation.to} for{" "}
+              {shiftAnnotation.mode}
+            </div>
+          )}
+          {NEUTRAL_ROLES.has(name) && (
+            <div className="text-[6.5px] font-bold text-purple-400 mt-0.5 uppercase tracking-wider leading-none">
+              neutral scale
+            </div>
+          )}
+          {getSemanticKey(name) && (
+            <div className="text-[6.5px] font-bold text-emerald-500 mt-0.5 uppercase tracking-wider leading-none">
+              {getSemanticKey(name)} scale
+            </div>
+          )}
         </div>
 
-        {/* Contrast badge — shows contextual ratio if paired bg exists */}
+        {/* Contrast badge — worst-case ratio with tooltip */}
         <div
           className={`flex flex-col items-center shrink-0 px-1.5 py-1 rounded-md ${
             isEnforcementWarning
@@ -356,11 +494,7 @@ function UsageRole({
                   ? "bg-yellow-500/10"
                   : "bg-red-500/10"
           }`}
-          title={
-            contrastAgainstBg
-              ? `${displayRatio}:1 against paired background`
-              : `${displayRatio}:1 best contrast`
-          }
+          title={contrastTitle}
         >
           <span
             className={`text-[10px] font-black leading-tight ${
@@ -394,28 +528,33 @@ function UsageRole({
                   ? "AA"
                   : "✗"}
           </span>
+          {/* Show which bg role is worst case */}
+          {worstCaseBgRole && (
+            <span className="text-[5.5px] text-gray-400 leading-tight font-mono max-w-[36px] truncate text-center">
+              vs {worstCaseBgRole.replace("background", "bg")}
+            </span>
+          )}
+          {contrastAlgorithm === "apca" && (
+            <span className="text-[5px] font-black text-violet-400 leading-none uppercase tracking-wider">
+              apca
+            </span>
+          )}
         </div>
 
-        {/* Per-chip contrast mode override — shown as a small pill on hover */}
+        {/* Per-chip contrast mode override */}
         {CONTRAST_RELATIONSHIPS[name] && (
           <div
             className="opacity-0 group-hover:opacity-100 absolute left-1.5 -top-2.5 flex items-center gap-0.5 z-20"
             onClick={(e) => e.stopPropagation()}
           >
             {["free", "AA", "AAA"].map((m) => {
-              const isActive =
-                perRoleContrastMode === m ||
-                (!perRoleContrastMode &&
-                  m === "free" &&
-                  globalContrastMode === "free") ||
-                (!perRoleContrastMode && m === globalContrastMode);
               const isOverride = perRoleContrastMode === m;
+              const isApca = contrastAlgorithm === "apca";
               return (
                 <button
                   key={m}
                   onClick={(e) => {
                     e.stopPropagation();
-                    // Clicking the already-active per-role override clears it (revert to global)
                     onContrastModeChange(
                       name,
                       perRoleContrastMode === m ? null : m,
@@ -424,9 +563,13 @@ function UsageRole({
                   className={`px-1 py-0.5 rounded text-[6.5px] font-black transition-all border ${
                     isOverride
                       ? m === "AA"
-                        ? "bg-yellow-500 text-white border-yellow-500"
+                        ? isApca
+                          ? "bg-violet-500 text-white border-violet-500"
+                          : "bg-yellow-500 text-white border-yellow-500"
                         : m === "AAA"
-                          ? "bg-green-600 text-white border-green-600"
+                          ? isApca
+                            ? "bg-violet-700 text-white border-violet-700"
+                            : "bg-green-600 text-white border-green-600"
                           : "bg-gray-600 text-white border-gray-600"
                       : "bg-background text-foreground/40 border-(--navBorder) hover:text-foreground/70"
                   }`}
@@ -443,7 +586,7 @@ function UsageRole({
           </div>
         )}
 
-        {/* Copy buttons */}
+        {/* Copy buttons — FIX 4: added RGB option */}
         <div className="opacity-0 group-hover:opacity-100 absolute right-1.5 top-1/2 -translate-y-1/2 bg-background border border-(--navBorder) flex items-center gap-0.5 px-1 py-0.5 rounded-md shadow-sm z-10">
           <button
             onClick={(e) => copy("hex", e)}
@@ -457,10 +600,16 @@ function UsageRole({
           >
             LCH
           </button>
+          <button
+            onClick={(e) => copy("rgb", e)}
+            className="px-1.5 py-0.5 hover:bg-(--brand) rounded text-[8px] font-bold"
+          >
+            RGB
+          </button>
         </div>
         {copied && (
           <div className="absolute inset-0 bg-green-500/15 flex items-center justify-center rounded-lg text-[9px] font-bold text-green-700 pointer-events-none">
-            ✓ Copied
+            ✓ Copied {copied.toUpperCase()}
           </div>
         )}
       </div>
@@ -472,29 +621,33 @@ function UsageRole({
           </div>
           <div className="flex gap-1.5">
             {alternatives.map((t) => {
-              const basePreview = scale[t];
-              const statusKey = Object.keys(statusHueMap).find((key) =>
-                name.startsWith(key),
+              const previewColor = scaleForRole[t];
+
+              const previewVal =
+                pairedBgColors && pairedBgColors.length > 0
+                  ? Math.min(
+                      ...pairedBgColors.map(({ color: bgC }) =>
+                        getContrastValue(previewColor, bgC, contrastAlgorithm),
+                      ),
+                    )
+                  : Math.max(
+                      getContrastValue(
+                        previewColor,
+                        { l: 1, c: 0, h: 0 },
+                        contrastAlgorithm,
+                      ),
+                      getContrastValue(
+                        previewColor,
+                        { l: 0, c: 0, h: 0 },
+                        contrastAlgorithm,
+                      ),
+                    );
+              const previewContrast = formatContrast(
+                previewVal,
+                contrastAlgorithm,
               );
-              const previewColor = statusKey
-                ? {
-                    ...basePreview,
-                    h: statusHueMap[statusKey],
-                    c: Math.max(basePreview.c, 0.12),
-                  }
-                : name.startsWith("neutral")
-                  ? { ...basePreview, c: Math.min(basePreview.c * 0.06, 0.025) }
-                  : basePreview;
-              // Show contrast against paired bg if available, else white/black
-              const previewContrast = pairedBgColor
-                ? getContrastRatio(previewColor, pairedBgColor).toFixed(1)
-                : Math.max(
-                    getContrastRatio(previewColor, { l: 1, c: 0, h: 0 }),
-                    getContrastRatio(previewColor, { l: 0, c: 0, h: 0 }),
-                  ).toFixed(1);
               const isCurrent = t === Number(currentToken);
-              const previewPasses =
-                minRatio === 0 || parseFloat(previewContrast) >= minRatio;
+              const previewPasses = minRatio === 0 || previewVal >= minRatio;
               return (
                 <button
                   key={t}
@@ -554,7 +707,6 @@ function ComponentPreview({
     }
     return {};
   };
-
   const rc = (role) => {
     const roles = Array.isArray(role) ? role : [role];
     return {
@@ -565,7 +717,6 @@ function ComponentPreview({
       title: "Click to select: " + roles.join(", "),
     };
   };
-
   const cl = (role) => {
     if (!clickedRoles || clickedRoles.length === 0) return {};
     const roles = Array.isArray(role) ? role : [role];
@@ -578,7 +729,6 @@ function ComponentPreview({
     }
     return {};
   };
-
   return (
     <Preview
       getActiveColor={getActiveColor}
@@ -631,7 +781,14 @@ function ExportDropdown({
         </svg>
       </button>
       {open && (
-        <div className="absolute right-0 top-full mt-1 w-40 bg-white dark:bg-gray-800 border border-(--navBorder) rounded-lg shadow-xl z-50 overflow-hidden">
+        <div
+          className="absolute right-0 top-full mt-1 w-52 rounded-lg shadow-xl z-50 overflow-hidden pb-1.5"
+          style={{
+            background: "#ffffff",
+            border: "1px solid #e5e7eb",
+            color: "#111827",
+          }}
+        >
           {hasChanges && (
             <>
               <button
@@ -639,44 +796,217 @@ function ExportDropdown({
                   onExportDecisions();
                   setOpen(false);
                 }}
-                className="w-full px-3 py-2 text-left text-[10px] font-semibold hover:bg-purple-50 dark:hover:bg-purple-900/20 text-purple-700 dark:text-purple-400 flex items-center gap-2"
+                className="w-full px-3 py-2 text-left text-[10px] font-semibold flex items-center gap-2"
+                style={{ color: "#7c3aed", background: "transparent" }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.background = "#f5f3ff")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.background = "transparent")
+                }
               >
-                <span className="w-2 h-2 rounded-full bg-purple-500 shrink-0" />
+                <span
+                  className="w-2 h-2 rounded-full shrink-0"
+                  style={{ background: "#7c3aed" }}
+                />
                 {exporting === "decisions" ? "✓ Copied!" : "Decisions (MD)"}
               </button>
-              <div className="h-px bg-gray-100 dark:bg-gray-700" />
+              <div style={{ height: 1, background: "#e5e7eb" }} />
             </>
           )}
+          {/* Design tools section */}
+          <div className="px-3 pt-2 pb-0.5">
+            <span
+              className="text-[7.5px] font-black uppercase tracking-widest"
+              style={{ color: "#9ca3af" }}
+            >
+              Design Tools
+            </span>
+          </div>
           {[
-            {
-              key: "json",
-              label: "JSON",
-              color: "text-gray-700 dark:text-gray-300",
-            },
-            {
-              key: "css",
-              label: "CSS Variables",
-              color: "text-blue-700 dark:text-blue-400",
-            },
-            {
-              key: "tailwind",
-              label: "Tailwind Config",
-              color: "text-teal-700 dark:text-teal-400",
-            },
-          ].map(({ key, label, color }) => (
+            { key: "figma-tokens", label: "Figma / Tokens Studio" },
+            { key: "dtcg", label: "W3C DTCG (.tokens.json)" },
+            { key: "style-dictionary", label: "Style Dictionary" },
+          ].map(({ key, label }) => (
             <button
               key={key}
               onClick={() => {
                 onExport(key);
                 setOpen(false);
               }}
-              className={`w-full px-3 py-2 text-left text-[10px] font-semibold hover:bg-gray-50 dark:hover:bg-gray-700/50 ${color}`}
+              className="w-full px-3 py-1.5 text-left text-[10px] font-semibold"
+              style={{ color: "#111827", background: "transparent" }}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.background = "#f3f4f6")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.background = "transparent")
+              }
+            >
+              {exporting === key ? "✓ Copied!" : label}
+            </button>
+          ))}
+          <div style={{ height: 1, background: "#e5e7eb", margin: "4px 0" }} />
+          {/* Code section */}
+          <div className="px-3 pt-1 pb-0.5">
+            <span
+              className="text-[7.5px] font-black uppercase tracking-widest"
+              style={{ color: "#9ca3af" }}
+            >
+              Code
+            </span>
+          </div>
+          {[
+            { key: "css", label: "CSS Variables" },
+            { key: "css-dark", label: "CSS + Dark Mode" },
+            { key: "tailwind", label: "Tailwind Config" },
+            { key: "json", label: "JSON (hex)" },
+            { key: "json-rgb", label: "JSON (rgb)" },
+          ].map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => {
+                onExport(key);
+                setOpen(false);
+              }}
+              className="w-full px-3 py-1.5 text-left text-[10px] font-semibold"
+              style={{ color: "#111827", background: "transparent" }}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.background = "#f3f4f6")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.background = "transparent")
+              }
             >
               {exporting === key ? "✓ Copied!" : label}
             </button>
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+// Lightweight read-only roles panel for split view
+function SplitRolesPanel({
+  modeOverride,
+  currentRoleMap,
+  allRoleDefaults,
+  customMappingsPerMode,
+  shiftAnnotations,
+  colorData,
+  getActiveColorForMode,
+  getTextOnColor,
+  contrastAlgorithm,
+  contrastMode,
+  contrastModePerRole,
+  highlightedRolesFromScale,
+  hoveredRole,
+  setHoveredRole,
+  clickedRoles,
+  setClickedRoles,
+  getScaleForRole,
+  getContrastValue,
+  meetsThreshold,
+  formatContrast,
+}) {
+  return (
+    <div className="grid grid-cols-1 gap-y-5">
+      {Object.entries(currentRoleMap).map(([category, roles]) => (
+        <div key={category}>
+          <h4 className="text-[9px] font-black uppercase tracking-widest text-foreground/40 mb-2 pb-1 border-b border-(--navBorder)">
+            {category}
+          </h4>
+          <div className="space-y-1">
+            {roles.map((roleName) => {
+              const mappings = customMappingsPerMode[modeOverride] || {};
+              const def = allRoleDefaults[roleName];
+              if (!def) return null;
+              const token = mappings[roleName] || def;
+              const color = getActiveColorForMode(roleName, modeOverride);
+              const textColor = getTextOnColor(color);
+              const annotation = shiftAnnotations[roleName];
+              const isHighlighted =
+                highlightedRolesFromScale.includes(roleName) ||
+                clickedRoles.includes(roleName);
+
+              // Contrast check — uses module-level CONTRAST_RELATIONSHIPS
+              const pairedBgRoles = CONTRAST_RELATIONSHIPS[roleName] || [];
+              let worstContrast = null;
+              let passes = true;
+              pairedBgRoles.forEach((bgRole) => {
+                const bgColor = getActiveColorForMode(bgRole, modeOverride);
+                if (!bgColor) return;
+                const ratio = getContrastValue(
+                  color,
+                  bgColor,
+                  contrastAlgorithm,
+                );
+                if (worstContrast === null || ratio < worstContrast)
+                  worstContrast = ratio;
+              });
+              if (worstContrast !== null) {
+                const effectiveMode =
+                  contrastModePerRole[roleName] || contrastMode;
+                passes = meetsThreshold(
+                  worstContrast,
+                  effectiveMode,
+                  contrastAlgorithm,
+                );
+              }
+
+              return (
+                <div
+                  key={roleName}
+                  onMouseEnter={() => setHoveredRole(roleName)}
+                  onMouseLeave={() => setHoveredRole(null)}
+                  onClick={() =>
+                    setClickedRoles((prev) =>
+                      prev.includes(roleName)
+                        ? prev.filter((r) => r !== roleName)
+                        : [...prev, roleName],
+                    )
+                  }
+                  className={`flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer transition-all ${
+                    isHighlighted
+                      ? "ring-2 ring-blue-400 bg-blue-50/30"
+                      : "hover:bg-foreground/5"
+                  }`}
+                >
+                  <div
+                    className="w-7 h-7 rounded-md shrink-0 shadow-sm border border-black/10"
+                    style={{ backgroundColor: oklchToCss(color) }}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[9px] font-semibold text-foreground/80 truncate">
+                      {roleName}
+                    </div>
+                    <div className="text-[8px] text-foreground/40 font-mono">
+                      {token}
+                    </div>
+                  </div>
+                  {worstContrast !== null && (
+                    <span
+                      className={`text-[8px] font-mono px-1 py-0.5 rounded ${
+                        passes
+                          ? "text-green-600 bg-green-50"
+                          : "text-red-500 bg-red-50"
+                      }`}
+                    >
+                      {formatContrast(worstContrast, contrastAlgorithm)}
+                    </span>
+                  )}
+                  {annotation && (
+                    <span className="text-[7px] text-amber-500 font-semibold">
+                      ↕
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -699,16 +1029,19 @@ function ColorDetail({
     light: {},
     dark: {},
   });
+  // FIX 3: Track which roles were auto-shifted and what the annotation is
+  const [shiftAnnotations, setShiftAnnotations] = useState({});
   const [exporting, setExporting] = useState(null);
   const roleBundle = "comprehensive";
   const [hoveredRole, setHoveredRole] = useState(null);
   const [highlightedToken, setHighlightedToken] = useState(null);
   const [clickedRoles, setClickedRoles] = useState([]);
-  // NEW: preview panel toggle
   const [showPreview, setShowPreview] = useState(false);
-  // NEW: global contrast enforcement mode
+  const [showScales, setShowScales] = useState(false);
+  const [viewMode, setViewMode] = useState("single"); // "single" | "split"
+  const previewBeforeSplit = useRef(false);
+  const [contrastAlgorithm, setContrastAlgorithm] = useState("wcag");
   const [contrastMode, setContrastMode] = useState("free");
-  // NEW: per-role contrast mode overrides (role → "free"|"AA"|"AAA"|null=inherit)
   const [contrastModePerRole, setContrastModePerRole] = useState({});
 
   const roleChipRefs = useRef({});
@@ -727,6 +1060,9 @@ function ColorDetail({
 
   const colorData = expanded[selectedIdx];
   const scale = colorMode === "light" ? colorData.scale : colorData.darkScale;
+  // FIX 1: Use neutral scale
+  const neutralScale =
+    colorMode === "light" ? colorData.neutralScale : colorData.darkNeutralScale;
   const currentRoleMap = ROLE_BUNDLES[roleBundle].categories;
 
   const activeCustomMappings = customMappingsPerMode[colorMode];
@@ -737,108 +1073,145 @@ function ColorDetail({
     [activeCustomMappings],
   );
 
-  // resolveColor: applies statusHue / neutral overrides to a raw scale color
-  // (mirrors getActiveColor but works on any arbitrary scale color + role name)
+  // resolveRoleColor: semantic scales already have correct hues, neutrals
+  // already have correct chroma. This is now a simple null-guard identity.
   const resolveRoleColor = (role, baseColor) => {
-    const statusKey = Object.keys(statusHueMap).find((k) => role.startsWith(k));
-    if (statusKey)
-      return {
-        ...baseColor,
-        h: statusHueMap[statusKey],
-        c: Math.max(baseColor.c, 0.12),
-      };
-    if (role.startsWith("neutral"))
-      return { ...baseColor, c: Math.min(baseColor.c * 0.06, 0.025) };
+    if (!baseColor) return null;
     return baseColor;
   };
 
-  // ── Pure sweep: given a mappings snapshot, enforce contrast for ALL pairs ──
-  // Returns a new mappings object with any failing fg roles shifted to pass.
-  // changedByUser: optional role name the user just explicitly changed — skip
-  // auto-adjusting that specific fg role so we don't override their intent.
-  const enforceAllContrast = useCallback(
-    (mappings, currentScale, globalMode, perRoleMode, changedByUser = null) => {
-      const allRoleDefaults = Object.values(roleTokenMap).reduce(
-        (acc, r) => ({ ...acc, ...r }),
-        {},
-      );
+  const allRoleDefaults = useMemo(
+    () =>
+      Object.values(roleTokenMap).reduce((acc, r) => ({ ...acc, ...r }), {}),
+    [],
+  );
 
+  // Get worst-case bg color across all paired backgrounds for a role.
+  const getWorstCaseBgColor = useCallback(
+    (fgRole, mappings) => {
+      const bgRoles = CONTRAST_RELATIONSHIPS[fgRole];
+      if (!bgRoles) return null;
+      const mode = colorMode;
+      let worst = null;
+      let worstRatio = Infinity;
+      const fgToken = mappings[fgRole] || allRoleDefaults[fgRole];
+      const fgScaleRef = getScaleForRole(fgRole, colorData, mode);
+      const fgBase = fgScaleRef && fgScaleRef[fgToken];
+      if (!fgBase) return null;
+      const fgColor = resolveRoleColor(fgRole, fgBase);
+      bgRoles.forEach((bgRole) => {
+        const bgToken = mappings[bgRole] || allRoleDefaults[bgRole];
+        const bgScaleRef = getScaleForRole(bgRole, colorData, mode);
+        const bgBase = bgScaleRef && bgScaleRef[bgToken];
+        if (!bgBase) return;
+        const bgColor = resolveRoleColor(bgRole, bgBase);
+        if (!bgColor) return;
+        const ratio = getContrastRatio(fgColor, bgColor);
+        if (ratio < worstRatio) {
+          worstRatio = ratio;
+          worst = bgColor;
+        }
+      });
+      return worst;
+    },
+    [colorMode, colorData, allRoleDefaults],
+  );
+
+  const enforceAllContrast = useCallback(
+    (mappings, modeOverride, globalMode, perRoleMode, changedByUser = null) => {
       const getColorForRole = (role, m) => {
         const token = m[role] || allRoleDefaults[role];
-        if (!currentScale[token]) return null;
-        return resolveRoleColor(role, currentScale[token]);
+        const scaleRef = getScaleForRole(role, colorData, modeOverride);
+        if (!scaleRef || !scaleRef[token]) return null;
+        return resolveRoleColor(role, scaleRef[token]);
       };
 
       const enforced = { ...mappings };
+      const newAnnotations = {};
+      const thresholds =
+        contrastAlgorithm === "apca" ? APCA_THRESHOLDS : WCAG_RATIOS;
 
       Object.entries(CONTRAST_RELATIONSHIPS).forEach(([fgRole, bgRoles]) => {
-        // Don't auto-adjust a role the user just explicitly chose
         if (fgRole === changedByUser) return;
-
         const roleMode = perRoleMode[fgRole] || globalMode;
-        const minRatio = WCAG_RATIOS[roleMode] || 0;
+        const minRatio = thresholds[roleMode] || 0;
         if (minRatio === 0) return;
 
-        // Use the best-contrast bg available (first one that resolves)
-        const bgColor = bgRoles
-          .map((bgRole) => getColorForRole(bgRole, enforced))
-          .find(Boolean);
-        if (!bgColor) return;
+        let worstBgColor = null;
+        let worstVal = Infinity;
+        bgRoles.forEach((bgRole) => {
+          const c = getColorForRole(bgRole, enforced);
+          if (!c) return;
+          const fgToken = enforced[fgRole] || allRoleDefaults[fgRole];
+          const fgScaleRef = getScaleForRole(fgRole, colorData, modeOverride);
+          const fgBase = fgScaleRef && fgScaleRef[fgToken];
+          if (!fgBase) return;
+          const fgColor = resolveRoleColor(fgRole, fgBase);
+          const val = getContrastValue(fgColor, c, contrastAlgorithm);
+          if (val < worstVal) {
+            worstVal = val;
+            worstBgColor = c;
+          }
+        });
+        if (!worstBgColor) return;
 
         const currentFgToken = enforced[fgRole] || allRoleDefaults[fgRole];
+        const fgScaleRef = getScaleForRole(fgRole, colorData, modeOverride);
+        if (!fgScaleRef) return;
+
         const newFgToken = findCompliantToken(
           fgRole,
           currentFgToken,
-          currentScale,
-          bgColor,
+          fgScaleRef,
+          worstBgColor,
           minRatio,
           resolveRoleColor,
+          contrastAlgorithm,
         );
 
         if (newFgToken !== null) {
+          newAnnotations[fgRole] = {
+            from: currentFgToken,
+            to: newFgToken,
+            mode: roleMode,
+          };
           enforced[fgRole] = newFgToken;
         }
       });
 
-      return enforced;
+      return { enforced, annotations: newAnnotations };
     },
-    [],
+    [allRoleDefaults, colorData, contrastAlgorithm],
   );
 
-  const handleTokenChange = (roleName, newToken) => {
-    const allRoleDefaults = Object.values(roleTokenMap).reduce(
-      (acc, r) => ({ ...acc, ...r }),
-      {},
-    );
+  const handleTokenChange = (roleName, newToken, explicitMode) => {
+    const targetMode = explicitMode || colorMode;
 
     setCustomMappingsPerMode((prev) => {
-      const modeMap = prev[colorMode];
-      const origMap = originalMappingsPerMode[colorMode];
+      const modeMap = prev[targetMode];
+      const origMap = originalMappingsPerMode[targetMode];
 
-      // Save original token before first override
       if (!origMap[roleName]) {
         setOriginalMappingsPerMode((p) => ({
           ...p,
-          [colorMode]: {
-            ...p[colorMode],
+          [targetMode]: {
+            ...p[targetMode],
             [roleName]: allRoleDefaults[roleName],
           },
         }));
       }
 
-      // Commit the user's change first
       const withChange = { ...modeMap, [roleName]: newToken };
 
-      // Then sweep all pairs — skip auto-adjusting the role the user just changed
-      const enforced = enforceAllContrast(
+      const { enforced, annotations } = enforceAllContrast(
         withChange,
-        scale,
+        targetMode,
         contrastMode,
         contrastModePerRole,
-        roleName, // don't override the user's explicit choice
+        roleName,
       );
 
-      // Save originals for any roles that got auto-adjusted
+      // Save originals for auto-adjusted roles
       Object.keys(enforced).forEach((role) => {
         if (
           role !== roleName &&
@@ -847,40 +1220,41 @@ function ColorDetail({
           if (!origMap[role]) {
             setOriginalMappingsPerMode((p) => ({
               ...p,
-              [colorMode]: { ...p[colorMode], [role]: allRoleDefaults[role] },
+              [targetMode]: { ...p[targetMode], [role]: allRoleDefaults[role] },
             }));
           }
         }
       });
 
-      return { ...prev, [colorMode]: enforced };
+      // FIX 3: Update annotations
+      setShiftAnnotations((prev) => {
+        const next = { ...prev, ...annotations };
+        delete next[roleName];
+        return next;
+      });
+
+      return { ...prev, [targetMode]: enforced };
     });
   };
 
-  // ── When contrastMode or contrastModePerRole changes, immediately sweep ──
-  // all pairs and fix any that now fail the new requirement.
   useEffect(() => {
-    if (contrastMode === "free") return; // free mode — nothing to enforce
-
-    const allRoleDefaults = Object.values(roleTokenMap).reduce(
-      (acc, r) => ({ ...acc, ...r }),
-      {},
-    );
+    if (contrastMode === "free") {
+      setShiftAnnotations({});
+      return;
+    }
 
     setCustomMappingsPerMode((prev) => {
       const modeMap = prev[colorMode];
-      const enforced = enforceAllContrast(
+      const { enforced, annotations } = enforceAllContrast(
         modeMap,
-        scale,
+        colorMode,
         contrastMode,
         contrastModePerRole,
-        null, // no user-changed role — sweep everything
+        null,
       );
 
-      // If nothing changed, bail out to avoid infinite loop
       if (JSON.stringify(enforced) === JSON.stringify(modeMap)) return prev;
 
-      // Save originals for any newly auto-adjusted roles
       setOriginalMappingsPerMode((p) => {
         const origMap = p[colorMode];
         const newOrigMap = { ...origMap };
@@ -895,33 +1269,42 @@ function ColorDetail({
         return { ...p, [colorMode]: newOrigMap };
       });
 
+      setShiftAnnotations(annotations);
       return { ...prev, [colorMode]: enforced };
     });
-  }, [contrastMode, contrastModePerRole, colorMode, scale]);
+  }, [
+    contrastMode,
+    contrastModePerRole,
+    colorMode,
+    colorData,
+    contrastAlgorithm,
+  ]);
 
-  const getActiveColor = (role) => {
-    const allRoles = Object.values(roleTokenMap).reduce(
-      (acc, roles) => ({ ...acc, ...roles }),
-      {},
-    );
-    const def = allRoles[role];
-    const token = activeCustomMappings[role] || def;
-    const baseColor = scale[token];
-    const statusKey = Object.keys(statusHueMap).find((k) => role.startsWith(k));
-    let resolved;
-    if (statusKey) {
-      resolved = {
-        ...baseColor,
-        h: statusHueMap[statusKey],
-        c: Math.max(baseColor.c, 0.12),
-      };
-    } else if (role.startsWith("neutral")) {
-      resolved = { ...baseColor, c: Math.min(baseColor.c * 0.06, 0.025) };
-    } else {
-      resolved = baseColor;
-    }
-    return resolved;
-  };
+  const getActiveColor = useCallback(
+    (role) => {
+      const def = allRoleDefaults[role];
+      const token = activeCustomMappings[role] || def;
+      const scaleRef = getScaleForRole(role, colorData, colorMode);
+      const baseColor = scaleRef && scaleRef[token];
+      if (!baseColor) return colorData.scale[500];
+      return baseColor;
+    },
+    [activeCustomMappings, allRoleDefaults, colorData, colorMode],
+  );
+
+  // Split-view helper: resolve a role color for a specific mode.
+  const getActiveColorForMode = useCallback(
+    (role, modeOverride) => {
+      const def = allRoleDefaults[role];
+      const mappings = customMappingsPerMode[modeOverride] || {};
+      const token = mappings[role] || def;
+      const scaleRef = getScaleForRole(role, colorData, modeOverride);
+      const baseColor = scaleRef && scaleRef[token];
+      if (!baseColor) return colorData.scale[500];
+      return baseColor;
+    },
+    [customMappingsPerMode, allRoleDefaults, colorData],
+  );
 
   const getTextOnColor = (bgColor) => {
     const white = { l: 1, c: 0, h: 0 };
@@ -931,60 +1314,384 @@ function ColorDetail({
     return rW >= rB ? "white" : "black";
   };
 
+  // Resolve every role to its final color for a given mode.
+  const buildColorMap = (modeOverride) => {
+    const mappings = customMappingsPerMode[modeOverride] || {};
+    const bundleRoles = Object.values(currentRoleMap).flat();
+    const result = {};
+    bundleRoles.forEach((role) => {
+      const def = allRoleDefaults[role];
+      if (!def) return;
+      const scaleRef = getScaleForRole(role, colorData, modeOverride);
+      if (!scaleRef) return;
+      const token = mappings[role] || def;
+      const baseColor = scaleRef[token];
+      if (!baseColor) return;
+      result[role] = baseColor;
+    });
+    return result;
+  };
+
+  // Build alpha token map: { "background/10": { l, c, h, a: 0.10 }, ... }
+  const buildAlphaTokens = (modeOverride) => {
+    const result = {};
+    ALPHA_ROLES.forEach((role) => {
+      const scaleRef = getScaleForRole(role, colorData, modeOverride);
+      const mappings = customMappingsPerMode[modeOverride] || {};
+      const def = allRoleDefaults[role];
+      if (!def || !scaleRef) return;
+      const token = mappings[role] || def;
+      const baseColor = scaleRef[token];
+      if (!baseColor) return;
+      ALPHA_LEVELS.forEach((pct) => {
+        result[role + "/" + pct] = { ...baseColor, a: pct / 100 };
+      });
+    });
+    return result;
+  };
+
   const exportDecisions = () => {
     const markdown = `# Design System Color Decisions\n\n**Palette**: #${selectedIdx + 1}\n**Mode**: ${colorMode}\n**Bundle**: ${ROLE_BUNDLES[roleBundle].name}\n**Light Mode Ceiling**: ${(lightModeCeiling * 100).toFixed(0)}%\n**Dark Mode Floor**: ${(darkModeFloor * 100).toFixed(0)}%\n\n## Customizations (${Object.keys(activeCustomMappings).length})\n\n${Object.entries(
       activeCustomMappings,
     )
-      .map(
-        ([role, token]) =>
-          `### ${role}\n- **Token**: ${activeOriginalMappings[role]} → **${token}**\n- **Color**: ${oklchToHex(getActiveColor(role))}\n`,
-      )
+      .map(([role, token]) => {
+        const annotation = shiftAnnotations[role];
+        const autoNote = annotation
+          ? ` *(auto-shifted ${annotation.from}→${annotation.to} for ${annotation.mode})*`
+          : "";
+        return `### ${role}${autoNote}\n- **Token**: ${activeOriginalMappings[role]} → **${token}**\n- **Color**: ${oklchToHex(getActiveColor(role))}\n`;
+      })
       .join("\n")}`;
     navigator.clipboard.writeText(markdown);
     setExporting("decisions");
     setTimeout(() => setExporting(null), 2000);
   };
 
+  // FIX 4: Export now outputs both oklch and rgb fallbacks in CSS
   const exportData = (type) => {
-    const allRoles = Object.values(roleTokenMap).reduce(
-      (acc, roles) => ({ ...acc, ...roles }),
-      {},
-    );
-    const bundleRoles = Object.values(currentRoleMap).flat();
-    const buildConfig = (scaleToUse, mappings) => {
+    const buildConfig = (modeOverride, includeRgb = false) => {
+      const colorMap = buildColorMap(modeOverride);
       const config = {};
-      bundleRoles.forEach((role) => {
-        const def = allRoles[role];
-        if (!def) return;
-        config[role] = oklchToHex(scaleToUse[mappings[role] || def]);
+      Object.entries(colorMap).forEach(([role, color]) => {
+        if (includeRgb) {
+          const { r, g, b } = oklchToRgbValues(color);
+          const toInt = (v) => Math.round(Math.max(0, Math.min(1, v)) * 255);
+          config[role] =
+            "rgb(" + toInt(r) + ", " + toInt(g) + ", " + toInt(b) + ")";
+        } else {
+          config[role] = oklchToHex(color);
+        }
       });
       return config;
     };
-    const lightConfig = buildConfig(
-      colorData.scale,
-      customMappingsPerMode["light"],
-    );
-    const darkConfig = buildConfig(
-      colorData.darkScale,
-      customMappingsPerMode["dark"],
-    );
+
+    const lightConfig = buildConfig("light");
+    const darkConfig = buildConfig("dark");
+    const lightConfigRgb = buildConfig("light", true);
+    const darkConfigRgb = buildConfig("dark", true);
+    const activeConfig = colorMode === "light" ? lightConfig : darkConfig;
+
     let output = "";
+
     if (type === "tailwind") {
-      output = `module.exports = {\n  theme: {\n    extend: {\n      colors: {\n        light: ${JSON.stringify(lightConfig, null, 10)},\n        dark: ${JSON.stringify(darkConfig, null, 10)}\n      }\n    }\n  }\n}`;
+      output =
+        "module.exports = {\n  theme: {\n    extend: {\n      colors: {\n        light: " +
+        JSON.stringify(lightConfig, null, 8) +
+        ",\n        dark: " +
+        JSON.stringify(darkConfig, null, 8) +
+        "\n      }\n    }\n  }\n}";
     } else if (type === "css") {
-      const vars = Object.entries(
-        colorMode === "light" ? lightConfig : darkConfig,
-      )
-        .map(([k, v]) => `  --color-${k}: ${v};`)
+      const colorMap = buildColorMap(colorMode);
+      const vars = Object.entries(colorMap)
+        .map(([role, color]) => {
+          const { oklch: oklchVal, rgb: rgbVal } = oklchWithFallback(color);
+          return (
+            "  /* " +
+            role +
+            " */\n  --color-" +
+            role +
+            "-fallback: " +
+            rgbVal +
+            ";\n  --color-" +
+            role +
+            ": " +
+            oklchVal +
+            ";"
+          );
+        })
         .join("\n");
-      output = `:root {\n${vars}\n}`;
-    } else {
+      output = ":root {\n" + vars + "\n}";
+    } else if (type === "css-dark") {
+      const buildVars = (modeOverride) => {
+        const colorMap = buildColorMap(modeOverride);
+        const alphaTokens = buildAlphaTokens(modeOverride);
+        const base = Object.entries(colorMap)
+          .map(([role, color]) => {
+            const { oklch: oklchVal, rgb: rgbVal } = oklchWithFallback(color);
+            return (
+              "  --color-" +
+              role +
+              "-fallback: " +
+              rgbVal +
+              ";\n  --color-" +
+              role +
+              ": " +
+              oklchVal +
+              ";"
+            );
+          })
+          .join("\n");
+        const alpha = Object.entries(alphaTokens)
+          .map(([key, color]) => {
+            return (
+              "  --color-" +
+              key.replace("/", "-") +
+              ": " +
+              oklchToCss(color) +
+              ";"
+            );
+          })
+          .join("\n");
+        return base + "\n\n  /* Alpha tokens */\n" + alpha;
+      };
+      const lightVars = buildVars("light");
+      const darkVars = buildVars("dark");
+      output =
+        ":root {\n" +
+        lightVars +
+        "\n}\n\n@media (prefers-color-scheme: dark) {\n  :root {\n" +
+        darkVars +
+        "\n  }\n}";
+    } else if (type === "figma-tokens") {
+      // Figma Tokens Studio format: two token sets (light + dark) + $themes + $metadata
+      const buildFigmaSet = (modeOverride) => {
+        const colorMap = buildColorMap(modeOverride);
+        const alphaMap = buildAlphaTokens(modeOverride);
+        const tokens = {};
+        // Group by category
+        Object.entries(currentRoleMap).forEach(([category, roles]) => {
+          tokens[category] = {};
+          roles.forEach((role) => {
+            if (!colorMap[role]) return;
+            tokens[category][role] = {
+              value: oklchToHex(colorMap[role]),
+              type: "color",
+              description: role,
+            };
+          });
+        });
+        // Alpha tokens as separate group
+        tokens["Alpha"] = {};
+        Object.entries(alphaMap).forEach(([key, color]) => {
+          const [role, pct] = key.split("/");
+          if (!tokens["Alpha"][role]) tokens["Alpha"][role] = {};
+          tokens["Alpha"][role][pct] = {
+            value: oklchToCss(color),
+            type: "color",
+            description: role + " at " + pct + "% opacity",
+          };
+        });
+        return tokens;
+      };
+      const figmaOutput = {
+        light: buildFigmaSet("light"),
+        dark: buildFigmaSet("dark"),
+        $themes: [
+          {
+            id: "light",
+            name: "Light",
+            selectedTokenSets: { light: "enabled" },
+            $figmaStyleReferences: {},
+          },
+          {
+            id: "dark",
+            name: "Dark",
+            selectedTokenSets: { dark: "enabled" },
+            $figmaStyleReferences: {},
+          },
+        ],
+        $metadata: { tokenSetOrder: ["light", "dark"] },
+      };
+      output = JSON.stringify(figmaOutput, null, 2);
+    } else if (type === "dtcg") {
+      // W3C Design Token Community Group format (.tokens.json)
+      // https://tr.designtokens.org/format/
+      const buildDtcgMode = (modeOverride) => {
+        const colorMap = buildColorMap(modeOverride);
+        const alphaMap = buildAlphaTokens(modeOverride);
+        const tokens = {};
+        Object.entries(currentRoleMap).forEach(([category, roles]) => {
+          tokens[category] = { $type: "color" };
+          roles.forEach((role) => {
+            if (!colorMap[role]) return;
+            const color = colorMap[role];
+            const hex = oklchToHex(color);
+            tokens[category][role] = {
+              $value: oklchToCss(color),
+              $type: "color",
+              $description: role,
+              $extensions: {
+                "com.figma": { hiddenFromPublishing: false },
+                fallback: hex,
+              },
+            };
+          });
+        });
+        // Alpha tokens
+        tokens["alpha"] = { $type: "color" };
+        Object.entries(alphaMap).forEach(([key, color]) => {
+          const tokenKey = key.replace("/", "-");
+          tokens["alpha"][tokenKey] = {
+            $value: oklchToCss(color),
+            $type: "color",
+            $description: key,
+          };
+        });
+        return tokens;
+      };
+      const dtcgOutput = {
+        $schema: "https://tr.designtokens.org/format/",
+        $metadata: { generator: "palette-expander", version: "1.0" },
+        modes: {
+          light: buildDtcgMode("light"),
+          dark: buildDtcgMode("dark"),
+        },
+      };
+      output = JSON.stringify(dtcgOutput, null, 2);
+    } else if (type === "style-dictionary") {
+      // Style Dictionary v3 source format.
+      // Structure: { color: { primitive: { blue: { 100: {value, type} } }, semantic: { category: { role: {value, type, attributes} } } } }
+      // Consumers drop this into sd.source[], define their own platforms config, then run sd.buildAllPlatforms().
+
+      // Primitive layer: raw scale steps for every scale in the palette
+      const buildPrimitives = (modeOverride) => {
+        const primitives = {};
+        // Brand scale
+        const brandScale =
+          modeOverride === "light" ? colorData.scale : colorData.darkScale;
+        primitives["brand"] = {};
+        Object.entries(brandScale).forEach(([step, color]) => {
+          primitives["brand"][step] = {
+            value: oklchToHex(color),
+            type: "color",
+          };
+        });
+        // Neutral scale
+        const nScale =
+          modeOverride === "light"
+            ? colorData.neutralScale
+            : colorData.darkNeutralScale;
+        if (nScale) {
+          primitives["neutral"] = {};
+          Object.entries(nScale).forEach(([step, color]) => {
+            primitives["neutral"][step] = {
+              value: oklchToHex(color),
+              type: "color",
+            };
+          });
+        }
+        // Semantic scales
+        if (colorData.semanticScales) {
+          Object.entries(colorData.semanticScales).forEach(
+            ([key, semScale]) => {
+              const activeScale =
+                modeOverride === "light"
+                  ? semScale
+                  : colorData.darkSemanticScales[key];
+              primitives[key] = {};
+              Object.entries(activeScale).forEach(([step, color]) => {
+                primitives[key][step] = {
+                  value: oklchToHex(color),
+                  type: "color",
+                };
+              });
+            },
+          );
+        }
+        return primitives;
+      };
+
+      // Semantic layer: role → resolved token value, with attributes for category + mode
+      const buildSemanticLayer = (modeOverride) => {
+        const colorMap = buildColorMap(modeOverride);
+        const mappings = customMappingsPerMode[modeOverride] || {};
+        const semantic = {};
+        Object.entries(currentRoleMap).forEach(([category, roles]) => {
+          const catKey = category.toLowerCase();
+          semantic[catKey] = {};
+          roles.forEach((role) => {
+            if (!colorMap[role]) return;
+            const token = mappings[role] || allRoleDefaults[role];
+            semantic[catKey][role] = {
+              value: oklchToHex(colorMap[role]),
+              type: "color",
+              attributes: {
+                category: catKey,
+                role,
+                mode: modeOverride,
+                step: token,
+              },
+            };
+          });
+        });
+        return semantic;
+      };
+
+      // Alpha layer: semi-transparent tokens keyed as role-N
+      const buildAlphaLayer = (modeOverride) => {
+        const alphaMap = buildAlphaTokens(modeOverride);
+        const alpha = {};
+        Object.entries(alphaMap).forEach(([key, color]) => {
+          const [role, pct] = key.split("/");
+          if (!alpha[role]) alpha[role] = {};
+          alpha[role][pct] = {
+            value: oklchToCss(color),
+            type: "color",
+            attributes: { category: "alpha", role, opacity: Number(pct) / 100 },
+          };
+        });
+        return alpha;
+      };
+
+      // Style Dictionary expects a single token tree; we nest light+dark under a "modes" key
+      // so consumers can use sd-transforms or style-dictionary-utils to split them.
+      const sdOutput = {
+        color: {
+          primitive: {
+            light: buildPrimitives("light"),
+            dark: buildPrimitives("dark"),
+          },
+          semantic: {
+            light: buildSemanticLayer("light"),
+            dark: buildSemanticLayer("dark"),
+          },
+          alpha: {
+            light: buildAlphaLayer("light"),
+            dark: buildAlphaLayer("dark"),
+          },
+        },
+        // Minimal config hint so consumers know what they're looking at
+        _meta: {
+          generator: "palette-expander",
+          sdVersion: "3.x",
+          usage:
+            "Drop into sd.source[]. Define your own platforms config. Run sd.buildAllPlatforms().",
+          primitiveRef:
+            "color.primitive.{light|dark}.{brand|neutral|success|...}.{100-900}",
+          semanticRef: "color.semantic.{light|dark}.{category}.{role}",
+        },
+      };
+      output = JSON.stringify(sdOutput, null, 2);
+    } else if (type === "json-rgb") {
       output = JSON.stringify(
-        colorMode === "light" ? lightConfig : darkConfig,
+        colorMode === "light" ? lightConfigRgb : darkConfigRgb,
         null,
         2,
       );
+    } else {
+      output = JSON.stringify(activeConfig, null, 2);
     }
+
     navigator.clipboard.writeText(output);
     setExporting(type);
     setTimeout(() => setExporting(null), 2000);
@@ -999,8 +1706,8 @@ function ColorDetail({
     : [];
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-background border border-(--navBorder) rounded-xl">
-      {/* ── TOOLBAR: single unified row ── */}
+    <div className="flex flex-col h-full overflow-hidden bg-background border border-(--navBorder) rounded-xl relative">
+      {/* ── TOOLBAR ── */}
       <div className="border-b border-(--navBorder) bg-background px-3 py-2 flex items-center gap-3 flex-wrap">
         {/* Palette chips */}
         <div className="flex items-center gap-2 shrink-0">
@@ -1026,12 +1733,16 @@ function ColorDetail({
 
         <div className="w-px h-4 bg-foreground/10 shrink-0" />
 
-        {/* Light / Dark toggle */}
+        {/* Light / Dark / Split toggle */}
         <div className="flex p-0.5 bg-gray-100 dark:bg-gray-800 rounded-lg border border-(--navBorder) shrink-0">
           <button
-            onClick={() => setColorMode("light")}
+            onClick={() => {
+              setViewMode("single");
+              setColorMode("light");
+              setShowPreview(previewBeforeSplit.current);
+            }}
             className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold transition-all ${
-              colorMode === "light"
+              viewMode === "single" && colorMode === "light"
                 ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm"
                 : "text-gray-400 hover:text-gray-600"
             }`}
@@ -1039,19 +1750,85 @@ function ColorDetail({
             ☀️ Light
           </button>
           <button
-            onClick={() => setColorMode("dark")}
+            onClick={() => {
+              setViewMode("single");
+              setColorMode("dark");
+              setShowPreview(previewBeforeSplit.current);
+            }}
             className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold transition-all ${
-              colorMode === "dark"
+              viewMode === "single" && colorMode === "dark"
                 ? "bg-gray-700 text-white shadow-sm"
                 : "text-gray-400 hover:text-gray-600"
             }`}
           >
             🌙 Dark
           </button>
+          <button
+            onClick={() => {
+              if (viewMode === "split") {
+                setViewMode("single");
+                setShowPreview(previewBeforeSplit.current);
+              } else {
+                previewBeforeSplit.current = showPreview;
+                setShowPreview(false);
+                setViewMode("split");
+              }
+            }}
+            className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold transition-all ${
+              viewMode === "split"
+                ? "bg-indigo-600 text-white shadow-sm"
+                : "text-gray-400 hover:text-gray-600"
+            }`}
+            title="Side-by-side light + dark"
+          >
+            ☀️🌙
+          </button>
         </div>
 
-        {/* Ceiling / Floor slider — shows contextually */}
-        {colorMode === "light" ? (
+        {/* Ceiling / Floor slider */}
+        {viewMode === "split" ? (
+          // In split mode show both sliders
+          <>
+            <div className="flex items-center gap-1.5 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-lg border border-(--navBorder) shrink-0">
+              <span className="text-[9px] font-semibold text-foreground/50">
+                Ceil
+              </span>
+              <input
+                type="range"
+                min="0.75"
+                max="0.99"
+                step="0.01"
+                value={lightModeCeiling}
+                onChange={(e) =>
+                  onLightModeCeilingChange(parseFloat(e.target.value))
+                }
+                className="w-12 h-1 cursor-pointer accent-(--brand)"
+              />
+              <span className="text-[9px] font-mono font-bold text-(--brand) w-6">
+                {(lightModeCeiling * 100).toFixed(0)}%
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-lg border border-(--navBorder) shrink-0">
+              <span className="text-[9px] font-semibold text-foreground/50">
+                Floor
+              </span>
+              <input
+                type="range"
+                min="0.08"
+                max="0.25"
+                step="0.01"
+                value={darkModeFloor}
+                onChange={(e) =>
+                  onDarkModeFloorChange(parseFloat(e.target.value))
+                }
+                className="w-12 h-1 cursor-pointer accent-(--brand)"
+              />
+              <span className="text-[9px] font-mono font-bold text-(--brand) w-6">
+                {(darkModeFloor * 100).toFixed(0)}%
+              </span>
+            </div>
+          </>
+        ) : colorMode === "light" ? (
           <div className="flex items-center gap-1.5 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-lg border border-(--navBorder) shrink-0">
             <span className="text-[9px] font-semibold text-foreground/50">
               Ceiling
@@ -1093,26 +1870,66 @@ function ColorDetail({
           </div>
         )}
 
-        {/* Spacer pushes remaining controls right */}
         <div className="flex-1" />
 
-        {/* ── Contrast mode toggle ── */}
+        {/* Contrast controls: algorithm toggle + threshold */}
         <div className="flex items-center gap-1.5 shrink-0">
           <span className="text-[9px] font-semibold text-foreground/40 uppercase tracking-wider">
             Contrast
           </span>
+          {/* Algorithm toggle */}
+          <div className="flex p-0.5 bg-gray-100 dark:bg-gray-800 rounded-lg border border-(--navBorder)">
+            {["wcag", "apca"].map((algo) => (
+              <button
+                key={algo}
+                onClick={() => setContrastAlgorithm(algo)}
+                title={
+                  algo === "wcag"
+                    ? "WCAG 2.x (current standard)"
+                    : "APCA — Advanced Perceptual Contrast Algorithm (WCAG 3.0 basis)"
+                }
+                className={`px-2 py-1 rounded-md text-[10px] font-bold transition-all uppercase tracking-wider ${
+                  contrastAlgorithm === algo
+                    ? algo === "apca"
+                      ? "bg-violet-600 text-white shadow-sm"
+                      : "bg-background text-foreground shadow-sm"
+                    : "text-gray-400 hover:text-gray-600"
+                }`}
+              >
+                {algo}
+              </button>
+            ))}
+          </div>
+          {/* Threshold toggle */}
           <div className="flex p-0.5 bg-gray-100 dark:bg-gray-800 rounded-lg border border-(--navBorder)">
             {["free", "AA", "AAA"].map((mode) => (
               <button
                 key={mode}
                 onClick={() => setContrastMode(mode)}
+                title={
+                  contrastAlgorithm === "apca"
+                    ? mode === "free"
+                      ? "No enforcement"
+                      : mode === "AA"
+                        ? "APCA Lc 60 (body text)"
+                        : "APCA Lc 75 (enhanced)"
+                    : mode === "free"
+                      ? "No enforcement"
+                      : mode === "AA"
+                        ? "WCAG 4.5:1"
+                        : "WCAG 7:1"
+                }
                 className={`px-2 py-1 rounded-md text-[10px] font-bold transition-all ${
                   contrastMode === mode
                     ? mode === "free"
                       ? "bg-background text-foreground shadow-sm"
                       : mode === "AA"
-                        ? "bg-yellow-500 text-white shadow-sm"
-                        : "bg-green-600 text-white shadow-sm"
+                        ? contrastAlgorithm === "apca"
+                          ? "bg-violet-500 text-white shadow-sm"
+                          : "bg-yellow-500 text-white shadow-sm"
+                        : contrastAlgorithm === "apca"
+                          ? "bg-violet-700 text-white shadow-sm"
+                          : "bg-green-600 text-white shadow-sm"
                     : "text-gray-400 hover:text-gray-600"
                 }`}
               >
@@ -1124,7 +1941,6 @@ function ColorDetail({
 
         <div className="w-px h-4 bg-foreground/10 shrink-0" />
 
-        {/* Override count badge */}
         {hasChanges && (
           <span className="text-[9px] text-blue-500 font-semibold shrink-0">
             {Object.keys(activeCustomMappings).length} override
@@ -1132,19 +1948,18 @@ function ColorDetail({
           </span>
         )}
 
-        {/* Reset */}
         <button
           onClick={() => {
             setCustomMappingsPerMode({ light: {}, dark: {} });
             setOriginalMappingsPerMode({ light: {}, dark: {} });
             setContrastModePerRole({});
+            setShiftAnnotations({});
           }}
           className="px-2.5 py-1.5 rounded-lg border border-(--navBorder) text-[10px] font-semibold text-foreground/60 hover:text-foreground hover:border-gray-400 transition-all shrink-0"
         >
           Reset
         </button>
 
-        {/* Export dropdown */}
         <ExportDropdown
           onExport={exportData}
           hasChanges={hasChanges}
@@ -1152,7 +1967,6 @@ function ColorDetail({
           exporting={exporting}
         />
 
-        {/* Preview toggle */}
         <button
           onClick={() => setShowPreview((v) => !v)}
           className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[10px] font-bold transition-all shrink-0 ${
@@ -1161,7 +1975,6 @@ function ColorDetail({
               : "border-(--navBorder) text-foreground/60 hover:text-foreground hover:border-gray-400"
           }`}
         >
-          {/* Eye icon */}
           <svg
             className="w-3 h-3"
             fill="none"
@@ -1181,178 +1994,471 @@ function ColorDetail({
           </svg>
           Preview
         </button>
+
+        <button
+          onClick={() => setShowScales((v) => !v)}
+          className={
+            "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[10px] font-bold transition-all shrink-0 " +
+            (showScales
+              ? "bg-gray-800 border-gray-800 text-white shadow-sm"
+              : "border-(--navBorder) text-foreground/60 hover:text-foreground hover:border-gray-400")
+          }
+          title="View tonal scales"
+        >
+          <svg
+            className="w-3 h-3"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"
+            />
+          </svg>
+          Scales
+        </button>
       </div>
 
       {/* ── MAIN BODY ── */}
       <div className="flex flex-1 min-h-0 bg-background overflow-hidden">
-        {/* ROLES PANEL — full width (2-col) when no preview, left 42% when preview shown */}
-        <div
-          className={`flex flex-col min-w-0 transition-all duration-200 ${
-            showPreview ? "w-[42%] border-r border-(--navBorder)" : "w-full"
-          }`}
-        >
-          <div
-            ref={rolePanelRef}
-            className="flex-1 overflow-y-auto custom-scrollbar px-3 py-3"
-          >
+        {viewMode === "split" ? (
+          // Split view: light on left, dark on right
+          <>
+            <div className="flex-1 flex flex-col min-w-0 border-r border-(--navBorder)">
+              <div className="px-3 py-1.5 border-b border-amber-300 bg-amber-50 dark:bg-amber-950/30 flex items-center gap-1.5">
+                <span className="text-[9px] font-black uppercase tracking-widest text-amber-600">
+                  ☀️ Light
+                </span>
+              </div>
+              <div
+                ref={rolePanelRef}
+                className="flex-1 overflow-y-auto custom-scrollbar px-3 py-3"
+              >
+                <SplitRolesPanel
+                  modeOverride="light"
+                  currentRoleMap={currentRoleMap}
+                  allRoleDefaults={allRoleDefaults}
+                  customMappingsPerMode={customMappingsPerMode}
+                  shiftAnnotations={shiftAnnotations}
+                  colorData={colorData}
+                  getActiveColorForMode={getActiveColorForMode}
+                  getTextOnColor={getTextOnColor}
+                  contrastAlgorithm={contrastAlgorithm}
+                  contrastMode={contrastMode}
+                  contrastModePerRole={contrastModePerRole}
+                  highlightedRolesFromScale={highlightedRolesFromScale}
+                  hoveredRole={hoveredRole}
+                  setHoveredRole={setHoveredRole}
+                  clickedRoles={clickedRoles}
+                  setClickedRoles={setClickedRoles}
+                  getScaleForRole={getScaleForRole}
+                  getContrastValue={getContrastValue}
+                  meetsThreshold={meetsThreshold}
+                  formatContrast={formatContrast}
+                />
+              </div>
+            </div>
+            <div className="flex-1 flex flex-col min-w-0">
+              <div className="px-3 py-1.5 border-b border-indigo-300 bg-indigo-50 dark:bg-indigo-950/30 flex items-center gap-1.5">
+                <span className="text-[9px] font-black uppercase tracking-widest text-indigo-600">
+                  🌙 Dark
+                </span>
+              </div>
+              <div className="flex-1 overflow-y-auto custom-scrollbar px-3 py-3">
+                <SplitRolesPanel
+                  modeOverride="dark"
+                  currentRoleMap={currentRoleMap}
+                  allRoleDefaults={allRoleDefaults}
+                  customMappingsPerMode={customMappingsPerMode}
+                  shiftAnnotations={shiftAnnotations}
+                  colorData={colorData}
+                  getActiveColorForMode={getActiveColorForMode}
+                  getTextOnColor={getTextOnColor}
+                  contrastAlgorithm={contrastAlgorithm}
+                  contrastMode={contrastMode}
+                  contrastModePerRole={contrastModePerRole}
+                  highlightedRolesFromScale={highlightedRolesFromScale}
+                  hoveredRole={hoveredRole}
+                  setHoveredRole={setHoveredRole}
+                  clickedRoles={clickedRoles}
+                  setClickedRoles={setClickedRoles}
+                  getScaleForRole={getScaleForRole}
+                  getContrastValue={getContrastValue}
+                  meetsThreshold={meetsThreshold}
+                  formatContrast={formatContrast}
+                />
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
             <div
-              className={`gap-x-4 gap-y-5 ${
-                showPreview
-                  ? "flex flex-col space-y-5"
-                  : "grid grid-cols-2 items-start"
+              className={`flex flex-col min-w-0 transition-all duration-200 ${
+                showPreview ? "w-[42%] border-r border-(--navBorder)" : "w-full"
               }`}
             >
-              {Object.entries(currentRoleMap).map(([category, roles]) => {
-                const allRoles = Object.values(roleTokenMap).reduce(
-                  (acc, r) => ({ ...acc, ...r }),
-                  {},
-                );
-                return (
-                  <div
-                    key={category}
-                    className={showPreview ? "" : "col-span-1"}
-                  >
-                    <h4 className="text-[9px] font-black uppercase tracking-widest text-foreground/40 mb-2 pb-1 border-b border-(--navBorder)">
-                      {category}
-                    </h4>
-                    <div className="space-y-1.5">
-                      {roles.map((roleName) => {
-                        const defaultToken = allRoles[roleName];
-                        if (!defaultToken) return null;
-                        const isHighlightedByScale =
-                          highlightedRolesFromScale.includes(roleName);
-                        return (
-                          <div
-                            key={roleName}
-                            ref={(el) => {
-                              roleChipRefs.current[roleName] = el;
-                            }}
-                          >
-                            <UsageRole
-                              name={roleName}
-                              scale={scale}
-                              currentToken={
-                                activeCustomMappings[roleName] || defaultToken
-                              }
-                              oldToken={activeOriginalMappings[roleName]}
-                              onTokenChange={handleTokenChange}
-                              isHighlighted={
-                                isHighlightedByScale ||
-                                clickedRoles.includes(roleName)
-                              }
-                              isClicked={clickedRoles.includes(roleName)}
-                              onHover={setHoveredRole}
-                              globalContrastMode={contrastMode}
-                              perRoleContrastMode={
-                                contrastModePerRole[roleName] || null
-                              }
-                              onContrastModeChange={(role, mode) =>
-                                setContrastModePerRole((prev) => ({
-                                  ...prev,
-                                  [role]: mode,
-                                }))
-                              }
-                              pairedBgColor={(() => {
-                                const bgRoles =
-                                  CONTRAST_RELATIONSHIPS[roleName];
-                                if (!bgRoles) return null;
-                                for (const bgRole of bgRoles) {
+              <div
+                ref={rolePanelRef}
+                className="flex-1 overflow-y-auto custom-scrollbar px-3 py-3"
+              >
+                <div
+                  className={`gap-x-4 gap-y-5 ${
+                    showPreview
+                      ? "flex flex-col space-y-5"
+                      : "grid grid-cols-2 items-start"
+                  }`}
+                >
+                  {Object.entries(currentRoleMap).map(([category, roles]) => (
+                    <div
+                      key={category}
+                      className={showPreview ? "" : "col-span-1"}
+                    >
+                      <h4 className="text-[9px] font-black uppercase tracking-widest text-foreground/40 mb-2 pb-1 border-b border-(--navBorder)">
+                        {category}
+                        {category === "Neutrals" && (
+                          <span className="ml-1.5 text-[6px] font-bold text-purple-400 normal-case tracking-normal border border-purple-300 rounded px-1 py-0.5">
+                            independent scale
+                          </span>
+                        )}
+                        {category === "Status" && (
+                          <span className="ml-1.5 text-[6px] font-bold text-emerald-500 normal-case tracking-normal border border-emerald-400 rounded px-1 py-0.5">
+                            semantic scales
+                          </span>
+                        )}
+                      </h4>
+                      <div className="space-y-1.5">
+                        {roles.map((roleName) => {
+                          const defaultToken = allRoleDefaults[roleName];
+                          if (!defaultToken) return null;
+                          const isHighlightedByScale =
+                            highlightedRolesFromScale.includes(roleName);
+
+                          // FIX 2+6: Build pairedBgColors array with ALL backgrounds for this role
+                          const bgRoleNames = CONTRAST_RELATIONSHIPS[roleName];
+                          const pairedBgColors = bgRoleNames
+                            ? bgRoleNames
+                                .map((bgRole) => {
                                   const c = getActiveColor(bgRole);
-                                  if (c) return c;
+                                  return c ? { role: bgRole, color: c } : null;
+                                })
+                                .filter(Boolean)
+                            : [];
+
+                          return (
+                            <div
+                              key={roleName}
+                              ref={(el) => {
+                                roleChipRefs.current[roleName] = el;
+                              }}
+                            >
+                              <UsageRole
+                                name={roleName}
+                                scaleForRole={getScaleForRole(
+                                  roleName,
+                                  colorData,
+                                  colorMode,
+                                )}
+                                contrastAlgorithm={contrastAlgorithm}
+                                currentToken={
+                                  activeCustomMappings[roleName] || defaultToken
                                 }
-                                return null;
-                              })()}
-                            />
-                          </div>
-                        );
-                      })}
+                                oldToken={activeOriginalMappings[roleName]}
+                                onTokenChange={handleTokenChange}
+                                isHighlighted={
+                                  isHighlightedByScale ||
+                                  clickedRoles.includes(roleName)
+                                }
+                                isClicked={clickedRoles.includes(roleName)}
+                                onHover={setHoveredRole}
+                                globalContrastMode={contrastMode}
+                                perRoleContrastMode={
+                                  contrastModePerRole[roleName] || null
+                                }
+                                onContrastModeChange={(role, mode) =>
+                                  setContrastModePerRole((prev) => ({
+                                    ...prev,
+                                    [role]: mode,
+                                  }))
+                                }
+                                pairedBgColors={pairedBgColors}
+                                shiftAnnotation={
+                                  shiftAnnotations[roleName] || null
+                                }
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {showPreview && (
+              <div className="flex-1 min-w-0 flex flex-col">
+                <ComponentPreview
+                  getActiveColor={getActiveColor}
+                  getTextOnColor={getTextOnColor}
+                  highlightedRole={hoveredRole}
+                  onRoleClick={handlePreviewRoleClick}
+                  onClear={handlePreviewClear}
+                  clickedRoles={clickedRoles}
+                />
+              </div>
+            )}
+          </>
+        )}{" "}
+        {/* end split/single conditional */}
+      </div>
+
+      {/* Floating tonal scale panel */}
+      {showScales && (
+        <>
+          <div
+            className="absolute inset-0 z-40"
+            onClick={() => setShowScales(false)}
+          />
+          <div className="absolute bottom-0 left-0 right-0 z-50 bg-background border-t border-(--navBorder) shadow-2xl rounded-b-xl px-3 py-3">
+            <div className="flex items-center justify-between mb-2.5">
+              <div className="flex items-center gap-2">
+                <h4 className="text-[9px] font-black uppercase tracking-widest text-foreground/50">
+                  Tonal Scales
+                </h4>
+                <span className="text-[8px] text-foreground/30">
+                  {highlightedToken
+                    ? "Step " +
+                      highlightedToken +
+                      " · " +
+                      (tokenToRoles[highlightedToken] || []).length +
+                      " role(s)"
+                    : "Click a step to highlight roles"}
+                </span>
+              </div>
+              <button
+                onClick={() => setShowScales(false)}
+                className="text-foreground/30 hover:text-foreground/70 transition-colors p-0.5 rounded"
+              >
+                <svg
+                  className="w-3.5 h-3.5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-1.5">
+                <span className="text-[7px] font-bold text-foreground/30 w-14 shrink-0">
+                  Brand
+                </span>
+                <div className="flex flex-1 h-9 rounded-lg overflow-hidden border border-(--navBorder)">
+                  {Object.entries(scale).map(([token, color]) => {
+                    const isActive = highlightedToken === Number(token);
+                    const rolesUsingThis = tokenToRoles[Number(token)] || [];
+                    return (
+                      <button
+                        key={token}
+                        className={
+                          "flex-1 h-full flex flex-col items-center justify-center transition-all " +
+                          (isActive
+                            ? "ring-2 ring-inset ring-white/60 z-10 brightness-110"
+                            : "hover:brightness-90")
+                        }
+                        style={{ backgroundColor: oklchToCss(color) }}
+                        onClick={() => {
+                          const newToken = isActive ? null : Number(token);
+                          setHighlightedToken(newToken);
+                          setShowScales(false);
+                          if (newToken !== null) {
+                            const firstRole = (tokenToRoles[newToken] || [])[0];
+                            if (
+                              firstRole &&
+                              roleChipRefs.current[firstRole] &&
+                              rolePanelRef.current
+                            ) {
+                              roleChipRefs.current[firstRole].scrollIntoView({
+                                behavior: "smooth",
+                                block: "nearest",
+                              });
+                            }
+                          }
+                        }}
+                        title={
+                          "Step " +
+                          token +
+                          " · " +
+                          rolesUsingThis.length +
+                          " role(s)"
+                        }
+                      >
+                        <span
+                          style={{ color: getContrastText(color) }}
+                          className="text-[8px] font-black leading-tight"
+                        >
+                          {token}
+                        </span>
+                        {rolesUsingThis.length > 0 && (
+                          <span
+                            style={{ color: getContrastText(color) }}
+                            className="text-[6px] opacity-60 font-bold leading-tight"
+                          >
+                            {"×"}
+                            {rolesUsingThis.length}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              {neutralScale && (
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[7px] font-bold text-purple-400 w-14 shrink-0">
+                    Neutral
+                  </span>
+                  <div className="flex flex-1 h-5 rounded overflow-hidden border border-dashed border-purple-300">
+                    {Object.entries(neutralScale).map(([token, color]) => (
+                      <div
+                        key={token}
+                        className="flex-1 h-full"
+                        style={{ backgroundColor: oklchToCss(color) }}
+                        title={"Neutral " + token}
+                      />
+                    ))}
                   </div>
-                );
-              })}
+                </div>
+              )}
+              {colorData.semanticScales &&
+                Object.entries(colorData.semanticScales).map(
+                  ([key, semScale]) => {
+                    const labelCls = {
+                      success: "text-emerald-600",
+                      warning: "text-amber-600",
+                      error: "text-red-500",
+                      info: "text-blue-500",
+                    };
+                    const borderCls = {
+                      success: "border-emerald-300",
+                      warning: "border-amber-300",
+                      error: "border-red-300",
+                      info: "border-blue-300",
+                    };
+                    const activeSemScale =
+                      colorMode === "light"
+                        ? semScale
+                        : colorData.darkSemanticScales[key];
+                    return (
+                      <div key={key} className="flex items-center gap-1.5">
+                        <span
+                          className={
+                            "text-[7px] font-bold w-14 shrink-0 capitalize " +
+                            (labelCls[key] || "text-gray-400")
+                          }
+                        >
+                          {key}
+                        </span>
+                        <div
+                          className={
+                            "flex flex-1 h-5 rounded overflow-hidden border border-dashed " +
+                            (borderCls[key] || "border-gray-300")
+                          }
+                        >
+                          {Object.entries(activeSemScale).map(
+                            ([token, color]) => (
+                              <div
+                                key={token}
+                                className="flex-1 h-full"
+                                style={{ backgroundColor: oklchToCss(color) }}
+                                title={key + " " + token}
+                              />
+                            ),
+                          )}
+                        </div>
+                      </div>
+                    );
+                  },
+                )}
+
+              {/* Alpha token grid */}
+              <div className="mt-1 pt-2 border-t border-(--navBorder)">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="text-[7px] font-black uppercase tracking-widest text-foreground/40">
+                    Alpha tokens
+                  </span>
+                  <span className="text-[6.5px] text-foreground/25">
+                    --color-role-N in CSS exports
+                  </span>
+                </div>
+                <div className="space-y-1">
+                  {ALPHA_ROLES.map((role) => {
+                    const baseColor = getActiveColor(role);
+                    if (!baseColor) return null;
+                    return (
+                      <div key={role} className="flex items-center gap-1.5">
+                        <span
+                          className="text-[6.5px] font-bold text-foreground/40 w-14 shrink-0 truncate"
+                          title={role}
+                        >
+                          {role
+                            .replace("interactive-default", "interactive")
+                            .replace("neutral-surface", "neutral-surf")
+                            .replace("border-focus", "focus")}
+                        </span>
+                        <div className="flex gap-0.5 flex-1">
+                          {ALPHA_LEVELS.map((pct) => {
+                            const alphaColor = { ...baseColor, a: pct / 100 };
+                            return (
+                              <div
+                                key={pct}
+                                className="flex-1 h-6 rounded-sm flex items-center justify-center relative overflow-hidden"
+                                style={{
+                                  backgroundImage:
+                                    "repeating-conic-gradient(#ccc 0% 25%, #fff 0% 50%)",
+                                  backgroundSize: "6px 6px",
+                                }}
+                                title={role + "/" + pct}
+                              >
+                                <div
+                                  className="absolute inset-0"
+                                  style={{
+                                    backgroundColor: oklchToCss(alphaColor),
+                                  }}
+                                />
+                                <span
+                                  className="relative text-[5.5px] font-black leading-none"
+                                  style={{
+                                    color:
+                                      baseColor.l > 0.5
+                                        ? "rgba(0,0,0,0.7)"
+                                        : "rgba(255,255,255,0.8)",
+                                  }}
+                                >
+                                  {pct}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-
-        {/* PREVIEW PANEL — only rendered when showPreview is true */}
-        {showPreview && (
-          <div className="flex-1 min-w-0 flex flex-col">
-            <ComponentPreview
-              getActiveColor={getActiveColor}
-              getTextOnColor={getTextOnColor}
-              highlightedRole={hoveredRole}
-              onRoleClick={handlePreviewRoleClick}
-              onClear={handlePreviewClear}
-              clickedRoles={clickedRoles}
-            />
-          </div>
-        )}
-      </div>
-
-      {/* ── TONAL SCALE (bottom) ── */}
-      <div className="px-3 py-2.5 border-t border-(--navBorder) bg-foreground/[0.01]">
-        <div className="flex items-center justify-between mb-2">
-          <h4 className="text-[9px] font-black uppercase tracking-widest text-foreground/40">
-            Tonal Scale
-          </h4>
-          <span className="text-[8px] text-foreground/30">
-            {highlightedToken
-              ? `Step ${highlightedToken} · used by ${(tokenToRoles[highlightedToken] || []).length} role(s)`
-              : "Click any step to highlight its roles ↑"}
-          </span>
-        </div>
-        <div className="flex w-full h-12 rounded-lg overflow-hidden border border-(--navBorder)">
-          {Object.entries(scale).map(([token, color]) => {
-            const isActive = highlightedToken === Number(token);
-            const rolesUsingThis = tokenToRoles[Number(token)] || [];
-            return (
-              <button
-                key={token}
-                className={`flex-1 h-full flex flex-col items-center justify-center transition-all relative ${
-                  isActive
-                    ? "ring-2 ring-inset ring-white/60 z-10 brightness-110"
-                    : "hover:brightness-90"
-                }`}
-                style={{ backgroundColor: oklchToCss(color) }}
-                onClick={() => {
-                  const newToken = isActive ? null : Number(token);
-                  setHighlightedToken(newToken);
-                  if (newToken !== null) {
-                    const roles = tokenToRoles[newToken] || [];
-                    const firstRole = roles[0];
-                    if (
-                      firstRole &&
-                      roleChipRefs.current[firstRole] &&
-                      rolePanelRef.current
-                    ) {
-                      roleChipRefs.current[firstRole].scrollIntoView({
-                        behavior: "smooth",
-                        block: "nearest",
-                      });
-                    }
-                  }
-                }}
-                title={`Step ${token} · ${rolesUsingThis.length} role(s)`}
-              >
-                <span
-                  style={{ color: getContrastText(color) }}
-                  className="text-[8px] font-black leading-tight"
-                >
-                  {token}
-                </span>
-                {rolesUsingThis.length > 0 && (
-                  <span
-                    style={{ color: getContrastText(color) }}
-                    className="text-[6px] opacity-60 font-bold leading-tight"
-                  >
-                    ×{rolesUsingThis.length}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </div>
+        </>
+      )}
     </div>
   );
 }

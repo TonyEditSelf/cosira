@@ -19,30 +19,23 @@ import {
 } from "./custom-palettes/_components/Pickers/components/colorutil";
 
 import paletteDecider from "./custom-palettes/ColorPaletteUtils/paletteDecider";
-import { randomPaletteTypes } from "../data/randomPaletteTypes";
-import { paletteTypes } from "../data/paletteTypes";
-import { paletteVariations } from "../data/paletteVarities";
-import analogousPalGen from "./custom-palettes/ColorPaletteUtils/analogousPalGen";
-import accentedAnalogousPalGen from "./custom-palettes/ColorPaletteUtils/accentedAnalogousPalGen";
-import achromaticPalGen from "./custom-palettes/ColorPaletteUtils/achromaticPalGen";
-import brandPalGen from "./custom-palettes/ColorPaletteUtils/brandPalGen";
-import chromaticNeutralPalGen from "./custom-palettes/ColorPaletteUtils/chromaticNeutralPalGen";
-import clashPalGen from "./custom-palettes/ColorPaletteUtils/clashPalGen";
-import complementaryPalGen from "./custom-palettes/ColorPaletteUtils/complementaryPalGen";
-import compoundPalGen from "./custom-palettes/ColorPaletteUtils/compoundPalGen";
-import dataVizPalettePalGen from "./custom-palettes/ColorPaletteUtils/dataVizPalettePalGen";
-import designsystemPalGen from "./custom-palettes/ColorPaletteUtils/designsystemPalGen";
-import doubleSplitCompPalGen from "./custom-palettes/ColorPaletteUtils/doubleSplitCompPalGen";
-import flowerPalGen from "./custom-palettes/ColorPaletteUtils/flowerPalGen";
-import monochromaticPalGen from "./custom-palettes/ColorPaletteUtils/monochromaticPalGen";
-import nearCompPalGen from "./custom-palettes/ColorPaletteUtils/nearCompPalGen";
-import seasonalPalGen from "./custom-palettes/ColorPaletteUtils/seasonalPalGen";
-import splitCompPalGen from "./custom-palettes/ColorPaletteUtils/splitCompPalGen";
-import squarePalGen from "./custom-palettes/ColorPaletteUtils/squarePalGen";
-import tetradicPalGen from "./custom-palettes/ColorPaletteUtils/tetradicPalGen";
-import triadicPalGen from "./custom-palettes/ColorPaletteUtils/triadicPalGen";
-import uiPalettePalGen from "./custom-palettes/ColorPaletteUtils/uiPalettePalGen";
-import warmCoolPalGen from "./custom-palettes/ColorPaletteUtils/warmCoolPalGen";
+import {
+  useRandomPalette,
+  generateRandomColor,
+} from "./random-palettes/randompalette";
+// import { paletteTypes } from "../data/paletteTypes";
+// import accentedAnalogousPalGen from "./custom-palettes/ColorPaletteUtils/accentedAnalogousPalGen";
+// import achromaticPalGen from "./custom-palettes/ColorPaletteUtils/achromaticPalGen";
+// import brandPalGen from "./custom-palettes/ColorPaletteUtils/brandPalGen";
+// import chromaticNeutralPalGen from "./custom-palettes/ColorPaletteUtils/chromaticNeutralPalGen";
+// import clashPalGen from "./custom-palettes/ColorPaletteUtils/clashPalGen";
+// import compoundPalGen from "./custom-palettes/ColorPaletteUtils/compoundPalGen";
+// import designsystemPalGen from "./custom-palettes/ColorPaletteUtils/designsystemPalGen";
+// import nearCompPalGen from "./custom-palettes/ColorPaletteUtils/nearCompPalGen";
+// import seasonalPalGen from "./custom-palettes/ColorPaletteUtils/seasonalPalGen";
+// import squarePalGen from "./custom-palettes/ColorPaletteUtils/squarePalGen";
+// import uiPalettePalGen from "./custom-palettes/ColorPaletteUtils/uiPalettePalGen";
+// import warmCoolPalGen from "./custom-palettes/ColorPaletteUtils/warmCoolPalGen";
 
 export const ColorPaletteContext = createContext(null);
 
@@ -59,117 +52,6 @@ export function ColorPaletteContextProvider({ children }) {
     variation: "",
     typeName: "",
   });
-
-  const generateRandomColor = () => {
-    return {
-      l: Math.random() * 0.15 + 0.65, // 0.65 to 0.8 (bright and luminous)
-      c: Math.random() * 0.12 + 0.18, // 0.18 to 0.3 (vivid and saturated)
-      h: Math.random() * 360, // 0 to 360 (full hue range)
-      a: 1,
-    };
-  };
-
-    // Function to generate random palette
-  const generateRandomPalette = () => {
-    // Generate random base color
-    const randomColor = generateRandomColor();
-    setOklch(randomColor);
-
-    // Select random palette type
-    const randomTypeIndex = Math.floor(
-      Math.random() * randomPaletteTypes.length,
-    );
-    const selectedType = randomPaletteTypes[randomTypeIndex];
-    const paletteTypeValue = selectedType.value;
-
-    setSelectedPaletteType(paletteTypeValue);
-
-    let generatedPalette = null;
-    let selectedVariation = null;
-
-    // Check if this palette type has variations
-    if (paletteVariations[paletteTypeValue]) {
-      const variations = paletteVariations[paletteTypeValue];
-      const randomVariationIndex = Math.floor(
-        Math.random() * variations.length,
-      );
-      selectedVariation = variations[randomVariationIndex];
-
-      // Generate palette based on type and variation
-      switch (paletteTypeValue) {
-        case "analogous":
-          setAnalogPalType(selectedVariation);
-          generatedPalette = analogousPalGen(
-            randomColor,
-            analogOptions,
-            selectedVariation,
-          );
-          break;
-        case "complementary":
-          setCompPalType(selectedVariation);
-          generatedPalette = complementaryPalGen(
-            randomColor,
-            selectedVariation,
-          );
-          break;
-        case "flowerPalette":
-          setFlowerPalType(selectedVariation);
-          generatedPalette = flowerPalGen(randomColor, selectedVariation);
-          break;
-        case "dataVizPalette":
-          setDataVizPalType(selectedVariation);
-          generatedPalette = dataVizPalettePalGen(
-            randomColor,
-            selectedVariation,
-          );
-          break;
-        case "doubleSplitComp":
-          setDoubleSplitCompPalType(selectedVariation);
-          generatedPalette = doubleSplitCompPalGen(
-            randomColor,
-            selectedVariation,
-          );
-          break;
-        // Add other cases for other palette types
-        default:
-          generatedPalette = [{ name: "Base", value: randomColor }];
-      }
-    } else {
-      // For palette types without variations
-      switch (paletteTypeValue) {
-        case "monochromatic":
-          generatedPalette = monochromaticPalGen(randomColor);
-          break;
-        case "triadic":
-          generatedPalette = triadicPalGen(randomColor);
-          break;
-        case "tetradic":
-          generatedPalette = tetradicPalGen(randomColor);
-          break;
-        case "splitComplementary":
-          generatedPalette = splitCompPalGen(randomColor);
-          break;
-        // Add other palette types without variations
-
-        default:
-          generatedPalette = [{ name: "Base", value: randomColor }];
-      }
-    }
-
-    if (generatedPalette) {
-      setPalette(generatedPalette);
-      setCurrentPaletteInfo({
-        type: paletteTypeValue,
-        variation: selectedVariation || "Default",
-        typeName: selectedType.label,
-      });
-    }
-  };
-
-  // Generate initial random palette on mount
-  useEffect(() => {
-    generateRandomPalette();
-  }, []);
 
   const [analogOptions, setAnalogOptions] = useState({
     analogousAngle1: null, // null = use palette-specific defaults
@@ -193,10 +75,10 @@ export function ColorPaletteContextProvider({ children }) {
     });
   };
 
-const [expanderBases, setExpanderBases] = useState(null);
-const [expanderThemeProfile, setExpanderThemeProfile] = useState(null);
+  const [expanderBases, setExpanderBases] = useState(null);
+  const [expanderThemeProfile, setExpanderThemeProfile] = useState(null);
 
-// Helper to get current effective angles (for display in UI)
+  // Helper to get current effective angles (for display in UI)
   const getCurrentAngles = () => {
     const baseAngle = getBaseAngles(analogPalType);
     return {
@@ -410,7 +292,7 @@ const [expanderThemeProfile, setExpanderThemeProfile] = useState(null);
 
   const [monoPalType, setMonoPalType] = useState("classicMono");
   const [monoColorCount, setMonoColorCount] = useState(8);
-const [monoHueDrift, setMonoHueDrift] = useState(null);
+  const [monoHueDrift, setMonoHueDrift] = useState(null);
 
   const [analogPalType, setAnalogPalType] = useState("classicCenteredAnalog");
   const [doubleSplitCompPalType, setDoubleSplitCompPalType] =
@@ -432,28 +314,28 @@ const [monoHueDrift, setMonoHueDrift] = useState(null);
 
   const [paletteState, setPaletteState] = useState([]);
 
-const setPalette = useCallback((newPalette) => {
-  if (newPalette !== undefined && newPalette !== null) {
-    setPaletteState(newPalette);
-  } else {
-    console.error("Attempted to set palette to undefined/null - blocked");
-    console.trace();
-  }
-}, []);
+  const setPalette = useCallback((newPalette) => {
+    if (newPalette !== undefined && newPalette !== null) {
+      setPaletteState(newPalette);
+    } else {
+      console.error("Attempted to set palette to undefined/null - blocked");
+      console.trace();
+    }
+  }, []);
 
   const palette = paletteState;
 
-const prepareForExpander = useCallback(() => {
-  const { bases, themeProfile, label } = extractBasesForExpander(palette);
-  setExpanderBases(bases);
-  setExpanderThemeProfile(themeProfile);
-  return { bases, themeProfile, label };
-}, [palette]);
+  const prepareForExpander = useCallback(() => {
+    const { bases, themeProfile, label } = extractBasesForExpander(palette);
+    setExpanderBases(bases);
+    setExpanderThemeProfile(themeProfile);
+    return { bases, themeProfile, label };
+  }, [palette]);
 
-useEffect(() => {
-  if (!palette || palette.length === 0) return;
-  prepareForExpander();
-}, [palette]);
+  useEffect(() => {
+    if (!palette || palette.length === 0) return;
+    prepareForExpander();
+  }, [palette]);
 
   const [duplicatePalette, setDuplicatePalette] = useState([]);
   const [duplicatePaletteType, setDuplicatePaletteType] = useState("");
@@ -550,7 +432,6 @@ useEffect(() => {
     // Skip if no palette type selected yet (initial load)
     if (!selectedPaletteType) return; // This exits early, so no error below
 
-
     const pal = paletteDecider(
       oklch,
       analogOptions,
@@ -572,13 +453,12 @@ useEffect(() => {
       chromaticNeutralPalType,
       splitCompPalType,
       nearCompPalType,
-       monoColorCount,
-  monoHueDrift,
+      monoColorCount,
+      monoHueDrift,
     );
 
     if (pal && Array.isArray(pal) && pal.length > 0) {
       setPalette(pal);
-      
 
       if (
         selectedPaletteType === "analogous" &&
@@ -590,7 +470,6 @@ useEffect(() => {
         setDuplicatePalette(pal);
       }
     }
-    
   }, [
     oklch,
     analogOptions,
@@ -611,10 +490,23 @@ useEffect(() => {
     achroPalType,
     chromaticNeutralPalType,
     splitCompPalType,
-    nearCompPalType,  
+    nearCompPalType,
     monoColorCount,
-monoHueDrift, 
+    monoHueDrift,
   ]);
+
+  const { generateRandomColor, generateRandomPalette } = useRandomPalette({
+    analogOptions,
+    setOklch,
+    setSelectedPaletteType,
+    setAnalogPalType,
+    setCompPalType,
+    setFlowerPalType,
+    setDataVizPalType,
+    setDoubleSplitCompPalType,
+    setPalette,
+    setCurrentPaletteInfo,
+  });
 
   const values = {
     toggles,
@@ -716,14 +608,14 @@ monoHueDrift,
     achroPalType,
     setAchroPalType,
     monoColorCount,
-setMonoColorCount,
-monoHueDrift,
-setMonoHueDrift,
-expanderBases,
-setExpanderBases,
-expanderThemeProfile,
-setExpanderThemeProfile,
-prepareForExpander,
+    setMonoColorCount,
+    monoHueDrift,
+    setMonoHueDrift,
+    expanderBases,
+    setExpanderBases,
+    expanderThemeProfile,
+    setExpanderThemeProfile,
+    prepareForExpander,
   };
 
   return (

@@ -2,9 +2,11 @@ export const navDesktopElements = [
   {
     label: "Color Playground",
     submenu: [
+      { label: "Spectral Palettes", path: "/spectral-arc" },
       { label: "Random Palettes", path: "/random-palettes" },
       { label: "Custom Palettes", path: "/custom-palettes" },
-      { label: "Palette Expander", path: "/palette-expander" },
+      { label: "Single Palette Color Expander", path: "/palette-expander" },
+      { label: "Multi Palette Expander", path: "/palette-expander1" },
       { label: "Blend Colors", path: "/blend-colors" },
       { label: "Color Editor", path: "/color-editor" },
       { label: "Contrast Matrix", path: "/contrast-matrix" },
