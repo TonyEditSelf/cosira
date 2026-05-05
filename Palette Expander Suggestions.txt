@@ -1,0 +1,6 @@
+Priority order if building next:
+
+Style Dictionary — 30 min, just another export format, pure wins
+Primitive tokens — fills a real gap in current exports, needed for P2.6 to be fully checkable
+Harmony analysis — the highest-leverage differentiator from everything else out there
+Component mappings — most complex, most design work, most user-facing value

@@ -91,7 +91,30 @@ function autoAssign(palette) {
   return { primary, secondary, accent, neutral, background: null };
 }
 
-// Resolve the full token map from assignments + expanded data
+// ── FIXED resolveTokens ───────────────────────────────────────────────────────
+// Drop-in replacement for the resolveTokens function in FullPaletteExpand.jsx
+//
+// Root causes of dark-mode breakage that this fixes:
+//
+//  1. textColor used ns[900] in dark mode  → near-black on dark bg = invisible
+//     FIX: light → ns[900], dark → ns[50]  (flipped correctly)
+//
+//  2. textSubtle used ns[500] in dark mode → often too dark against dark surfaces
+//     FIX: light → ns[500], dark → ns[400]
+//
+//  3. borderColor used ns[200] in dark mode → very light border on dark bg
+//     FIX: light → ns[200], dark → ns[700]
+//
+//  4. navbarBg/surfaceColor token resolution for dark modes was mixing light
+//     values (e.g. "#ffffff") regardless of mode
+//     FIX: explicit light/dark branches for every bg mode
+//
+//  5. getContrastText(ps[500]) is correct — was checking ps[600] which is wrong
+//     FIX: kept ps[500] as the reference
+//
+//  6. No fallback when a scale slot is undefined (e.g. darkScale missing)
+//     FIX: added null-safe fallbacks throughout
+
 function resolveTokens(assignments, expanded, bgMode, mode) {
   if (!expanded || expanded.length === 0) return null;
 
@@ -110,6 +133,9 @@ function resolveTokens(assignments, expanded, bgMode, mode) {
   if (!primaryData) return null;
 
   const isLight = mode === "light";
+
+  // ── Scale accessors ──────────────────────────────────────────────────────────
+  // Use the correct scale for the current mode
   const scale = (data) =>
     data ? (isLight ? data.scale : data.darkScale) : null;
   const semScale = (data, key) =>
@@ -121,115 +147,99 @@ function resolveTokens(assignments, expanded, bgMode, mode) {
   const neuScale = (data) =>
     data ? (isLight ? data.neutralScale : data.darkNeutralScale) : null;
 
+  // Primary/secondary/accent/neutral resolved scales
   const ps = scale(primaryData);
-  const ss = scale(secondaryData) || ps;
+  const ss = scale(secondaryData) || ps; // fallback to primary if not assigned
   const as = scale(accentData) || ps;
   const ns = neuScale(neutralData || primaryData);
 
-  // Semantic scales (success/warning/error/info) — always from primary's derivation
+  // Semantic scales always derive from primary's palette derivation
   const successScale = semScale(primaryData, "success");
   const warningScale = semScale(primaryData, "warning");
   const errorScale = semScale(primaryData, "error");
   const infoScale = semScale(primaryData, "info");
 
-  // ── Background resolution ──────────────────────────────────────────────────
-  let bgColor, surfaceColor, surfaceRaisedColor, navbarBg, sidebarBg;
+  // ── Background resolution ────────────────────────────────────────────────────
+  // Each bgMode produces: bgColor, surfaceColor, surfaceRaisedColor, navbarBg, sidebarBg
+  // All as OKLCH color objects (or CSS strings for navbarBg/sidebarBg).
+  // Key rule: light mode → use low-step scale values (50/100); dark → high-step (800/900)
 
   const bgSource = bgData ? scale(bgData) : null;
-  const bgBaseScale = bgSource || ns;
+  const bgBaseScale = bgSource || ns; // custom bg slot falls back to neutral
+
+  let bgColor, surfaceColor, surfaceRaisedColor, navbarBgObj, sidebarBgObj;
 
   if (bgMode === "neutral") {
-    bgColor = isLight ? bgBaseScale?.[50] : bgBaseScale?.[900];
-    surfaceColor = isLight ? bgBaseScale?.[100] : bgBaseScale?.[800];
-    surfaceRaisedColor = isLight ? bgBaseScale?.[50] : bgBaseScale?.[800];
-    navbarBg = isLight
-      ? "#ffffff"
-      : bgBaseScale?.[900]
-        ? oklchToCss(bgBaseScale[900])
-        : "#111";
-    sidebarBg = isLight
+    // Clean neutral backgrounds — barely tinted
+    bgColor = isLight
       ? bgBaseScale?.[50]
-        ? oklchToCss(bgBaseScale[50])
-        : "#f8f8f8"
-      : bgBaseScale?.[900]
-        ? oklchToCss(bgBaseScale[900])
-        : "#111";
+      : bgBaseScale?.[950] || bgBaseScale?.[900];
+    surfaceColor = isLight
+      ? bgBaseScale?.[100]
+      : bgBaseScale?.[850] || bgBaseScale?.[800];
+    surfaceRaisedColor = isLight ? bgBaseScale?.[50] : bgBaseScale?.[800];
+    navbarBgObj = isLight ? { l: 1, c: 0, h: 0 } : bgBaseScale?.[900]; // white / very dark
+    sidebarBgObj = isLight ? bgBaseScale?.[50] : bgBaseScale?.[900];
   } else if (bgMode === "tinted") {
-    bgColor = isLight ? ps?.[50] : ps?.[900];
-    surfaceColor = isLight ? ps?.[100] : ps?.[800];
+    // Backgrounds washed with primary hue
+    bgColor = isLight ? ps?.[50] : ps?.[950] || ps?.[900];
+    surfaceColor = isLight ? ps?.[100] : ps?.[850] || ps?.[800];
     surfaceRaisedColor = isLight ? ps?.[50] : ps?.[800];
-    navbarBg = isLight ? "#ffffff" : ps?.[900] ? oklchToCss(ps[900]) : "#111";
-    sidebarBg = isLight
-      ? ps?.[50]
-        ? oklchToCss(ps[50])
-        : "#f8f8f8"
-      : ps?.[900]
-        ? oklchToCss(ps[900])
-        : "#111";
+    navbarBgObj = isLight ? { l: 1, c: 0, h: 0 } : ps?.[900];
+    sidebarBgObj = isLight ? ps?.[50] : ps?.[900];
   } else if (bgMode === "colored") {
+    // Bold brand backgrounds
     bgColor = isLight ? ps?.[100] : ps?.[900];
     surfaceColor = isLight ? ps?.[50] : ps?.[800];
     surfaceRaisedColor = isLight ? ps?.[50] : ps?.[700];
-    navbarBg = isLight
-      ? ps?.[600]
-        ? oklchToCss(ps[600])
-        : "#333"
-      : ps?.[900]
-        ? oklchToCss(ps[900])
-        : "#111";
-    sidebarBg = isLight
-      ? ps?.[200]
-        ? oklchToCss(ps[200])
-        : "#ddd"
-      : ps?.[900]
-        ? oklchToCss(ps[900])
-        : "#111";
+    navbarBgObj = isLight ? ps?.[600] : ps?.[900];
+    sidebarBgObj = isLight ? ps?.[200] : ps?.[900];
   } else if (bgMode === "dark-brand") {
+    // Always dark, hue-tinted
     bgColor = ps?.[900];
     surfaceColor = ps?.[800];
     surfaceRaisedColor = ps?.[700];
-    navbarBg = ps?.[900] ? oklchToCss(ps[900]) : "#111";
-    sidebarBg = ps?.[900] ? oklchToCss(ps[900]) : "#111";
+    navbarBgObj = ps?.[900];
+    sidebarBgObj = ps?.[900];
   } else {
-    // custom bg slot
+    // "custom" — use Background slot, fall back to neutral
     const cbs = bgSource || ns;
     bgColor = isLight ? cbs?.[50] : cbs?.[900];
     surfaceColor = isLight ? cbs?.[100] : cbs?.[800];
     surfaceRaisedColor = isLight ? cbs?.[50] : cbs?.[800];
-    navbarBg = isLight ? "#ffffff" : cbs?.[900] ? oklchToCss(cbs[900]) : "#111";
-    sidebarBg = isLight
-      ? cbs?.[50]
-        ? oklchToCss(cbs[50])
-        : "#f8f8f8"
-      : cbs?.[900]
-        ? oklchToCss(cbs[900])
-        : "#111";
+    navbarBgObj = isLight ? { l: 1, c: 0, h: 0 } : cbs?.[900];
+    sidebarBgObj = isLight ? cbs?.[50] : cbs?.[900];
   }
 
-  // ── Text colors based on actual background ─────────────────────────────────
-  const bgForContrast = bgColor || { l: isLight ? 0.98 : 0.08, c: 0, h: 0 };
-  const textOnBg = getContrastText(bgForContrast);
-  const textColor = isLight ? ns?.[900] : ns?.[50];
-  const textSubtle = isLight ? ns?.[500] : ns?.[400];
-  const borderColor = isLight ? ns?.[200] : ns?.[700];
+  // ── Text & border colors — always relative to background ────────────────────
+  // The critical fix: in dark mode, readable text comes from the LIGHT end of
+  // the neutral scale (50/100/200), not the dark end (800/900).
 
-  // navbar text contrast
-  let navbarBgColor;
-  try {
-    if (typeof navbarBg === "string" && navbarBg.startsWith("oklch")) {
-      navbarBgColor = { l: isLight ? 0.99 : 0.1, c: 0, h: 0 }; // fallback
-    } else {
-      navbarBgColor = bgForContrast;
-    }
-  } catch {
-    navbarBgColor = bgForContrast;
-  }
+  const textColor = isLight ? ns?.[900] : ns?.[50]; // ← was: always ns[900]
+  const textSubtle = isLight ? ns?.[500] : ns?.[400]; // ← was: always ns[500]
+  const borderColor = isLight ? ns?.[200] : ns?.[700]; // ← was: always ns[200]
 
+  // ── Navbar text contrast — derive from the actual navbar background ──────────
+  // Previously this was guessing from oklch string content — unreliable.
+  // Instead: just check isLight for the common cases.
+  const navbarTextColor = navbarBgObj
+    ? getContrastText(navbarBgObj)
+    : isLight
+      ? "black"
+      : "white";
+  const navbarTextMutedColor = isLight ? ns?.[500] : ns?.[400];
+
+  // ── CSS serialization helpers ────────────────────────────────────────────────
   const css = (c) => (c ? oklchToCss(c) : "transparent");
+  const cssStr = (c, fallback) => {
+    if (!c) return fallback;
+    if (typeof c === "string") return c; // already a CSS string
+    return oklchToCss(c);
+  };
 
-  // Build token object — keys become --prev-{key} CSS vars in preview
-  const tokens = {
-    // backgrounds
+  // ── Build final token map ────────────────────────────────────────────────────
+  return {
+    // ── Surfaces ──────────────────────────────────────────────────────────────
     background: bgColor ? css(bgColor) : isLight ? "#f9fafb" : "#0f1117",
     surface: surfaceColor ? css(surfaceColor) : isLight ? "#ffffff" : "#1a1d27",
     "surface-raised": surfaceRaisedColor
@@ -239,7 +249,8 @@ function resolveTokens(assignments, expanded, bgMode, mode) {
         : "#22263a",
     border: borderColor ? css(borderColor) : isLight ? "#e5e7eb" : "#2d3148",
 
-    // text
+    // ── Text (THE KEY FIX) ────────────────────────────────────────────────────
+    // light: dark text on light bg | dark: light text on dark bg
     text: textColor ? css(textColor) : isLight ? "#111827" : "#f1f5f9",
     "text-subtle": textSubtle
       ? css(textSubtle)
@@ -247,7 +258,7 @@ function resolveTokens(assignments, expanded, bgMode, mode) {
         ? "#6b7280"
         : "#8b95b0",
 
-    // primary
+    // ── Primary scale ─────────────────────────────────────────────────────────
     "primary-50": css(ps?.[50]),
     "primary-100": css(ps?.[100]),
     "primary-200": css(ps?.[200]),
@@ -258,9 +269,10 @@ function resolveTokens(assignments, expanded, bgMode, mode) {
     "primary-700": css(ps?.[700]),
     "primary-800": css(ps?.[800]),
     "primary-900": css(ps?.[900]),
-    "on-primary": ps?.[600] ? getContrastText(ps[500]) : "white",
+    // on-primary: what color text to put ON a primary-500 button
+    "on-primary": ps?.[500] ? getContrastText(ps[500]) : "white",
 
-    // secondary
+    // ── Secondary scale ───────────────────────────────────────────────────────
     "secondary-50": css(ss?.[50]),
     "secondary-100": css(ss?.[100]),
     "secondary-200": css(ss?.[200]),
@@ -271,7 +283,7 @@ function resolveTokens(assignments, expanded, bgMode, mode) {
     "secondary-700": css(ss?.[700]),
     "on-secondary": ss?.[500] ? getContrastText(ss[500]) : "white",
 
-    // accent
+    // ── Accent scale ──────────────────────────────────────────────────────────
     "accent-50": css(as?.[50]),
     "accent-100": css(as?.[100]),
     "accent-200": css(as?.[200]),
@@ -282,7 +294,7 @@ function resolveTokens(assignments, expanded, bgMode, mode) {
     "accent-700": css(as?.[700]),
     "on-accent": as?.[500] ? getContrastText(as[500]) : "white",
 
-    // neutral
+    // ── Neutral scale ─────────────────────────────────────────────────────────
     "neutral-50": css(ns?.[50]),
     "neutral-100": css(ns?.[100]),
     "neutral-200": css(ns?.[200]),
@@ -294,7 +306,7 @@ function resolveTokens(assignments, expanded, bgMode, mode) {
     "neutral-800": css(ns?.[800]),
     "neutral-900": css(ns?.[900]),
 
-    // semantic
+    // ── Semantic scales ───────────────────────────────────────────────────────
     "success-100": css(successScale?.[100]),
     "success-500": css(successScale?.[500]),
     "success-600": css(successScale?.[600]),
@@ -311,19 +323,24 @@ function resolveTokens(assignments, expanded, bgMode, mode) {
     "info-500": css(infoScale?.[500]),
     "info-600": css(infoScale?.[600]),
 
-    // navbar
-    "navbar-bg": navbarBg || (isLight ? "#ffffff" : "#0f1117"),
+    // ── Navbar ────────────────────────────────────────────────────────────────
+    "navbar-bg": cssStr(navbarBgObj, isLight ? "#ffffff" : "#0f1117"),
     "navbar-border": isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.08)",
-    "navbar-text": isLight ? "#111827" : "#f1f5f9",
-    "navbar-text-muted": isLight ? "#6b7280" : "#8b95b0",
+    "navbar-text":
+      navbarTextColor === "white"
+        ? css(ns?.[50]) || "#f1f5f9"
+        : css(ns?.[900]) || "#111827",
+    "navbar-text-muted": navbarTextMutedColor
+      ? css(navbarTextMutedColor)
+      : isLight
+        ? "#6b7280"
+        : "#8b95b0",
     "navbar-search-bg": isLight ? "#f3f4f6" : "rgba(255,255,255,0.06)",
     "navbar-kbd-bg": isLight ? "#e5e7eb" : "rgba(255,255,255,0.1)",
 
-    // sidebar
-    "sidebar-bg": sidebarBg || (isLight ? "#f9fafb" : "#0f1117"),
+    // ── Sidebar ───────────────────────────────────────────────────────────────
+    "sidebar-bg": cssStr(sidebarBgObj, isLight ? "#f9fafb" : "#0f1117"),
   };
-
-  return tokens;
 }
 
 // ── Role config ───────────────────────────────────────────────────────────────

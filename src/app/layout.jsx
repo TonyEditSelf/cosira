@@ -5,7 +5,7 @@ import { ColorPaletteContextProvider } from "./(palettes)/ColorContext";
 // ⬆ important: import provider from palettes folder
 
 export const metadata = {
-  title: "Tofabzo - Brand Building Tools",
+  title: "COSIRA - Brand Building Tools",
   description: "A collection of tools for color palette generation",
 };
 

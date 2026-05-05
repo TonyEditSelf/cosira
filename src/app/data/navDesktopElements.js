@@ -8,8 +8,8 @@ export const navDesktopElements = [
       { label: "Single Palette Color Expander", path: "/palette-expander" },
       { label: "Multi Palette Expander", path: "/palette-expander1" },
       { label: "Blend Colors", path: "/blend-colors" },
-      { label: "Color Editor", path: "/color-editor" },
-      { label: "Contrast Matrix", path: "/contrast-matrix" },
+      // { label: "Color Editor", path: "/color-editor" },
+      // { label: "Contrast Matrix", path: "/contrast-matrix" },
       { label: "Tonalist", path: "/tonalist" },
       { label: "Bezier Blend", path: "/bezier-blend" },
       { label: "Color Adjust", path: "/color-adjust" },
@@ -19,24 +19,24 @@ export const navDesktopElements = [
       { label: "Culture & Festival Palettes", path: "/culture-palettes" },
     ],
   },
-  {
-    label: "Font Playground",
-    submenu: [
-      // Add your font playground items here
-      // { label: "Spacing Generator", path: "/spacing-system" },
-      // { label: "Spacing Generator", path: "/new-spacing" },
-      { label: "Spacing Gen", path: "/ultimate-space" },
-      { label: "Preview Fonts and Palette", path: "/preview-fonts-palette" },
-    ],
-  },
-  {
-    label: "Design Playground",
-    submenu: [
-      // Add your design playground items here
-      { label: "Design Item 1", path: "/design-item-1" },
-      { label: "Design Item 2", path: "/design-item-2" },
-    ],
-  },
+  // {
+  //   label: "Font Playground",
+  //   submenu: [
+  //     // Add your font playground items here
+  //     // { label: "Spacing Generator", path: "/spacing-system" },
+  //     // { label: "Spacing Generator", path: "/new-spacing" },
+  //     { label: "Spacing Gen", path: "/ultimate-space" },
+  //     { label: "Preview Fonts and Palette", path: "/preview-fonts-palette" },
+  //   ],
+  // },
+  // {
+  //   label: "Design Playground",
+  //   submenu: [
+  //     // Add your design playground items here
+  //     { label: "Design Item 1", path: "/design-item-1" },
+  //     { label: "Design Item 2", path: "/design-item-2" },
+  //   ],
+  // },
 ];
 
 // navMobileElements.js

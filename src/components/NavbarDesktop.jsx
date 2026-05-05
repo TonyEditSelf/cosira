@@ -58,7 +58,10 @@ export default function NavbarDesktop() {
             </button>
 
             {isOpen && (
-              <div className="nav-dropdown absolute top-full left-0 mt-2 min-w-[200px] z-50">
+              <div
+                style={{ border: "5px solid red" }}
+                className="nav-dropdown absolute top-full left-0 mt-2 min-w-[200px] z-50"
+              >
                 <div className="nav-dropdown__inner py-1.5">
                   {element.submenu.map((item, i) => (
                     <NavLinkIsActive
@@ -77,10 +80,6 @@ export default function NavbarDesktop() {
           </div>
         );
       })}
-
-      <button className="nav-kebab-btn ml-2 p-1.5 rounded-md">
-        <CiMenuKebab className="text-lg" />
-      </button>
     </div>
   );
 }

@@ -1,0 +1,14 @@
+What the algorithm does, piece by piece:
+1. Golden Angle spacing
+The golden angle (137.5°) is not unique to this — it's used in nature (sunflower seeds, leaf arrangements) and several palette tools use it for hue distribution. Palleton, some d3 color schemes, and a few open source generators use golden ratio hue stepping. Not unique.
+2. Warmth-based arc bias
+Blending linear hue spacing with golden angle spacing, where how much you blend is driven by the seed hue's warmth (via a sine function). This specific mechanic — using the hue's own warmth as a continuous dial between two spacing strategies — I haven't seen this exact approach elsewhere. Likely unique.
+3. Role profiles
+Assigning named personality roles (Anchor, Shadow, Vivid, etc.) with independent L and C modifiers per color is conceptually similar to what tools like Huemint and Realtime Colors do implicitly. But those tools use ML or fixed templates. Doing it as explicit shuffleable profiles with jitter is a more mechanical/transparent version. Partially unique.
+4. Mood scalar
+A single multiplier that stretches or compresses chroma across the whole palette uniformly. Simple idea, clean execution. Adobe Color and Coolors don't expose this directly but their "vibrant/muted" modes do something similar under the hood. Not unique in concept, but the implementation here is simpler and more transparent.
+5. Seeded RNG driving all randomness
+Standard practice in generative art tools. Totally common. Not unique.
+6. Tension Accent with warm/cool polarity
+Instead of a pure 180° complement, offsetting by warmth bias ± random polarity. This is the most genuinely novel piece — most tools just do straight complementary. The idea that the accent leans based on the seed's own warmth character is subtle but meaningful. Likely unique.
+

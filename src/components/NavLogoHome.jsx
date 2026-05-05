@@ -27,7 +27,9 @@ export default function NavLogoHome() {
       </button>
 
       {/* Mobile menu overlay */}
-      <div className={`mobile-overlay lg:hidden ${mobileMenuOpen ? "mobile-overlay--open" : ""}`}>
+      <div
+        className={`mobile-overlay lg:hidden ${mobileMenuOpen ? "mobile-overlay--open" : ""}`}
+      >
         <div className="mobile-overlay__panel">
           <div className="mobile-overlay__header flex items-center justify-between px-6 py-4 mb-4">
             {/* Logo repeated in panel */}
@@ -36,9 +38,15 @@ export default function NavLogoHome() {
               className={`${orbitron.className} text-sm font-[900] text-[var(--brand)]`}
               onClick={() => setMobileMenuOpen(false)}
             >
-              <span className="border-l-2 border-t-2 border-b-2 rounded-tl-lg border-[var(--brand)] px-1.5 py-0.5">TO</span>
-              <span className="border-2 border-[var(--brand)] px-1.5 py-0.5">FAB</span>
-              <span className="border-r-2 border-t-2 border-b-2 border-[var(--brand)] rounded-br-lg px-1.5 py-0.5">ZA</span>
+              <span className="border-l-2 border-t-2 border-b-2 rounded-tl-lg border-[var(--brand)] px-1.5 py-0.5">
+                CO
+              </span>
+              <span className="border-2 border-[var(--brand)] px-1.5 py-0.5">
+                SI
+              </span>
+              <span className="border-r-2 border-t-2 border-b-2 border-[var(--brand)] rounded-br-lg px-1.5 py-0.5">
+                RA
+              </span>
             </Link>
 
             <button
@@ -59,9 +67,13 @@ export default function NavLogoHome() {
         href={"/"}
         className={`${orbitron.className} text-[15px] lg:text-[17px] font-[900] text-[var(--brand)] nav-logo`}
       >
-        <span className="border-l-2 border-t-2 border-b-2 rounded-tl-xl border-[var(--brand)] px-2 py-1">TO</span>
-        <span className="border-2 border-[var(--brand)] px-2 py-1">FAB</span>
-        <span className="border-r-2 border-t-2 border-b-2 border-[var(--brand)] rounded-br-xl px-2 py-1">ZA</span>
+        <span className="border-l-2 border-t-2 border-b-2 rounded-tl-xl border-[var(--brand)] px-2 py-1">
+          CO
+        </span>
+        <span className="border-2 border-[var(--brand)] px-2 py-1">SI</span>
+        <span className="border-r-2 border-t-2 border-b-2 border-[var(--brand)] rounded-br-xl px-2 py-1">
+          RA
+        </span>
       </Link>
     </>
   );
