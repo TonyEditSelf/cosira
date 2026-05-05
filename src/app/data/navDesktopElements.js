@@ -2,17 +2,17 @@ export const navDesktopElements = [
   {
     label: "Color Playground",
     submenu: [
+      { label: "Home", path: "/" },
       { label: "Spectral Palettes", path: "/spectral-arc" },
       { label: "Random Palettes", path: "/random-palettes" },
       { label: "Custom Palettes", path: "/custom-palettes" },
       { label: "Single Palette Color Expander", path: "/palette-expander" },
       { label: "Multi Palette Expander", path: "/palette-expander1" },
       { label: "Blend Colors", path: "/blend-colors" },
-      // { label: "Color Editor", path: "/color-editor" },
-      // { label: "Contrast Matrix", path: "/contrast-matrix" },
+
       { label: "Tonalist", path: "/tonalist" },
       { label: "Bezier Blend", path: "/bezier-blend" },
-      // { label: "Color Adjust", path: "/color-adjust" },
+
       { label: "Gradient Generator", path: "/gradient-tool" },
       { label: "Temperature Shifter", path: "/temp-shifter" },
       { label: "Mood Palettes", path: "/mood-palettes" },
