@@ -12,7 +12,7 @@ export const navDesktopElements = [
       // { label: "Contrast Matrix", path: "/contrast-matrix" },
       { label: "Tonalist", path: "/tonalist" },
       { label: "Bezier Blend", path: "/bezier-blend" },
-      { label: "Color Adjust", path: "/color-adjust" },
+      // { label: "Color Adjust", path: "/color-adjust" },
       { label: "Gradient Generator", path: "/gradient-tool" },
       { label: "Temperature Shifter", path: "/temp-shifter" },
       { label: "Mood Palettes", path: "/mood-palettes" },
