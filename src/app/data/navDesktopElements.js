@@ -51,18 +51,18 @@ export const navMobileElements = [
       { label: "Palette Expander", path: "/palette-expander" },
     ],
   },
-  {
-    label: "Font Playground",
-    submenu: [
-      { label: "Font Item 1", path: "/font-item-1" },
-      { label: "Font Item 2", path: "/font-item-2" },
-    ],
-  },
-  {
-    label: "Design Playground",
-    submenu: [
-      { label: "Design Item 1", path: "/design-item-1" },
-      { label: "Design Item 2", path: "/design-item-2" },
-    ],
-  },
+  // {
+  //   label: "Font Playground",
+  //   submenu: [
+  //     { label: "Font Item 1", path: "/font-item-1" },
+  //     { label: "Font Item 2", path: "/font-item-2" },
+  //   ],
+  // },
+  // {
+  //   label: "Design Playground",
+  //   submenu: [
+  //     { label: "Design Item 1", path: "/design-item-1" },
+  //     { label: "Design Item 2", path: "/design-item-2" },
+  //   ],
+  // },
 ];
