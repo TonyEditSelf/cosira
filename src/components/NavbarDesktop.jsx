@@ -59,7 +59,7 @@ export default function NavbarDesktop() {
 
             {isOpen && (
               <div
-                style={{ border: "5px solid red" }}
+                // style={{ border: "5px solid red" }}
                 className="nav-dropdown absolute top-full left-0 mt-2 min-w-[200px] z-50"
               >
                 <div className="nav-dropdown__inner py-1.5">
