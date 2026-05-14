@@ -7,7 +7,7 @@ export const navDesktopElements = [
       { label: "Random Palettes", path: "/random-palettes" },
       { label: "Custom Palettes", path: "/custom-palettes" },
       { label: "Single Palette Color Expander", path: "/palette-expander" },
-      { label: "Multi Palette Expander", path: "/palette-expander1" },
+      // { label: "Multi Palette Expander", path: "/palette-expander1" },
       { label: "Blend Colors", path: "/blend-colors" },
 
       { label: "Tonalist", path: "/tonalist" },

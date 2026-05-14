@@ -66,21 +66,4 @@ export const randomPaletteTypes = [
     description:
       "Intentionally jarring combinations (30-60° off harmonies) — bold, attention-grabbing tension",
   },
-  {
-    label: "Brand Palette",
-    value: "brandPalette",
-    description: "Multiple distinct hues",
-  },
-  {
-    label: "UI Palette",
-    value: "uiPalette",
-    description:
-      "A balanced set of multiple distinct hues designed for user interfaces. Optimized for clarity, accessibility, and role differentiation across buttons, alerts, and interactive elements.",
-  },
-  {
-    label: "Design System Palette",
-    value: "designSystemPalette",
-    description:
-      "A scalable palette with core hues defined across tonal ranges. Ideal for building consistent, themeable design systems and maintaining visual hierarchy.",
-  },
 ];

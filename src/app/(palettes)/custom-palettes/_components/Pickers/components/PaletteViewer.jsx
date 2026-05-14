@@ -7,7 +7,7 @@ import * as allColors from "color-name-list";
 import nearestColor from "nearest-color";
 import chroma from "chroma-js";
 import { RiAddLargeLine } from "react-icons/ri";
-import { FiDroplet, FiMoon } from "react-icons/fi";
+import { FiDroplet, FiMoon, FiTrash2 } from "react-icons/fi";
 import { BsCircleHalf } from "react-icons/bs";
 import { FaCrosshairs, FaLayerGroup } from "react-icons/fa";
 import OffAndOn from "../../OffAndOn";
@@ -48,12 +48,19 @@ export default function PaletteViewer() {
     setDatabaseOpen,
     shadesTintsTonesValues,
     selectedPaletteType,
+    setSelectedPaletteType,
     hoverOn,
     setHoverOn,
     favColors,
     setFavColors,
     favPalette,
     setFavPalette,
+    applySavedPalette,
+    applySavedColor,
+    clearFavColors,
+    clearFavPalette,
+    removeFavColorAt,
+    removeFavPaletteAt,
   } = useColorPaletteContext();
 
   const toggleConfig = [
@@ -74,6 +81,11 @@ export default function PaletteViewer() {
     { key: "blackContrastOn", label: "Show Black Contrast" },
     { key: "addColor", label: "Show Add Color" },
   ];
+
+  const handleSavedPaletteClick = (paletteObj) => {
+    applySavedPalette(paletteObj);
+    setDatabaseOpen(false);
+  };
 
   return (
     <main className="hidden lg:flex flex-col pt-3 h-full">
@@ -554,44 +566,108 @@ export default function PaletteViewer() {
 
             {databaseOpen && (
               <div className="absolute top-2 bottom-2 left-2 right-2 bg-[var(--background)] overflow-auto flex gap-3">
-                <div className="border-2 py-3 w-[26%] flex gap-2 flex-wrap justify-center overflow-auto content-start">
-                  {favColors.map((color, index) => {
-                    const { l, c, h, a = 1 } = color;
+                <div className="border-2 py-3 px-2 w-[26%] flex flex-col gap-3 overflow-auto content-start">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/45">
+                      Saved Colors
+                    </span>
+                    <button
+                      type="button"
+                      onClick={clearFavColors}
+                      className="flex items-center gap-1 rounded border border-[var(--navBorder)] px-2 py-1 text-[9px] font-bold uppercase text-foreground/55 hover:border-[var(--muted-foreground)]"
+                    >
+                      <FiTrash2 className="size-3" />
+                      Empty
+                    </button>
+                  </div>
 
-                    const cssCol = oklchToCss(l, c, h, a);
+                  <div className="flex gap-2 flex-wrap justify-center content-start">
+                    {favColors.map((color, index) => {
+                      const { l, c, h, a = 1 } = color;
+                      const cssCol = oklchToCss(l, c, h, a);
 
-                    return (
-                      <span
-                        key={index}
-                        className="w-10 h-10 border-0 inline-block cursor-pointer"
-                        style={{ backgroundColor: cssCol }}
-                      ></span>
-                    );
-                  })}
+                      return (
+                        <div
+                          key={index}
+                          className="group relative w-10 h-10 shrink-0"
+                        >
+                          <button
+                            type="button"
+                            className="w-10 h-10 border border-[var(--navBorder)] inline-block cursor-pointer rounded-sm"
+                            style={{ backgroundColor: cssCol }}
+                            onClick={() => applySavedColor(color)}
+                          />
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeFavColorAt(index);
+                            }}
+                            className="absolute -top-2 -right-2 rounded-full border border-[var(--navBorder)] bg-[var(--background)] p-0.5 opacity-0 shadow-sm transition-opacity group-hover:opacity-100"
+                            aria-label="Delete saved color"
+                          >
+                            <FiTrash2 className="size-3" />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
 
-                <div className="border-2 py-4 px-2 w-[74%] gap-2 flex flex-wrap justify-center overflow-auto content-start">
-                  {favPalette.map((paletteObj, pIndex) => {
-                    return (
-                      <div
-                        key={pIndex}
-                        className="w-[415px] h-fit flex justify-center items-center"
-                      >
-                        {paletteObj.palette.map((colorObj, cIndex) => {
-                          const { l, c, h, a } = colorObj.value;
+                <div className="border-2 py-4 px-2 w-[74%] gap-3 flex flex-col overflow-auto content-start">
+                  <div className="flex items-center justify-between gap-2 px-1">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/45">
+                      Saved Palettes
+                    </span>
+                    <button
+                      type="button"
+                      onClick={clearFavPalette}
+                      className="flex items-center gap-1 rounded border border-[var(--navBorder)] px-2 py-1 text-[9px] font-bold uppercase text-foreground/55 hover:border-[var(--muted-foreground)]"
+                    >
+                      <FiTrash2 className="size-3" />
+                      Empty
+                    </button>
+                  </div>
 
-                          const cssCol = oklchToCss(l, c, h, a);
-                          return (
-                            <span
-                              key={cIndex}
-                              className="w-[10%] h-10 border-0 inline-block cursor-pointer"
-                              style={{ backgroundColor: cssCol }}
-                            ></span>
-                          );
-                        })}
-                      </div>
-                    );
-                  })}
+                  <div className="flex flex-wrap justify-center gap-3 overflow-auto content-start">
+                    {favPalette.map((paletteObj, pIndex) => {
+                      return (
+                        <div
+                          key={pIndex}
+                          className="group relative flex w-[415px] flex-col gap-2 rounded-md border border-[var(--navBorder)] bg-foreground/[0.02] p-2 text-left cursor-pointer hover:border-[var(--muted-foreground)]"
+                          onClick={() => handleSavedPaletteClick(paletteObj)}
+                        >
+                          <div className="flex h-12 w-full overflow-hidden rounded-sm border border-[var(--navBorder)]">
+                            {paletteObj.palette.map((colorObj, cIndex) => {
+                              const { l, c, h, a } = colorObj.value;
+                              const cssCol = oklchToCss(l, c, h, a);
+                              return (
+                                <span
+                                  key={cIndex}
+                                  className="h-full flex-1 border-0 inline-block cursor-pointer"
+                                  style={{ backgroundColor: cssCol }}
+                                ></span>
+                              );
+                            })}
+                          </div>
+                          <span className="px-1 text-[9px] uppercase tracking-widest text-foreground/50 truncate">
+                            {paletteObj.type || "saved palette"}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeFavPaletteAt(pIndex);
+                            }}
+                            className="absolute right-2 top-2 rounded-full border border-[var(--navBorder)] bg-[var(--background)] p-1 opacity-0 shadow-sm transition-opacity group-hover:opacity-100"
+                            aria-label="Delete saved palette"
+                          >
+                            <FiTrash2 className="size-3" />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             )}

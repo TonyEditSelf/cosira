@@ -313,6 +313,7 @@ export function ColorPaletteContextProvider({ children }) {
   const [nearCompPalType, setNearCompPalType] = useState("warm-lean");
 
   const [paletteState, setPaletteState] = useState([]);
+  const paletteLoadLockRef = useRef(false);
 
   const setPalette = useCallback((newPalette) => {
     if (newPalette !== undefined && newPalette !== null) {
@@ -321,6 +322,40 @@ export function ColorPaletteContextProvider({ children }) {
       console.error("Attempted to set palette to undefined/null - blocked");
       console.trace();
     }
+  }, []);
+
+  const applySavedPalette = useCallback(
+    (savedPalette) => {
+      if (!savedPalette?.palette?.length) return;
+
+      paletteLoadLockRef.current = true;
+      const clonedPalette = savedPalette.palette.map((item) => ({
+        ...item,
+        value: { ...item.value },
+      }));
+
+      setPalette(clonedPalette);
+      setDuplicatePalette(clonedPalette);
+      setDuplicatePaletteType(savedPalette.type || "");
+      setSelectedPaletteType(savedPalette.type || "");
+      setOklch({ ...clonedPalette[0].value });
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          paletteLoadLockRef.current = false;
+        });
+      });
+    },
+    [],
+  );
+
+  const applySavedColor = useCallback((savedColor) => {
+    if (!savedColor) return;
+    setOklch((prev) => ({
+      ...prev,
+      ...savedColor,
+      a: savedColor.a ?? prev.a ?? 1,
+    }));
   }, []);
 
   const palette = paletteState;
@@ -358,6 +393,22 @@ export function ColorPaletteContextProvider({ children }) {
 
   const [favColors, setFavColors] = useState([]);
   const [favPalette, setFavPalette] = useState([]);
+
+  const clearFavColors = useCallback(() => {
+    setFavColors([]);
+  }, []);
+
+  const clearFavPalette = useCallback(() => {
+    setFavPalette([]);
+  }, []);
+
+  const removeFavColorAt = useCallback((index) => {
+    setFavColors((prev) => prev.filter((_, i) => i !== index));
+  }, []);
+
+  const removeFavPaletteAt = useCallback((index) => {
+    setFavPalette((prev) => prev.filter((_, i) => i !== index));
+  }, []);
 
   // Load once on mount (browser only)
   useEffect(() => {
@@ -427,6 +478,7 @@ export function ColorPaletteContextProvider({ children }) {
   }, [selectedPaletteType]);
 
   useEffect(() => {
+    if (paletteLoadLockRef.current) return;
     setShadesTintsTonesIndex(null);
 
     // Skip if no palette type selected yet (initial load)
@@ -515,6 +567,7 @@ export function ColorPaletteContextProvider({ children }) {
     setAnalogOptions,
     palette,
     setPalette,
+    applySavedPalette,
     duplicatePalette,
     setDuplicatePalette,
     paletteHistory,
@@ -591,6 +644,11 @@ export function ColorPaletteContextProvider({ children }) {
     setFavColors,
     favPalette,
     setFavPalette,
+    applySavedColor,
+    clearFavColors,
+    clearFavPalette,
+    removeFavColorAt,
+    removeFavPaletteAt,
     generateRandomColor,
     generateRandomPalette,
     chromaticNeutralPalType,

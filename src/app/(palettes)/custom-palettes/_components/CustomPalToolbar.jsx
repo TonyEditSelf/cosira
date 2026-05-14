@@ -1,24 +1,21 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { IoContrast } from "react-icons/io5";
 import { IoMdClose } from "react-icons/io";
 import { SiShowtime } from "react-icons/si";
 import { paletteTypes } from "@/app/data/paletteTypes";
-import { FaDatabase } from "react-icons/fa";
+import { FaDatabase, FaSave, FaPlay } from "react-icons/fa";
 import SelectComp from "./SelectComp";
 import { HiMiniAdjustmentsHorizontal } from "react-icons/hi2";
 import { TbArrowsMaximize } from "react-icons/tb";
-
 import {
   FaAnglesUp,
   FaAnglesDown,
   FaAnglesLeft,
   FaAnglesRight,
 } from "react-icons/fa6";
-import { FaSave, FaPlay } from "react-icons/fa";
 import { useColorPaletteContext } from "../../ColorContext";
+import PaletteExportMenu from "../../shared/PaletteExportMenu";
 
 export default function CustomPalToolbar() {
   const pathname = usePathname();
@@ -28,12 +25,9 @@ export default function CustomPalToolbar() {
     palette,
     setPalette,
     paletteHistory,
-    setPaletteHistory,
     paletteHistoryCounter,
     setPaletteHistoryCounter,
-    historyNavigation,
     setOklch,
-    setHistoryNavigation,
     historyNavigationRef,
     setLeftPaletteAdjusterOpen,
     setMyColorPickerOpen,
@@ -41,7 +35,6 @@ export default function CustomPalToolbar() {
     cssColor,
     selectedPaletteType,
     setSelectedPaletteType,
-    duplicatePaletteType,
     setDuplicatePaletteType,
     showHidePanelOpen,
     setShowHidePanelOpen,
@@ -49,18 +42,32 @@ export default function CustomPalToolbar() {
     setDatabaseOpen,
     favPalette,
     setFavPalette,
-    generateRandomColor,
     generateRandomPalette,
     prepareForExpander,
-    expanderThemeProfile,
   } = useColorPaletteContext();
 
   const isRandomPalettesPage = pathname === "/random-palettes";
+  const paletteTypeValues = paletteTypes.map((item) => item.value);
+
+  const shiftPaletteType = (direction) => {
+    if (!paletteTypeValues.length) return;
+
+    const currentIndex = Math.max(
+      0,
+      paletteTypeValues.indexOf(selectedPaletteType),
+    );
+    const nextIndex =
+      direction === "up"
+        ? (currentIndex - 1 + paletteTypeValues.length) %
+          paletteTypeValues.length
+        : (currentIndex + 1) % paletteTypeValues.length;
+
+    setSelectedPaletteType(paletteTypeValues[nextIndex]);
+  };
 
   const handleExpand = () => {
-    const { bases, label } = prepareForExpander();
+    const { bases } = prepareForExpander();
     if (!bases || bases.length === 0) return;
-    // Navigate — expander reads expanderBases from context
     router.push("/palette-expander");
   };
 
@@ -139,17 +146,39 @@ export default function CustomPalToolbar() {
         disabled={isRandomPalettesPage}
       />
 
-      <FaAnglesUp className="size-7 cursor-pointer border border-(--navBorder) py-2 px-2 rounded-md hover:border-muted-foreground" />
-      <FaAnglesDown className="size-7 cursor-pointer border border-(--navBorder) hover:border-muted-foreground p-2 rounded-md" />
-
-      <section className="flex gap-5 items-center border border-(--navBorder) hover:border-muted-foreground pl-5 rounded-md">
-        <p className="h-full">Pick Color: </p>
+      {!isRandomPalettesPage && (
         <button
-          onClick={() => setMyColorPickerOpen((prev) => !prev)}
-          className="rounded-md h-8.75 py-1 px-20 cursor-pointer"
-          style={{ backgroundColor: `${cssColor}` }}
-        />
-      </section>
+          type="button"
+          onClick={() => shiftPaletteType("up")}
+          className="size-7 cursor-pointer border border-(--navBorder) py-2 px-2 rounded-md hover:border-muted-foreground"
+          title="Previous theme"
+        >
+          <FaAnglesUp className="size-3.5" />
+        </button>
+      )}
+
+      {!isRandomPalettesPage && (
+        <button
+          type="button"
+          onClick={() => shiftPaletteType("down")}
+          className="size-7 cursor-pointer border border-(--navBorder) hover:border-muted-foreground p-2 rounded-md"
+          title="Next theme"
+        >
+          <FaAnglesDown className="size-3.5" />
+        </button>
+      )}
+
+      {!isRandomPalettesPage && (
+        <section className="flex gap-5 items-center border border-(--navBorder) hover:border-muted-foreground pl-5 rounded-md">
+          <p className="h-full">Pick Color: </p>
+          <button
+            type="button"
+            onClick={() => setMyColorPickerOpen((prev) => !prev)}
+            className="rounded-md h-8.75 py-1 px-20 cursor-pointer"
+            style={{ backgroundColor: `${cssColor}` }}
+          />
+        </section>
+      )}
 
       <FaAnglesLeft
         className="size-7 cursor-pointer py-2 px-2 rounded-md border border-(--navBorder) hover:border-muted-foreground"
@@ -172,7 +201,8 @@ export default function CustomPalToolbar() {
         onClick={() => {
           const favpalObject = { palette, type: selectedPaletteType };
           const exists = favPalette.some(
-            (element) => JSON.stringify(element) === JSON.stringify(favpalObject)
+            (element) =>
+              JSON.stringify(element) === JSON.stringify(favpalObject),
           );
           if (!exists) {
             setFavPalette((prev) => [
@@ -183,18 +213,6 @@ export default function CustomPalToolbar() {
         }}
         className="size-7 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]"
       />
-
-      {/* ── EXPAND BUTTON ───────────────────────────────────────────── */}
-      <button
-        onClick={handleExpand}
-        title="Expand this palette into a full design system"
-        className="flex items-center gap-1.5 px-2.5 h-7 cursor-pointer border-2 border-[var(--brand)] rounded-md hover:bg-[var(--brand)] hover:text-white transition-all group"
-      >
-        <TbArrowsMaximize className="size-3.5 text-[var(--brand)] group-hover:text-white transition-colors" />
-        <span className="text-[10px] font-bold text-[var(--brand)] group-hover:text-white transition-colors leading-none">
-          Expand
-        </span>
-      </button>
 
       {!databaseOpen ? (
         <FaDatabase
@@ -207,6 +225,23 @@ export default function CustomPalToolbar() {
           className="size-7 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]"
         />
       )}
+      <PaletteExportMenu
+        palette={palette}
+        paletteName={selectedPaletteType || "palette"}
+        buttonLabel="Export"
+        placement="up"
+      />
+
+      <button
+        onClick={handleExpand}
+        title="Expand this palette into a full design system"
+        className="flex items-center gap-1.5 px-2.5 h-7 cursor-pointer border-2 border-[var(--brand)] rounded-md hover:bg-[var(--brand)] hover:text-white transition-all group"
+      >
+        <TbArrowsMaximize className="size-3.5 text-[var(--brand)] group-hover:text-white transition-colors" />
+        <span className="text-[10px] font-bold text-[var(--brand)] group-hover:text-white transition-colors leading-none">
+          Expand
+        </span>
+      </button>
     </section>
   );
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useColorPaletteContext } from "../ColorContext";
+import PaletteExportMenu from "../shared/PaletteExportMenu";
 
 // ─── Algorithm (v4 — Closing the Gap) ────────────────────────────────────────
 
@@ -797,6 +798,13 @@ export default function SpectralArcDemo({ bg = "var(--background, #fff)" }) {
               </div>
               {/* Action buttons — right side */}
               <div className="flex gap-1.5 flex-shrink-0 ml-2">
+                <PaletteExportMenu
+                  palette={palette}
+                  paletteName="spectral-arc"
+                  buttonLabel="Export"
+                  className="shrink-0"
+                  placement="down"
+                />
                 <button
                   onClick={handleRandom}
                   className="px-2.5 py-1 rounded text-[10px] font-bold border border-(--navBorder) text-foreground/40 hover:text-foreground/70 hover:border-foreground/30 transition-all cursor-pointer bg-transparent uppercase tracking-wide"
