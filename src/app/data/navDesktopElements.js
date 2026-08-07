@@ -19,24 +19,10 @@ export const navDesktopElements = [
       { label: "Culture & Festival Palettes", path: "/culture-palettes" },
     ],
   },
-  // {
-  //   label: "Font Playground",
-  //   submenu: [
-  //     // Add your font playground items here
-  //     // { label: "Spacing Generator", path: "/spacing-system" },
-  //     // { label: "Spacing Generator", path: "/new-spacing" },
-  //     { label: "Spacing Gen", path: "/ultimate-space" },
-  //     { label: "Preview Fonts and Palette", path: "/preview-fonts-palette" },
-  //   ],
-  // },
-  // {
-  //   label: "Design Playground",
-  //   submenu: [
-  //     // Add your design playground items here
-  //     { label: "Design Item 1", path: "/design-item-1" },
-  //     { label: "Design Item 2", path: "/design-item-2" },
-  //   ],
-  // },
+  {
+    label: "Design Playground",
+    submenu: [{ label: "Design", path: "/design-playground" }],
+  },
 ];
 
 // navMobileElements.js

@@ -42,6 +42,7 @@ export default function CustomPalToolbar() {
     setDatabaseOpen,
     favPalette,
     setFavPalette,
+    showSaveNotice,
     generateRandomPalette,
     prepareForExpander,
   } = useColorPaletteContext();
@@ -209,6 +210,7 @@ export default function CustomPalToolbar() {
               ...prev,
               { palette, type: selectedPaletteType },
             ]);
+            showSaveNotice("Palette saved");
           }
         }}
         className="size-7 cursor-pointer border border-[var(--navBorder)] py-2 px-2 rounded-md hover:border-[var(--muted-foreground)]"

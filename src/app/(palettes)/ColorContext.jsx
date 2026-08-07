@@ -393,6 +393,18 @@ export function ColorPaletteContextProvider({ children }) {
 
   const [favColors, setFavColors] = useState([]);
   const [favPalette, setFavPalette] = useState([]);
+  const [saveNotice, setSaveNotice] = useState("");
+  const saveNoticeTimerRef = useRef(null);
+
+  const showSaveNotice = useCallback((message) => {
+    setSaveNotice(message);
+    if (saveNoticeTimerRef.current) {
+      clearTimeout(saveNoticeTimerRef.current);
+    }
+    saveNoticeTimerRef.current = setTimeout(() => {
+      setSaveNotice("");
+    }, 2200);
+  }, []);
 
   const clearFavColors = useCallback(() => {
     setFavColors([]);
@@ -649,6 +661,8 @@ export function ColorPaletteContextProvider({ children }) {
     clearFavPalette,
     removeFavColorAt,
     removeFavPaletteAt,
+    saveNotice,
+    showSaveNotice,
     generateRandomColor,
     generateRandomPalette,
     chromaticNeutralPalType,

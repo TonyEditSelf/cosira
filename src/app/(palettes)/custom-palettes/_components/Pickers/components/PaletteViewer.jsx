@@ -61,6 +61,8 @@ export default function PaletteViewer() {
     clearFavPalette,
     removeFavColorAt,
     removeFavPaletteAt,
+    saveNotice,
+    showSaveNotice,
   } = useColorPaletteContext();
 
   const toggleConfig = [
@@ -85,6 +87,7 @@ export default function PaletteViewer() {
   const handleSavedPaletteClick = (paletteObj) => {
     applySavedPalette(paletteObj);
     setDatabaseOpen(false);
+    showSaveNotice("Palette inserted");
   };
 
   return (
@@ -525,11 +528,13 @@ export default function PaletteViewer() {
                                       JSON.stringify(color) ===
                                       JSON.stringify(colorObj.value),
                                   );
-                                  if (!exists)
+                                  if (!exists) {
                                     setFavColors((prev) => [
                                       ...prev,
                                       colorObj.value,
                                     ]);
+                                    showSaveNotice("Color saved");
+                                  }
                                 }}
                                 className={`p-1 rounded-md border ${
                                   textColor === "white"
@@ -679,6 +684,12 @@ export default function PaletteViewer() {
           </AnimatePresence>
         </motion.section>
       </section>
+
+      {saveNotice && (
+        <div className="fixed top-4 left-1/2 z-[9999] -translate-x-1/2 rounded-full border border-green-600 bg-green-500 px-4 py-2 text-xs font-bold text-white shadow-xl">
+          {saveNotice}
+        </div>
+      )}
       <CustomPalToolbar />
     </main>
   );
